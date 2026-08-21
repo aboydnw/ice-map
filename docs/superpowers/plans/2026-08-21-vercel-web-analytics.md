@@ -20,11 +20,13 @@
 ### Task 1: Mount Vercel Web Analytics
 
 **Files:**
+
 - Modify: `web/package.json`
 - Modify: `web/yarn.lock`
 - Modify: `web/src/main.tsx`
 
 **Interfaces:**
+
 - Consumes: `Analytics` from `@vercel/analytics/react`
 - Produces: one root-level `<Analytics />` instance that reports standard page views in Vercel deployments
 
@@ -82,6 +84,7 @@ Expected: exit code 0.
 Run from `web`:
 
 ```bash
+set -euo pipefail
 yarn lint
 npx prettier --check src/main.tsx package.json
 ```
@@ -105,4 +108,7 @@ git add docs/superpowers/plans/2026-08-21-vercel-web-analytics.md web/package.js
 git commit -m "feat(web): add Vercel Web Analytics"
 ```
 
-After the commit is deployed, enable Web Analytics in the Vercel project dashboard if it is not already enabled, trigger a new production deployment, visit the site, and confirm a view request appears in the browser network panel and traffic begins appearing in the Analytics dashboard.
+Before deploying the commit, enable Web Analytics in the Vercel project
+dashboard if it is not already enabled. Then deploy the commit once, visit the
+site, and confirm a view request appears in the browser network panel and
+traffic begins appearing in the Analytics dashboard.
