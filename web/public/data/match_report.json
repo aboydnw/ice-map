@@ -1,0 +1,19 @@
+{
+  "pull_date": "2026-07-09",
+  "snapshot_facilities": 208,
+  "matched": 208,
+  "unmatched": 0,
+  "match_methods": {
+    "name": 174,
+    "address": 19,
+    "alias": 15
+  },
+  "national_adp": 62517,
+  "unmatched_adp": 0,
+  "history_coverage": {
+    "rows_resolved": 16663,
+    "rows_total": 20430,
+    "adp_share_resolved": 0.936
+  },
+  "unmatched_facilities": []
+}
