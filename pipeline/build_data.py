@@ -17,6 +17,8 @@ import sys
 import pandas as pd
 import requests
 
+import enrich
+
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 CACHE_DIR = REPO_ROOT / "pipeline" / "cache"
 OUT_DIR = REPO_ROOT / "web" / "public" / "data"
@@ -26,7 +28,12 @@ SOURCES = {
     "master": f"{LFS_BASE}/ice-detention-facilities/main/data/facilities-augmented.parquet",
     "crosswalk": f"{LFS_BASE}/ice-detention-facilities/main/data/facilities-name-state-match.parquet",
     "timeseries": f"{LFS_BASE}/ice-detention-management/main/data/facilities.parquet",
+    "alos": f"{LFS_BASE}/ice-detention-management/main/data/facility-alos.parquet",
 }
+DEATHS_URL = (
+    "https://raw.githubusercontent.com/uclalawbehindbars/ICE_custody_mortality/main/"
+    "Data/Processed/ice_deaths_validated.csv"
+)
 
 TYPE_BUCKETS = {
     "SPC": "dedicated",
@@ -75,7 +82,60 @@ def download_sources() -> dict[str, pathlib.Path]:
         response.raise_for_status()
         path.write_bytes(response.content)
         paths[key] = path
+    deaths_path = CACHE_DIR / "deaths.csv"
+    response = requests.get(DEATHS_URL, timeout=120)
+    response.raise_for_status()
+    deaths_path.write_bytes(response.content)
+    paths["deaths"] = deaths_path
     return paths
+
+
+class Enrichment:
+    """Reference lookups shared across facilities, plus coverage counters."""
+
+    def __init__(self, alos_path, deaths_path):
+        self.alos = enrich.load_alos(alos_path)
+        self.deaths = enrich.load_deaths(deaths_path)
+        self.ice_site = enrich.load_json("ice_site.json")
+        self.odo = enrich.load_json("odo_reports.json")
+        self.operators = enrich.load_json("operators_candidates.json")
+        raw_types = enrich.load_json("operator_types.json") or {}
+        self.operator_types = {enrich.normalize(k): v for k, v in raw_types.items() if not k.startswith("_")}
+        self.coverage = {}
+
+    def count(self, key, value):
+        self.coverage[key] = self.coverage.get(key, 0) + (1 if value is not None else 0)
+        return value
+
+    def properties(self, row, group, info, adp, detloc):
+        city = str(row.get("city") or "")
+        state = str(row.get("state") or "").upper()
+        name = str(row["name"])
+        site = self.count("ice_page", enrich.match_ice_site(self.ice_site, name, city, state))
+        odo = self.count("odo_report", enrich.match_odo_report(self.odo, name, city, state))
+        photo = site.get("photo") if site else None
+        if photo and not (REPO_ROOT / photo).exists():
+            photo = None
+        return {
+            "threat": self.count("threat", enrich.threat_levels(group, adp)),
+            "mandatory": self.count("mandatory", enrich.mandatory_detention(group, adp)),
+            "alos": self.count("alos", enrich.length_of_stay(self.alos, name)),
+            "last_year": self.count("last_year", enrich.last_year_use(info)),
+            "inspection": self.count("inspection", enrich.inspection(row)),
+            "deaths": self.count("deaths", enrich.deaths(self.deaths, detloc)),
+            "operator": self.count(
+                "operator",
+                enrich.verify_operator(
+                    self.operators, self.operator_types, name, city, state,
+                    str(row.get("type_detailed") or "").upper(),
+                    float(info["latitude"]), float(info["longitude"]),
+                ),
+            ),
+            "odo_report_url": odo.get("pdf_url") if odo else None,
+            "ice_page_url": site.get("url") if site else None,
+            "phone": site.get("facility_phone") if site else None,
+            "photo": self.count("photo", photo.replace("web/public/", "") if photo else None),
+        }
 
 
 def build_code_lookup(crosswalk: pd.DataFrame, master: pd.DataFrame) -> dict:
@@ -176,7 +236,7 @@ def display_name(name: str) -> str:
     )
 
 
-def build_features(matched: pd.DataFrame, master: pd.DataFrame) -> list[dict]:
+def build_features(matched: pd.DataFrame, master: pd.DataFrame, enrichment: Enrichment) -> list[dict]:
     master_by_code = master.set_index("detention_facility_code")
     features = []
     for detloc, group in matched.groupby("detloc"):
@@ -214,6 +274,7 @@ def build_features(matched: pd.DataFrame, master: pd.DataFrame) -> list[dict]:
                     "field_office": coalesce(info, "field_office"),
                     "aor": coalesce(row, "aor"),
                     "match_method": row["match_method"],
+                    **enrichment.properties(row, group, info, adp, detloc),
                 },
             }
         )
@@ -276,7 +337,8 @@ def main() -> int:
 
     validate(matched, snapshot)
 
-    features = build_features(matched, master)
+    enrichment = Enrichment(paths["alos"], paths["deaths"])
+    features = build_features(matched, master, enrichment)
     history, history_coverage = build_history(
         timeseries, aliases, code_lookup, address_lookup, set(matched["detloc"])
     )
@@ -291,6 +353,7 @@ def main() -> int:
         "national_adp": round(float(snapshot["adp"].sum())),
         "unmatched_adp": round(float(unmatched["adp"].sum())),
         "history_coverage": history_coverage,
+        "enrichment_coverage": enrichment.coverage,
         "unmatched_facilities": [
             {
                 "name": str(row["name"]),

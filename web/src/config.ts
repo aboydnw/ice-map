@@ -66,3 +66,26 @@ export function formatDate(iso: string): string {
     day: "numeric",
   });
 }
+
+export function formatMonthYear(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+  });
+}
+
+/** One-hue sequential ramp for the threat-level bar (none → level 1). */
+export const THREAT_COLORS = {
+  none: "#cde2fb",
+  level_3: "#86b6ef",
+  level_2: "#3987e5",
+  level_1: "#1c5cab",
+};
+
+export const HOTLINE = {
+  label: "National Immigration Detention Hotline",
+  number: "209-757-3733",
+};
+export const DIRECTORY_URL = "https://www.freedomforimmigrants.org/visitation";
+export const DEATHS_SOURCE_URL =
+  "https://github.com/uclalawbehindbars/ICE_custody_mortality";
