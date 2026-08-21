@@ -125,7 +125,8 @@ class WaybackClient:
 def clean_text(value: str) -> str:
     """Strip tags, unescape entities, and collapse whitespace."""
     value = re.sub(r"<[^>]+>", " ", value)
-    return re.sub(r"\s+", " ", html.unescape(value)).strip()
+    value = re.sub(r"[​‌‍﻿\xa0]", " ", html.unescape(value))
+    return re.sub(r"\s+", " ", value).strip()
 
 
 def slug_from_url(url: str) -> str:
@@ -284,9 +285,12 @@ def build(force_photos: bool) -> None:
         records.append(record)
     print(f"  {len(records)} facility pages parsed, {len(unavailable)} unavailable", file=sys.stderr)
 
+    valid = [r for r in records if is_valid(r)]
+    dropped = [r["slug"] for r in records if not is_valid(r)]
+
     print("Fetching photos...", file=sys.stderr)
     missing_photo = []
-    for record in records:
+    for record in valid:
         slug = record["slug"]
         if slug not in card_photos:
             missing_photo.append(slug)
@@ -296,7 +300,6 @@ def build(force_photos: bool) -> None:
         if record["photo"] is None:
             missing_photo.append(slug)
 
-    valid = [r for r in records if is_valid(r)]
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
     OUT_JSON.write_text(json.dumps(valid, indent=2) + "\n")
 
@@ -306,6 +309,8 @@ def build(force_photos: bool) -> None:
         f"{with_photo} with photos, to {OUT_JSON.relative_to(REPO_ROOT)}",
         file=sys.stderr,
     )
+    if dropped:
+        print(f"  dropped by validation: {', '.join(dropped)}", file=sys.stderr)
     if unavailable:
         print(f"  facility pages unavailable: {', '.join(unavailable)}", file=sys.stderr)
     if missing_photo:

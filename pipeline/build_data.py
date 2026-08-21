@@ -97,6 +97,9 @@ class Enrichment:
         self.alos = enrich.load_alos(alos_path)
         self.deaths = enrich.load_deaths(deaths_path)
         self.ice_site = enrich.load_json("ice_site.json")
+        self.ice_site_aliases = {
+            k: v for k, v in (enrich.load_json("ice_site_aliases.json") or {}).items() if not k.startswith("_")
+        }
         self.odo = enrich.load_json("odo_reports.json")
         self.operators = enrich.load_json("operators_candidates.json")
         raw_types = enrich.load_json("operator_types.json") or {}
@@ -111,7 +114,7 @@ class Enrichment:
         city = str(row.get("city") or "")
         state = str(row.get("state") or "").upper()
         name = str(row["name"])
-        site = self.count("ice_page", enrich.match_ice_site(self.ice_site, name, city, state))
+        site = self.count("ice_page", enrich.match_ice_site(self.ice_site, self.ice_site_aliases, [name, str(info["name"])], city, state))
         odo = self.count("odo_report", enrich.match_odo_report(self.odo, name, city, state))
         photo = site.get("photo") if site else None
         if photo and not (REPO_ROOT / photo).exists():

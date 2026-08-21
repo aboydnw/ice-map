@@ -184,19 +184,27 @@ def load_json(name: str):
     return json.loads(path.read_text()) if path.exists() else None
 
 
-def match_ice_site(records, name: str, city: str, state: str):
-    """Official ICE page/photo: same state and either the same name or same city plus a shared token."""
+def match_ice_site(records, aliases, names, city: str, state: str):
+    """Official ICE page/photo: a reviewed alias, an exact name (any known name), or - when the
+    city has a single ICE page - near-identical tokens."""
     if not records:
         return None
-    tokens = significant_tokens(name)
-    for record in records:
-        if str(record.get("state", "")).upper() != state:
-            continue
-        same_name = normalize(record.get("name")) == normalize(name)
-        same_city = normalize(record.get("city")) == normalize(city)
-        overlap = tokens & significant_tokens(record.get("name"))
-        if same_name or (same_city and overlap):
-            return record
+    in_state = [r for r in records if str(r.get("state", "")).upper() == state]
+    for name in names:
+        key = f"{normalize(name)}|{state}"
+        if aliases and key in aliases:
+            slug = aliases[key]
+            return next((r for r in records if r.get("slug") == slug), None) if slug else None
+    for name in names:
+        for record in in_state:
+            if normalize(record.get("name")) == normalize(name):
+                return record
+    in_city = [r for r in in_state if normalize(r.get("city")) == normalize(city)]
+    if len(in_city) != 1:
+        return None
+    tokens = significant_tokens(names[0])
+    if tokens and len(tokens ^ significant_tokens(in_city[0].get("name"))) <= 1:
+        return in_city[0]
     return None
 
 

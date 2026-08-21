@@ -133,3 +133,23 @@ def test_derive_local_operator_from_generic_county_value():
     assert enrich.derive_local_operator("ST CLAIR COUNTY JAIL", "County", "IGSA")["name"] == "St Clair County"
     assert enrich.derive_local_operator("RICHWOOD CORRECTIONAL CENTER", "County (Sheriff)", "IGSA") is None
     assert enrich.derive_local_operator("ADELANTO ICE PROCESSING CENTER", "County (Sheriff)", "CDF") is None
+
+
+def test_match_ice_site_rules():
+    records = [
+        {"slug": "camp-east-montana", "name": "ERO El Paso Camp East Montana", "city": "El Paso", "state": "TX"},
+        {"slug": "el-paso-spc", "name": "El Paso Service Processing Center", "city": "El Paso", "state": "TX"},
+        {"slug": "tacoma", "name": "Northwest ICE Processing Center (NWIPC)", "city": "Tacoma", "state": "WA"},
+        {"slug": "folkston-annex", "name": "Folkston ICE Processing Center (Annex)", "city": "Folkston", "state": "GA"},
+        {"slug": "folkston-dray", "name": "Folkston D Ray ICE Processing Center", "city": "Folkston", "state": "GA"},
+        {"slug": "florence-spc", "name": "Florence Service Processing Center", "city": "Florence", "state": "AZ"},
+        {"slug": "florence-cc", "name": "Central Arizona Florence Correctional Center", "city": "Florence", "state": "AZ"},
+    ]
+    aliases = {"DILLEY PROCESSING SINGLE ADULT FEMALE|TX": "dilley"}
+    match = enrich.match_ice_site
+    assert match(records, aliases, ["EL PASO SERVICE PROCESSING CENTER", "El Paso Service Processing Center"], "EL PASO", "TX")["slug"] == "el-paso-spc"
+    assert match(records, aliases, ["NORTHWEST ICE PROCESSING CENTER", "Northwest ICE Processing Center (NWIPC)"], "TACOMA", "WA")["slug"] == "tacoma"
+    assert match(records, aliases, ["FOLKSTON ANNEX IPC", "Folkston ICE Processing Center (Annex)"], "FOLKSTON", "GA")["slug"] == "folkston-annex"
+    assert match(records, aliases, ["FLORENCE STAGING FACILITY", "Florence Staging Facility"], "FLORENCE", "AZ") is None
+    assert match(records, aliases, ["CCA, FLORENCE CORRECTIONAL CENTER", "Central Arizona Florence Correctional Center"], "FLORENCE", "AZ")["slug"] == "florence-cc"
+    assert match(records, aliases, ["DILLEY PROCESSING SINGLE ADULT FEMALE", "Dilley Processing Single Female"], "DILLEY", "TX") is None

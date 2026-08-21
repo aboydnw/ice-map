@@ -1,0 +1,6 @@
+{
+  "_comment": "Human-reviewed links from spreadsheet facility names to ICE website slugs where names differ; null means 'no page of its own - do not match'. Keys are 'NORMALIZED NAME|STATE'.",
+  "DILLEY PROCESSING SINGLE ADULT FEMALE|TX": "dilley-immigration-processing-center",
+  "MONROE COUNTY DETENTION DORM|MI": "monroe-county-jail",
+  "ROBERT A DEYTON DETENTION FACILITY|GA": "robert-deyton-detention-facility"
+}
