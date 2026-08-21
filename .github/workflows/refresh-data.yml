@@ -1,0 +1,49 @@
+name: Refresh facility data
+
+on:
+  schedule:
+    - cron: "0 11 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pipeline dependencies
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Rebuild data artifacts
+        run: python pipeline/build_data.py
+
+      - name: Summarize match report
+        id: report
+        run: |
+          echo "summary<<EOF" >> "$GITHUB_OUTPUT"
+          python -m json.tool web/public/data/match_report.json >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: data-refresh
+          title: "chore(data): refresh facility data"
+          commit-message: "chore(data): refresh facility data"
+          body: |
+            Automated data refresh from the Deportation Data Project.
+
+            ```json
+            ${{ steps.report.outputs.summary }}
+            ```
+
+            Review the match report before merging: new unmatched facilities
+            belong in `pipeline/aliases.json`.
+          add-paths: web/public/data/
