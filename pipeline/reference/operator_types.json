@@ -1,0 +1,340 @@
+{
+  "GEO GROUP": {
+    "type": "private",
+    "display": "GEO Group"
+  },
+  "THE GEO GROUP": {
+    "type": "private",
+    "display": "GEO Group"
+  },
+  "THE GEO GROUP INC": {
+    "type": "private",
+    "display": "GEO Group"
+  },
+  "GEO GROUP INC": {
+    "type": "private",
+    "display": "GEO Group"
+  },
+  "COMMUNITY EDUCATION CENTERS GEO GROUP SUBSIDIARY": {
+    "type": "private",
+    "display": "GEO Group"
+  },
+  "COMMUNITY EDUCATION CENTERS": {
+    "type": "private",
+    "display": "GEO Group"
+  },
+  "CORECIVIC": {
+    "type": "private",
+    "display": "CoreCivic",
+    "notes": "Formerly Corrections Corporation of America (CCA); facility names still carry '(CCA)'."
+  },
+  "CORRECTIONS CORPORATION OF AMERICA": {
+    "type": "private",
+    "display": "CoreCivic",
+    "notes": "Formerly Corrections Corporation of America (CCA); facility names still carry '(CCA)'."
+  },
+  "CCA": {
+    "type": "private",
+    "display": "CoreCivic",
+    "notes": "Formerly Corrections Corporation of America (CCA); facility names still carry '(CCA)'."
+  },
+  "CORECIVIC OF TENNESSEE": {
+    "type": "private",
+    "display": "CoreCivic",
+    "notes": "Formerly Corrections Corporation of America (CCA); facility names still carry '(CCA)'."
+  },
+  "LASALLE CORRECTIONS": {
+    "type": "private",
+    "display": "LaSalle Corrections"
+  },
+  "LASALLE MANAGEMENT COMPANY": {
+    "type": "private",
+    "display": "LaSalle Corrections"
+  },
+  "LASALLE SOUTHWEST CORRECTIONS": {
+    "type": "private",
+    "display": "LaSalle Corrections"
+  },
+  "MANAGEMENT TRAINING CORPORATION MTC": {
+    "type": "private",
+    "display": "Management & Training Corp (MTC)"
+  },
+  "MANAGEMENT AND TRAINING CORPORATION": {
+    "type": "private",
+    "display": "Management & Training Corp (MTC)"
+  },
+  "MANAGEMENT TRAINING CORPORATION": {
+    "type": "private",
+    "display": "Management & Training Corp (MTC)"
+  },
+  "MTC": {
+    "type": "private",
+    "display": "Management & Training Corp (MTC)"
+  },
+  "AKIMA DIVISION OF NANA REGIONAL CORPORATION": {
+    "type": "private",
+    "display": "Akima",
+    "notes": "Subsidiary of NANA Regional Corporation, an Alaska Native corporation; operates under federal contract."
+  },
+  "AKIMA GLOBAL SERVICES": {
+    "type": "private",
+    "display": "Akima",
+    "notes": "Subsidiary of NANA Regional Corporation, an Alaska Native corporation; operates under federal contract."
+  },
+  "AKIMA": {
+    "type": "private",
+    "display": "Akima",
+    "notes": "Subsidiary of NANA Regional Corporation, an Alaska Native corporation; operates under federal contract."
+  },
+  "AGS": {
+    "type": "private",
+    "display": "Akima",
+    "notes": "Subsidiary of NANA Regional Corporation, an Alaska Native corporation; operates under federal contract."
+  },
+  "AHTNA GLOBAL SERVICES": {
+    "type": "private",
+    "display": "Ahtna",
+    "notes": "Subsidiary of Ahtna, Inc., an Alaska Native corporation; operates under federal contract."
+  },
+  "AHTNA": {
+    "type": "private",
+    "display": "Ahtna",
+    "notes": "Subsidiary of Ahtna, Inc., an Alaska Native corporation; operates under federal contract."
+  },
+  "AHTNA SUPPORT AND TRAINING SERVICES": {
+    "type": "private",
+    "display": "Ahtna",
+    "notes": "Subsidiary of Ahtna, Inc., an Alaska Native corporation; operates under federal contract."
+  },
+  "AMENTUM SERVICES": {
+    "type": "private",
+    "display": "Amentum"
+  },
+  "AMENTUM": {
+    "type": "private",
+    "display": "Amentum"
+  },
+  "EMERALD CORRECTIONAL MANAGEMENT": {
+    "type": "private",
+    "display": "Emerald Correctional",
+    "notes": "Not seen in the FY26 Wikipedia table; historical operator whose facilities largely passed to LaSalle."
+  },
+  "EMERALD CORRECTIONAL": {
+    "type": "private",
+    "display": "Emerald Correctional",
+    "notes": "Not seen in the FY26 Wikipedia table; historical operator whose facilities largely passed to LaSalle."
+  },
+  "GLOBAL PRECISION SYSTEMS LLC": {
+    "type": "private",
+    "display": "Global Precision Systems",
+    "notes": "Federal services contractor; confirm which facility it staffs before relying on this."
+  },
+  "GLOBAL PRECISION SYSTEMS": {
+    "type": "private",
+    "display": "Global Precision Systems",
+    "notes": "Federal services contractor; confirm which facility it staffs before relying on this."
+  },
+  "ASSET PROTECTION SECURITY SERVICES": {
+    "type": "private",
+    "display": "Asset Protection & Security Services",
+    "notes": "Private security contractor; appears once in the Wikipedia table."
+  },
+  "ASSET PROTECTION AND SECURITY SERVICES": {
+    "type": "private",
+    "display": "Asset Protection & Security Services",
+    "notes": "Private security contractor; appears once in the Wikipedia table."
+  },
+  "AP S": {
+    "type": "private",
+    "display": "Asset Protection & Security Services",
+    "notes": "Private security contractor; appears once in the Wikipedia table."
+  },
+  "CENTRAL FALLS DETENTION FACILITY CORP": {
+    "type": "public",
+    "display": "Central Falls Detention Facility Corp.",
+    "notes": "Municipal corporation created by the City of Central Falls, RI to run the Wyatt facility; legally public but bond-financed and run like a private operator. Classification uncertain."
+  },
+  "CENTRAL FALLS DETENTION FACILITY CORPORATION": {
+    "type": "public",
+    "display": "Central Falls Detention Facility Corp.",
+    "notes": "Municipal corporation created by the City of Central Falls, RI to run the Wyatt facility; legally public but bond-financed and run like a private operator. Classification uncertain."
+  },
+  "WYATT DETENTION FACILITY": {
+    "type": "public",
+    "display": "Central Falls Detention Facility Corp.",
+    "notes": "Municipal corporation created by the City of Central Falls, RI to run the Wyatt facility; legally public but bond-financed and run like a private operator. Classification uncertain."
+  },
+  "COUNTY SHERIFF": {
+    "type": "public",
+    "display": "County",
+    "notes": "Generic Wikipedia value; the specific county is not named."
+  },
+  "COUNTY": {
+    "type": "public",
+    "display": "County",
+    "notes": "Generic Wikipedia value; the specific county is not named."
+  },
+  "COUNTY CORRECTIONS": {
+    "type": "public",
+    "display": "County",
+    "notes": "Generic Wikipedia value; the specific county is not named."
+  },
+  "COUNTY JAILER": {
+    "type": "public",
+    "display": "County",
+    "notes": "Generic Wikipedia value; the specific county is not named."
+  },
+  "CITY": {
+    "type": "public",
+    "display": "City",
+    "notes": "Generic Wikipedia value; the specific city is not named."
+  },
+  "CAMBRIA COUNTY": {
+    "type": "public",
+    "display": "Cambria County"
+  },
+  "PLYMOUTH COUNTY": {
+    "type": "public",
+    "display": "Plymouth County"
+  },
+  "BOONE COUNTY SHERIFF S DEPARTMENT": {
+    "type": "public",
+    "display": "Boone County Sheriff"
+  },
+  "CHIPPEWA COUNTY SHERIFF S DEPARTMENT": {
+    "type": "public",
+    "display": "Chippewa County Sheriff"
+  },
+  "DODGE COUNTY SHERIFF S DEPARTMENT": {
+    "type": "public",
+    "display": "Dodge County Sheriff"
+  },
+  "ERIE COUNTY SHERIFF S OFFICE": {
+    "type": "public",
+    "display": "Erie County Sheriff"
+  },
+  "ETOWAH COUNTY SHERIFF S DEPARTMENT": {
+    "type": "public",
+    "display": "Etowah County Sheriff"
+  },
+  "GLADES COUNTY SHERIFF S DEPARTMENT": {
+    "type": "public",
+    "display": "Glades County Sheriff"
+  },
+  "LINN COUNTY SHERIFF": {
+    "type": "public",
+    "display": "Linn County Sheriff"
+  },
+  "POTTAWATTAMIE COUNTY SHERIFF": {
+    "type": "public",
+    "display": "Pottawattamie County Sheriff"
+  },
+  "SENECA COUNTY SHERIFF S OFFICE": {
+    "type": "public",
+    "display": "Seneca County Sheriff"
+  },
+  "SHERBURNE COUNTY SHERIFF S DEPARTMENT": {
+    "type": "public",
+    "display": "Sherburne County Sheriff"
+  },
+  "WASHOE COUNTY SHERIFF S OFFICE": {
+    "type": "public",
+    "display": "Washoe County Sheriff"
+  },
+  "FLORIDA DEPARTMENT OF CORRECTIONS": {
+    "type": "public",
+    "display": "Florida Department of Corrections"
+  },
+  "NEW YORK STATE COMMISSION OF CORRECTION": {
+    "type": "public",
+    "display": "New York State Commission of Correction",
+    "notes": "State oversight body rather than a day-to-day operator; the facility is likely county-run. Classification uncertain."
+  },
+  "FEDERAL BUREAU OF PRISONS": {
+    "type": "public",
+    "display": "Federal Bureau of Prisons"
+  },
+  "BUREAU OF PRISONS": {
+    "type": "public",
+    "display": "Federal Bureau of Prisons"
+  },
+  "BOP": {
+    "type": "public",
+    "display": "Federal Bureau of Prisons"
+  },
+  "US FEDERAL BUREAU OF PRISONS": {
+    "type": "public",
+    "display": "Federal Bureau of Prisons"
+  },
+  "ICE": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "US IMMIGRATION AND CUSTOMS ENFORCEMENT": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "U S IMMIGRATION AND CUSTOMS ENFORCEMENT": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "U S IMMIGRATION AND CUSTOMS ENFORCEMENT ICE": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "ICE IMMIGRATION AND CUSTOMS ENFORCEMENT": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "UNITED STATES IMMIGRATION AND CUSTOMS ENFORCEMENT": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "IMMIGRATION AND CUSTOMS ENFORCEMENT": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "IMMIGRATION CUSTOMS ENFORCEMENT": {
+    "type": "public",
+    "display": "ICE",
+    "notes": "ICE-owned SPCs are typically staffed by private contractors (e.g. Akima, Ahtna, GEO) even when ICE is listed as operator."
+  },
+  "US MARSHALS SERVICE": {
+    "type": "public",
+    "display": "US Marshals Service"
+  },
+  "UNITED STATES MARSHALS SERVICE": {
+    "type": "public",
+    "display": "US Marshals Service"
+  },
+  "U S MARSHALS SERVICE": {
+    "type": "public",
+    "display": "US Marshals Service"
+  },
+  "USMS": {
+    "type": "public",
+    "display": "US Marshals Service"
+  },
+  "DEPARTMENT OF DEFENSE": {
+    "type": "public",
+    "display": "Department of Defense",
+    "notes": "Covers military-base sites such as Fort Bliss; contractor staffing is common."
+  },
+  "US DEPARTMENT OF DEFENSE": {
+    "type": "public",
+    "display": "Department of Defense",
+    "notes": "Covers military-base sites such as Fort Bliss; contractor staffing is common."
+  },
+  "U S ARMY": {
+    "type": "public",
+    "display": "Department of Defense",
+    "notes": "Covers military-base sites such as Fort Bliss; contractor staffing is common."
+  }
+}

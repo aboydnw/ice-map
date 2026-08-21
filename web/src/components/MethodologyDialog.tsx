@@ -170,6 +170,44 @@ export function MethodologyDialog({ report, onClose }: Props) {
           </Text>
         </Section>
 
+        <Section title="Facility details">
+          <Text fontSize="sm" color="inkSecondary">
+            Threat levels, mandatory-detention counts, inspection results, and
+            average length of stay come from the same ICE reports (via DDP).
+            Threat levels are ICE's own classification of criminal history; "no
+            threat level" means ICE records no criminal conviction. Peak
+            population and days in use are computed by DDP from ICE's
+            individual-level detention records for the twelve months ending
+            March 10, 2026. Deaths in custody are from UCLA Law's Behind Bars
+            Data Project (
+            <Link
+              href="https://github.com/uclalawbehindbars/ICE_custody_mortality"
+              target="_blank"
+              rel="noopener"
+              color="#2a78d6"
+              textDecoration="underline"
+            >
+              ICE custody mortality dataset
+            </Link>
+            ), matched by ICE facility code. Operators are shown only when
+            Wikipedia's{" "}
+            <Link
+              href="https://en.wikipedia.org/wiki/List_of_immigrant_detention_sites_in_the_United_States"
+              target="_blank"
+              rel="noopener"
+              color="#2a78d6"
+              textDecoration="underline"
+            >
+              list of detention sites
+            </Link>{" "}
+            (CC BY-SA 4.0) agrees with an independent signal — OpenStreetMap
+            operator tags (© OpenStreetMap contributors, ODbL), the facility's
+            own name, or its federal type. Photos and official page links are
+            from ice.gov; photos are U.S. government works. Any item that fails
+            validation is left out for that facility rather than guessed.
+          </Text>
+        </Section>
+
         <Section title="Publication cadence">
           <Text fontSize="sm" color="inkSecondary">
             ICE was required to publish these figures every two weeks until
