@@ -144,7 +144,7 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
             />
             <text
               x={WIDTH - PAD.right}
-              y={gmY < 24 ? gmY + 11 : gmY - 4}
+              y={Math.max(gmY - 4, 9)}
               textAnchor="end"
               fontSize="9"
               fill="#898781"
