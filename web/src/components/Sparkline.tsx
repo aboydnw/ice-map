@@ -34,9 +34,8 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
           `${i === 0 ? "M" : "L"}${px.toFixed(1)},${py.toFixed(1)}`,
       )
       .join(" ");
-    const peakIndex = values.indexOf(Math.max(...values));
     const gmY = guaranteedMinimum ? y(guaranteedMinimum) : null;
-    return { coords, path, peakIndex, gmY };
+    return { coords, path, gmY };
   }, [points, guaranteedMinimum]);
 
   if (points.length < 2) {
@@ -47,12 +46,10 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
     );
   }
 
-  const { coords, path, peakIndex, gmY } = geometry;
+  const { coords, path, gmY } = geometry;
   const lastIndex = points.length - 1;
   const active = hoverIndex ?? lastIndex;
   const [ax, ay] = coords[active];
-  const [peakX, peakY] = coords[peakIndex];
-  const peakLabelLeft = peakX > WIDTH * 0.55;
 
   function handleMove(event: React.MouseEvent<SVGSVGElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -131,31 +128,16 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
           stroke="#c3c2b7"
           strokeWidth="1"
         />
-        {gmY !== null && guaranteedMinimum && (
-          <>
-            <line
-              x1={PAD.left}
-              x2={WIDTH - PAD.right}
-              y1={gmY}
-              y2={gmY}
-              stroke="#898781"
-              strokeWidth="1"
-              strokeDasharray="3 3"
-            />
-            <text
-              x={WIDTH - PAD.right}
-              y={Math.max(gmY - 4, 9)}
-              textAnchor="end"
-              fontSize="9"
-              fill="#898781"
-              fontFamily="inherit"
-              stroke="#fdfcfa"
-              strokeWidth="3"
-              paintOrder="stroke"
-            >
-              guaranteed min. {guaranteedMinimum.toLocaleString()} beds
-            </text>
-          </>
+        {gmY !== null && (
+          <line
+            x1={PAD.left}
+            x2={WIDTH - PAD.right}
+            y1={gmY}
+            y2={gmY}
+            stroke="#898781"
+            strokeWidth="1"
+            strokeDasharray="3 3"
+          />
         )}
         <path
           d={path}
@@ -164,24 +146,6 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
           strokeWidth="2"
           strokeLinejoin="round"
         />
-        {peakIndex !== active && (
-          <>
-            <circle cx={peakX} cy={peakY} r="2.5" fill="#2a78d6" />
-            <text
-              x={peakLabelLeft ? peakX - 5 : peakX + 5}
-              y={peakY < 22 ? peakY + 12 : peakY + 3}
-              textAnchor={peakLabelLeft ? "end" : "start"}
-              fontSize="9"
-              fill="#52514e"
-              fontFamily="inherit"
-              stroke="#fdfcfa"
-              strokeWidth="3"
-              paintOrder="stroke"
-            >
-              peak {points[peakIndex][1].toLocaleString()}
-            </text>
-          </>
-        )}
         <line
           x1={ax}
           x2={ax}
@@ -208,6 +172,22 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
           {formatShortDate(points[lastIndex][0])}
         </Text>
       </Box>
+      {guaranteedMinimum && (
+        <Box display="flex" alignItems="center" gap="6px" mt="6px">
+          <Box
+            as="span"
+            width="18px"
+            borderTopWidth="1px"
+            borderTopStyle="dashed"
+            borderColor="#898781"
+            aria-hidden="true"
+          />
+          <Text fontSize="11px" color="inkSecondary">
+            Guaranteed minimum: {guaranteedMinimum.toLocaleString()} beds ICE
+            pays for whether or not they are used
+          </Text>
+        </Box>
+      )}
     </Box>
   );
 }

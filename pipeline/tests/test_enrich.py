@@ -83,6 +83,15 @@ def test_last_year_use_bounds():
     assert enrich.last_year_use(bad, 5) is None
     conflicting = pd.Series({"days_with_detentions_daily_last_year": 24, "max_daily_population_last_year": 9})
     assert enrich.last_year_use(conflicting, 1076) is None
+    mismatched_code = pd.Series({"days_with_detentions_daily_last_year": 245, "max_daily_population_last_year": 10})
+    assert enrich.last_year_use(mismatched_code, 1, fytd_max=1545) is None
+    assert enrich.last_year_use(ok, 1174, fytd_max=2454)["peak"] == 1595
+
+
+def test_window_fytd_max_limits_to_trailing_year():
+    history = [["2024-10-28", 1608.0], ["2025-06-01", 900.0], ["2026-02-05", 977.0]]
+    assert enrich.window_fytd_max(history, "2026-03-10") == 977.0
+    assert enrich.window_fytd_max([["2020-01-01", 5.0]], "2026-03-10") is None
 
 
 def test_deaths_counts_and_last_date(tmp_path):

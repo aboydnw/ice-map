@@ -105,6 +105,7 @@ class Enrichment:
         raw_types = enrich.load_json("operator_types.json") or {}
         self.operator_types = {enrich.normalize(k): v for k, v in raw_types.items() if not k.startswith("_")}
         self.coverage = {}
+        self.history = {}
 
     def count(self, key, value):
         self.coverage[key] = self.coverage.get(key, 0) + (1 if value is not None else 0)
@@ -114,6 +115,9 @@ class Enrichment:
         """Deaths always render (zero reads 'no reported deaths'); coverage counts facilities with any."""
         self.count("deaths", value if value["count"] > 0 else None)
         return value
+
+    def fytd_max(self, detloc):
+        return enrich.window_fytd_max(self.history.get(detloc, []), enrich.INDIVIDUAL_DATA_THROUGH)
 
     def properties(self, row, group, info, adp, detloc):
         city = str(row.get("city") or "")
@@ -128,7 +132,7 @@ class Enrichment:
             "threat": self.count("threat", enrich.threat_levels(group, adp)),
             "mandatory": self.count("mandatory", enrich.mandatory_detention(group, adp)),
             "alos": self.count("alos", enrich.length_of_stay(self.alos, name)),
-            "last_year": self.count("last_year", enrich.last_year_use(info, adp)),
+            "last_year": self.count("last_year", enrich.last_year_use(info, adp, self.fytd_max(detloc))),
             "inspection": self.count("inspection", enrich.inspection(row)),
             "deaths": self.count_deaths(enrich.deaths(self.deaths, detloc)),
             "operator": self.count(
@@ -345,11 +349,12 @@ def main() -> int:
 
     validate(matched, snapshot)
 
-    enrichment = Enrichment(paths["alos"], paths["deaths"])
-    features = build_features(matched, master, enrichment)
     history, history_coverage = build_history(
         timeseries, aliases, code_lookup, address_lookup, set(matched["detloc"])
     )
+    enrichment = Enrichment(paths["alos"], paths["deaths"])
+    enrichment.history = history
+    features = build_features(matched, master, enrichment)
 
     pull_date = str(latest_date)[:10]
     report = {

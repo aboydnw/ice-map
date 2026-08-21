@@ -174,14 +174,29 @@ def length_of_stay(alos_lookup: dict, spreadsheet_name: str):
     return alos_lookup.get(normalize(spreadsheet_name))
 
 
-def last_year_use(master_row: pd.Series, adp: float):
-    """Peak and days in use from DDP's individual-level data; omitted when it conflicts with
-    ICE's spreadsheet (a peak below half the current fiscal-year average cannot both be true)."""
+def window_fytd_max(history, window_end: str):
+    """Highest fiscal-year-to-date average among snapshots inside the trailing 12-month window."""
+    end = dt.date.fromisoformat(window_end)
+    start = end - dt.timedelta(days=365)
+    values = [v for d, v in history if start <= dt.date.fromisoformat(d) <= end]
+    return max(values) if values else None
+
+
+PEAK_MISMATCH_FACTOR = 3
+
+
+def last_year_use(master_row: pd.Series, adp: float, fytd_max: float | None = None):
+    """Peak and days in use from DDP's individual-level data, omitted when it contradicts ICE's
+    spreadsheet. A daily peak below half the current fiscal-year average cannot be right; neither
+    can one several times below a fiscal-year average ICE reported inside the same window. The
+    latter is a heuristic (ICE's averages partly predate the window), so the factor is generous."""
     days = positive_number(master_row.get("days_with_detentions_daily_last_year"))
     peak = positive_number(master_row.get("max_daily_population_last_year"))
     if days is None or peak is None or not 0 < days <= 366 or peak < 1:
         return None
     if peak < 0.5 * adp:
+        return None
+    if fytd_max is not None and peak * PEAK_MISMATCH_FACTOR < fytd_max:
         return None
     return {"peak": round(peak), "days_in_use": round(days), "window_end": INDIVIDUAL_DATA_THROUGH}
 
