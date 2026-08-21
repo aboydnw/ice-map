@@ -102,6 +102,21 @@ def test_prepare_timeseries_drops_total_row_and_sums_levels():
     assert prepared.iloc[0]["adp"] == 35
 
 
+def test_format_inspection_date_handles_serials_and_strings():
+    assert build_data.format_inspection_date(46177) == "2026-06-04"
+    assert build_data.format_inspection_date("46177.0") == "2026-06-04"
+    assert build_data.format_inspection_date("2025-11-03 00:00:00") == "2025-11-03"
+    assert build_data.format_inspection_date(None) is None
+
+
+def test_display_name_preserves_mixed_case_and_acronyms():
+    assert build_data.display_name("Northwest ICE Processing Center (NWIPC)") == (
+        "Northwest ICE Processing Center (NWIPC)"
+    )
+    assert build_data.display_name("MONTGOMERY COUNTY JAIL") == "Montgomery County Jail"
+    assert build_data.display_name("FCI ATLANTA") == "FCI Atlanta"
+
+
 def test_alias_file_keys_are_canonical():
     raw = json.loads((pathlib.Path(build_data.__file__).parent / "aliases.json").read_text())
     for key, code in raw.items():

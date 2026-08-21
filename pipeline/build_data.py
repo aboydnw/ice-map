@@ -153,6 +153,29 @@ def coalesce(row, *columns):
     return None
 
 
+EXCEL_EPOCH = pd.Timestamp("1899-12-30")
+ACRONYMS = {"ICE", "US", "USP", "FCI", "FDC", "MDC", "CCA", "SPC", "IPC", "NWIPC", "CLIPC", "MCF", "CCNO"}
+
+
+def format_inspection_date(value) -> str | None:
+    """ICE spreadsheets mix ISO datetimes with raw Excel day serials."""
+    if value is None:
+        return None
+    text = str(value).strip()
+    if re.fullmatch(r"\d{4,6}(\.0)?", text):
+        return str((EXCEL_EPOCH + pd.Timedelta(days=float(text))).date())
+    return text[:10]
+
+
+def display_name(name: str) -> str:
+    """Title-case all-caps names, preserving known acronyms; keep mixed case as-is."""
+    if name != name.upper():
+        return name
+    return " ".join(
+        word if word.strip("().,") in ACRONYMS else word.title() for word in name.split(" ")
+    )
+
+
 def build_features(matched: pd.DataFrame, master: pd.DataFrame) -> list[dict]:
     master_by_code = master.set_index("detention_facility_code")
     features = []
@@ -173,7 +196,7 @@ def build_features(matched: pd.DataFrame, master: pd.DataFrame) -> list[dict]:
                 },
                 "properties": {
                     "detloc": detloc,
-                    "name": str(info["name"]).title(),
+                    "name": display_name(str(info["name"])),
                     "address": str(info["address_full"]),
                     "bucket": bucket_for(row["type_detailed"]),
                     "type_detailed": row["type_detailed"],
@@ -187,7 +210,7 @@ def build_features(matched: pd.DataFrame, master: pd.DataFrame) -> list[dict]:
                     if pd.notna(row["guaranteed_minimum"])
                     else None,
                     "inspection_rating": inspection_rating,
-                    "inspection_date": str(inspection_date)[:10] if inspection_date else None,
+                    "inspection_date": format_inspection_date(inspection_date),
                     "field_office": coalesce(info, "field_office"),
                     "aor": coalesce(row, "aor"),
                     "match_method": row["match_method"],
