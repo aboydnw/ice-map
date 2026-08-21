@@ -155,3 +155,32 @@ def test_match_ice_site_rules():
     assert match(records, aliases, ["FLORENCE STAGING FACILITY", "Florence Staging Facility"], "FLORENCE", "AZ") is None
     assert match(records, aliases, ["CCA, FLORENCE CORRECTIONAL CENTER", "Central Arizona Florence Correctional Center"], "FLORENCE", "AZ")["slug"] == "florence-cc"
     assert match(records, aliases, ["DILLEY PROCESSING SINGLE ADULT FEMALE", "Dilley Processing Single Female"], "DILLEY", "TX") is None
+
+
+def test_parse_inspection_date_rejects_out_of_range_serial():
+    assert enrich.parse_inspection_date("999999") == (None, None)
+
+
+def test_inspection_rating_falls_back_past_nan():
+    row = pd.Series(
+        {
+            "last_inspection_type": "ODO",
+            "last_final_rating": float("nan"),
+            "last_inspection_rating_final": "Pass",
+            "last_inspection_end_date": float("nan"),
+            "last_inspection_date": "2025-03-01",
+        }
+    )
+    result = enrich.inspection(row)
+    assert result["rating"] == "Pass"
+    assert result["date"] == "2025-03-01"
+
+
+def test_match_ice_site_skips_archived_pages():
+    records = [{"slug": "deyton", "name": "Robert A. Deyton Detention Facility", "city": "Lovejoy", "state": "GA", "archived": True}]
+    assert enrich.match_ice_site(records, {}, ["ROBERT A DEYTON DETENTION FACILITY"], "LOVEJOY", "GA") is None
+
+
+def test_load_json_requires_reference_file():
+    with pytest.raises(FileNotFoundError):
+        enrich.load_json("definitely-missing.json")

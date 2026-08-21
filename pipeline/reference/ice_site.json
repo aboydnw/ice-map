@@ -11,7 +11,8 @@
     "field_office_phone": "(800) 375-5283",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/adams-county-detention-center.jpg",
-    "snapshot_ts": "20260811115541"
+    "snapshot_ts": "20260811115541",
+    "archived": false
   },
   {
     "slug": "adelanto-ice-processing-center",
@@ -25,7 +26,8 @@
     "field_office_phone": "(760) 561-6100",
     "field_office": "Los Angeles Field Office",
     "photo": "web/public/photos/adelanto-ice-processing-center.jpg",
-    "snapshot_ts": "20260811115558"
+    "snapshot_ts": "20260811115558",
+    "archived": false
   },
   {
     "slug": "alamance-county-detention-center",
@@ -39,7 +41,8 @@
     "field_office_phone": "(404) 893-1210",
     "field_office": "Atlanta Field Office",
     "photo": "web/public/photos/alamance-county-detention-center.jpg",
-    "snapshot_ts": "20260811115612"
+    "snapshot_ts": "20260811115612",
+    "archived": false
   },
   {
     "slug": "allen-parish-public-safety-complex",
@@ -53,7 +56,8 @@
     "field_office_phone": "(504) 599-7845",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/allen-parish-public-safety-complex.jpg",
-    "snapshot_ts": "20260811115623"
+    "snapshot_ts": "20260811115623",
+    "archived": false
   },
   {
     "slug": "anchorage-correctional-complex",
@@ -67,7 +71,8 @@
     "field_office_phone": "(206) 277-2000",
     "field_office": "Seattle Field Office",
     "photo": "web/public/photos/anchorage-correctional-complex.jpg",
-    "snapshot_ts": "20260811115627"
+    "snapshot_ts": "20260811115627",
+    "archived": false
   },
   {
     "slug": "aurora-contract-detention-facility",
@@ -81,7 +86,8 @@
     "field_office_phone": "(720) 873-2899",
     "field_office": "Denver Field Office",
     "photo": "web/public/photos/aurora-contract-detention-facility.jpg",
-    "snapshot_ts": "20260621191409"
+    "snapshot_ts": "20260621191409",
+    "archived": false
   },
   {
     "slug": "baker-county-facility",
@@ -95,7 +101,8 @@
     "field_office_phone": "(407) 440-5100",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/baker-county-facility.jpg",
-    "snapshot_ts": "20260811115640"
+    "snapshot_ts": "20260811115640",
+    "archived": false
   },
   {
     "slug": "bluebonnet-detention-facility",
@@ -109,7 +116,8 @@
     "field_office_phone": "(972) 367-2200",
     "field_office": "Dallas Field Office",
     "photo": "web/public/photos/bluebonnet-detention-facility.jpg",
-    "snapshot_ts": "20260811115652"
+    "snapshot_ts": "20260811115652",
+    "archived": false
   },
   {
     "slug": "boone-county-jail",
@@ -123,7 +131,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/boone-county-jail.jpg",
-    "snapshot_ts": "20260811115657"
+    "snapshot_ts": "20260811115657",
+    "archived": false
   },
   {
     "slug": "broome-county-correctional-facility",
@@ -137,7 +146,8 @@
     "field_office_phone": "(716) 464-5800",
     "field_office": "Buffalo Field Office",
     "photo": "web/public/photos/broome-county-correctional-facility.jpg",
-    "snapshot_ts": "20260811115706"
+    "snapshot_ts": "20260811115706",
+    "archived": false
   },
   {
     "slug": "broward-transitional-center",
@@ -151,7 +161,8 @@
     "field_office_phone": "(954) 236-4900",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/broward-transitional-center.jpg",
-    "snapshot_ts": "20260811115714"
+    "snapshot_ts": "20260811115714",
+    "archived": false
   },
   {
     "slug": "buffalo-batavia-service-processing-center",
@@ -165,7 +176,8 @@
     "field_office_phone": "(716) 464-5800",
     "field_office": "Buffalo Field Office",
     "photo": "web/public/photos/buffalo-batavia-service-processing-center.jpg",
-    "snapshot_ts": "20260811115726"
+    "snapshot_ts": "20260811115726",
+    "archived": false
   },
   {
     "slug": "burleigh-county-detention-center",
@@ -179,12 +191,13 @@
     "field_office_phone": "(612) 843-8600",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/burleigh-county-detention-center.jpg",
-    "snapshot_ts": "20260811115729"
+    "snapshot_ts": "20260811115729",
+    "archived": false
   },
   {
     "slug": "butler-county-sheriffs-office",
     "url": "https://www.ice.gov/detain/detention-facilities/butler-county-sheriffs-office",
-    "name": "Butler County Sheriff\u2019s Office",
+    "name": "Butler County Sheriff’s Office",
     "address": "705 Hanover Street",
     "city": "Hamilton",
     "state": "OH",
@@ -193,7 +206,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/butler-county-sheriffs-office.jpg",
-    "snapshot_ts": "20260817150005"
+    "snapshot_ts": "20260817150005",
+    "archived": false
   },
   {
     "slug": "calhoun-county-correctional-center",
@@ -207,7 +221,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/calhoun-county-correctional-center.jpg",
-    "snapshot_ts": "20260811115751"
+    "snapshot_ts": "20260811115751",
+    "archived": false
   },
   {
     "slug": "california-city-detention-facility",
@@ -221,7 +236,8 @@
     "field_office_phone": "(415) 365-8800",
     "field_office": "San Francisco Field Office",
     "photo": "web/public/photos/california-city-detention-facility.jpg",
-    "snapshot_ts": "20260811115756"
+    "snapshot_ts": "20260811115756",
+    "archived": false
   },
   {
     "slug": "camp-east-montana",
@@ -235,7 +251,8 @@
     "field_office_phone": "(915) 856-2317",
     "field_office": "El Paso Field Office",
     "photo": "web/public/photos/camp-east-montana.jpg",
-    "snapshot_ts": "20260716043920"
+    "snapshot_ts": "20260716043920",
+    "archived": false
   },
   {
     "slug": "camp-east-montana-detention-facility",
@@ -249,7 +266,8 @@
     "field_office_phone": "(915) 856-2317",
     "field_office": "El Paso Field Office",
     "photo": null,
-    "snapshot_ts": "20251104024042"
+    "snapshot_ts": "20251104024042",
+    "archived": false
   },
   {
     "slug": "campbell-county-detention-center",
@@ -263,7 +281,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/campbell-county-detention-center.jpg",
-    "snapshot_ts": "20260811115803"
+    "snapshot_ts": "20260811115803",
+    "archived": false
   },
   {
     "slug": "caroline-detention-facility",
@@ -277,7 +296,8 @@
     "field_office_phone": "(703) 633-2100",
     "field_office": "Washington Field Office",
     "photo": "web/public/photos/caroline-detention-facility.jpg",
-    "snapshot_ts": "20260811115810"
+    "snapshot_ts": "20260811115810",
+    "archived": false
   },
   {
     "slug": "central-louisiana-ipc",
@@ -291,7 +311,8 @@
     "field_office_phone": "(504) 599-7800",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/central-louisiana-ipc.jpg",
-    "snapshot_ts": "20260811115835"
+    "snapshot_ts": "20260811115835",
+    "archived": false
   },
   {
     "slug": "central-valley-annex",
@@ -305,7 +326,8 @@
     "field_office_phone": "(559) 266-2083",
     "field_office": "San Francisco Field Office",
     "photo": null,
-    "snapshot_ts": "20260811115846"
+    "snapshot_ts": "20260811115846",
+    "archived": false
   },
   {
     "slug": "chase-county-jail",
@@ -319,7 +341,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/chase-county-jail.jpg",
-    "snapshot_ts": "20260621193111"
+    "snapshot_ts": "20260621193111",
+    "archived": false
   },
   {
     "slug": "chippewa-county-correctional-facility",
@@ -333,7 +356,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/chippewa-county-correctional-facility.jpg",
-    "snapshot_ts": "20260621192334"
+    "snapshot_ts": "20260621192334",
+    "archived": false
   },
   {
     "slug": "christian-county-jail",
@@ -347,7 +371,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/christian-county-jail.jpg",
-    "snapshot_ts": "20260621192644"
+    "snapshot_ts": "20260621192644",
+    "archived": false
   },
   {
     "slug": "cibola-county-correctional-center",
@@ -361,7 +386,8 @@
     "field_office_phone": "(915) 856-2317",
     "field_office": "El Paso Field Office",
     "photo": "web/public/photos/cibola-county-correctional-center.jpg",
-    "snapshot_ts": "20260621192528"
+    "snapshot_ts": "20260621192528",
+    "archived": false
   },
   {
     "slug": "cimarron-correctional-facility",
@@ -375,7 +401,8 @@
     "field_office_phone": "(972) 367-2200",
     "field_office": "Dallas Field Office",
     "photo": "web/public/photos/cimarron-correctional-facility.jpg",
-    "snapshot_ts": "20260621191836"
+    "snapshot_ts": "20260621191836",
+    "archived": false
   },
   {
     "slug": "clark-county-jail",
@@ -389,7 +416,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/clark-county-jail.jpg",
-    "snapshot_ts": "20260621192040"
+    "snapshot_ts": "20260621192040",
+    "archived": false
   },
   {
     "slug": "clay-county-jail",
@@ -403,7 +431,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/clay-county-jail.jpg",
-    "snapshot_ts": "20260621193621"
+    "snapshot_ts": "20260621193621",
+    "archived": false
   },
   {
     "slug": "clinton-county-correctional-facility",
@@ -417,7 +446,8 @@
     "field_office_phone": "(215) 656-7164",
     "field_office": "Philadelphia Field Office",
     "photo": "web/public/photos/clinton-county-correctional-facility.jpg",
-    "snapshot_ts": "20260621191742"
+    "snapshot_ts": "20260621191742",
+    "archived": false
   },
   {
     "slug": "clinton-county-jail",
@@ -431,7 +461,8 @@
     "field_office_phone": "(716) 464-5800",
     "field_office": "Buffalo Field Office",
     "photo": "web/public/photos/clinton-county-jail.jpg",
-    "snapshot_ts": "20260621192310"
+    "snapshot_ts": "20260621192310",
+    "archived": false
   },
   {
     "slug": "clinton-county-so",
@@ -445,7 +476,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/clinton-county-so.jpg",
-    "snapshot_ts": "20260621193457"
+    "snapshot_ts": "20260621193457",
+    "archived": false
   },
   {
     "slug": "cnmi-department-corrections",
@@ -459,7 +491,8 @@
     "field_office_phone": "(670) 237-2700",
     "field_office": "San Francisco Field Office",
     "photo": "web/public/photos/cnmi-department-corrections.jpg",
-    "snapshot_ts": "20260621192810"
+    "snapshot_ts": "20260621192810",
+    "archived": false
   },
   {
     "slug": "coastal-bend-detention-center",
@@ -473,7 +506,8 @@
     "field_office_phone": "(361) 879-4401",
     "field_office": "Harlingen Field Office",
     "photo": "web/public/photos/coastal-bend-detention-center.jpg",
-    "snapshot_ts": "20260621193418"
+    "snapshot_ts": "20260621193418",
+    "archived": false
   },
   {
     "slug": "corrections-center-northwest-ohio-ccno",
@@ -487,7 +521,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/corrections-center-northwest-ohio-ccno.jpg",
-    "snapshot_ts": "20260621191246"
+    "snapshot_ts": "20260621191246",
+    "archived": false
   },
   {
     "slug": "crow-wing-county-jail",
@@ -501,7 +536,8 @@
     "field_office_phone": "(612) 843-8600",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/crow-wing-county-jail.jpg",
-    "snapshot_ts": "20260621191342"
+    "snapshot_ts": "20260621191342",
+    "archived": false
   },
   {
     "slug": "cumberland-county-jail",
@@ -515,7 +551,8 @@
     "field_office_phone": "(781) 359-7500",
     "field_office": "Boston Field Office",
     "photo": "web/public/photos/cumberland-county-jail.jpg",
-    "snapshot_ts": "20260621192008"
+    "snapshot_ts": "20260621192008",
+    "archived": false
   },
   {
     "slug": "dakota-county-sheriff-office",
@@ -529,7 +566,8 @@
     "field_office_phone": "(402) 536-4861",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/dakota-county-sheriff-office.jpg",
-    "snapshot_ts": "20260621191350"
+    "snapshot_ts": "20260621191350",
+    "archived": false
   },
   {
     "slug": "daviess-county-detention-center",
@@ -543,7 +581,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/daviess-county-detention-center.jpg",
-    "snapshot_ts": "20260621193809"
+    "snapshot_ts": "20260621193809",
+    "archived": false
   },
   {
     "slug": "delaney-hall-detention-facility",
@@ -557,7 +596,8 @@
     "field_office_phone": "(862) 445-9200",
     "field_office": "Newark Field Office",
     "photo": "web/public/photos/delaney-hall-detention-facility.jpg",
-    "snapshot_ts": "20260715195135"
+    "snapshot_ts": "20260715195135",
+    "archived": false
   },
   {
     "slug": "desert-view-annex",
@@ -571,7 +611,8 @@
     "field_office_phone": "(714) 712-8074",
     "field_office": "Los Angeles Field Office",
     "photo": "web/public/photos/desert-view-annex.jpg",
-    "snapshot_ts": "20260621193629"
+    "snapshot_ts": "20260621193629",
+    "archived": false
   },
   {
     "slug": "diamondback-correctional-facility",
@@ -585,7 +626,8 @@
     "field_office_phone": "(972) 367-2200",
     "field_office": "Dallas Field Office",
     "photo": "web/public/photos/diamondback-correctional-facility.jpg",
-    "snapshot_ts": "20260621192311"
+    "snapshot_ts": "20260621192311",
+    "archived": false
   },
   {
     "slug": "dilley-immigration-processing-center",
@@ -599,7 +641,8 @@
     "field_office_phone": "(210) 283-4750",
     "field_office": "San Antonio Field Office",
     "photo": "web/public/photos/dilley-immigration-processing-center.jpg",
-    "snapshot_ts": "20260730014518"
+    "snapshot_ts": "20260730014518",
+    "archived": false
   },
   {
     "slug": "dodge-detention-facility",
@@ -613,7 +656,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/dodge-detention-facility.jpg",
-    "snapshot_ts": "20260621193208"
+    "snapshot_ts": "20260621193208",
+    "archived": false
   },
   {
     "slug": "douglas-county-jail",
@@ -627,7 +671,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/douglas-county-jail.jpg",
-    "snapshot_ts": "20260621191523"
+    "snapshot_ts": "20260621191523",
+    "archived": false
   },
   {
     "slug": "east-hidalgo-detention-center",
@@ -641,7 +686,8 @@
     "field_office_phone": "(956) 547-1700",
     "field_office": "Harlingen Field Office",
     "photo": "web/public/photos/east-hidalgo-detention-center.jpg",
-    "snapshot_ts": "20260621193913"
+    "snapshot_ts": "20260621193913",
+    "archived": false
   },
   {
     "slug": "eden-detention-center",
@@ -655,7 +701,8 @@
     "field_office_phone": "(972) 367-2200",
     "field_office": "Dallas Field Office",
     "photo": "web/public/photos/eden-detention-center.jpg",
-    "snapshot_ts": "20260621191459"
+    "snapshot_ts": "20260621191459",
+    "archived": false
   },
   {
     "slug": "el-paso-service-processing-center",
@@ -669,7 +716,8 @@
     "field_office_phone": "(915) 856-2317",
     "field_office": "El Paso Field Office",
     "photo": "web/public/photos/el-paso-service-processing-center.jpg",
-    "snapshot_ts": "20260621193253"
+    "snapshot_ts": "20260621193253",
+    "archived": false
   },
   {
     "slug": "el-valle-detention-facility",
@@ -683,7 +731,8 @@
     "field_office_phone": "(956) 547-1700",
     "field_office": "Harlingen Field Office",
     "photo": "web/public/photos/el-valle-detention-facility.jpg",
-    "snapshot_ts": "20260621234031"
+    "snapshot_ts": "20260621234031",
+    "archived": false
   },
   {
     "slug": "elizabeth-contract-detention-facility",
@@ -697,7 +746,8 @@
     "field_office_phone": "(973) 645-3666",
     "field_office": "Newark Field Office",
     "photo": "web/public/photos/elizabeth-contract-detention-facility.jpg",
-    "snapshot_ts": "20260730173418"
+    "snapshot_ts": "20260730173418",
+    "archived": false
   },
   {
     "slug": "elmore-county-detention-center-elmore-county-jail",
@@ -711,7 +761,8 @@
     "field_office_phone": "(801) 886-7400",
     "field_office": "Salt Lake City Field Office",
     "photo": "web/public/photos/elmore-county-detention-center-elmore-county-jail.jpg",
-    "snapshot_ts": "20260621191042"
+    "snapshot_ts": "20260621191042",
+    "archived": false
   },
   {
     "slug": "eloy-detention-center",
@@ -725,7 +776,8 @@
     "field_office_phone": "(602) 257-5900",
     "field_office": "Phoenix Field Office",
     "photo": "web/public/photos/eloy-detention-center.jpg",
-    "snapshot_ts": "20260621193808"
+    "snapshot_ts": "20260621193808",
+    "archived": false
   },
   {
     "slug": "farmville-detention-center",
@@ -739,7 +791,8 @@
     "field_office_phone": "(703) 633-2100",
     "field_office": "Washington Field Office",
     "photo": "web/public/photos/farmville-detention-center.jpg",
-    "snapshot_ts": "20260707135359"
+    "snapshot_ts": "20260707135359",
+    "archived": false
   },
   {
     "slug": "fci-atlanta",
@@ -753,7 +806,8 @@
     "field_office_phone": "(404) 893-1290",
     "field_office": "Atlanta Field Office",
     "photo": "web/public/photos/fci-atlanta.jpg",
-    "snapshot_ts": "20260621191210"
+    "snapshot_ts": "20260621191210",
+    "archived": false
   },
   {
     "slug": "fci-leavenworth",
@@ -767,7 +821,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/fci-leavenworth.jpg",
-    "snapshot_ts": "20260621192045"
+    "snapshot_ts": "20260621192045",
+    "archived": false
   },
   {
     "slug": "fci-lewisburg",
@@ -781,7 +836,8 @@
     "field_office_phone": "(570) 244-4380",
     "field_office": "Philadelphia Field Office",
     "photo": "web/public/photos/fci-lewisburg.jpg",
-    "snapshot_ts": "20260621192740"
+    "snapshot_ts": "20260621192740",
+    "archived": false
   },
   {
     "slug": "fdc-miami",
@@ -795,7 +851,8 @@
     "field_office_phone": "(954) 236-4900",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/fdc-miami.jpg",
-    "snapshot_ts": "20260621192456"
+    "snapshot_ts": "20260621192456",
+    "archived": false
   },
   {
     "slug": "fdc-philadelphia",
@@ -809,7 +866,8 @@
     "field_office_phone": "(215) 656-7164",
     "field_office": "Philadelphia Field Office",
     "photo": "web/public/photos/fdc-philadelphia.jpg",
-    "snapshot_ts": "20260621193142"
+    "snapshot_ts": "20260621193142",
+    "archived": false
   },
   {
     "slug": "federal-correctional-institution-berlin-nh",
@@ -823,7 +881,8 @@
     "field_office_phone": "(781) 359-7500",
     "field_office": "Boston Field Office",
     "photo": "web/public/photos/federal-correctional-institution-berlin-nh.jpg",
-    "snapshot_ts": "20260621191536"
+    "snapshot_ts": "20260621191536",
+    "archived": false
   },
   {
     "slug": "federal-detention-center-honolulu-fdc-honolulu",
@@ -837,7 +896,8 @@
     "field_office_phone": "(808) 529-1970",
     "field_office": "San Francisco Field Office",
     "photo": "web/public/photos/federal-detention-center-honolulu-fdc-honolulu.jpg",
-    "snapshot_ts": "20260621191030"
+    "snapshot_ts": "20260621191030",
+    "archived": false
   },
   {
     "slug": "flagler-county-detention-facility",
@@ -851,7 +911,8 @@
     "field_office_phone": "(904) 288-4600",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/flagler-county-detention-facility.jpg",
-    "snapshot_ts": "20260621191358"
+    "snapshot_ts": "20260621191358",
+    "archived": false
   },
   {
     "slug": "florence-correctional-center",
@@ -865,7 +926,8 @@
     "field_office_phone": "(602) 257-5900",
     "field_office": "Phoenix Field Office",
     "photo": "web/public/photos/florence-correctional-center.jpg",
-    "snapshot_ts": "20260820004922"
+    "snapshot_ts": "20260820004922",
+    "archived": false
   },
   {
     "slug": "florence-spc",
@@ -879,7 +941,8 @@
     "field_office_phone": "(602) 257-5900",
     "field_office": "Phoenix Field Office",
     "photo": "web/public/photos/florence-spc.jpg",
-    "snapshot_ts": "20260621191836"
+    "snapshot_ts": "20260621191836",
+    "archived": false
   },
   {
     "slug": "florida-soft-sided-facility-south",
@@ -893,7 +956,8 @@
     "field_office_phone": "(407) 440-5100",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/florida-soft-sided-facility-south.jpg",
-    "snapshot_ts": "20260714163326"
+    "snapshot_ts": "20260714163326",
+    "archived": false
   },
   {
     "slug": "folkston-d-ray-ice-processing-center",
@@ -907,7 +971,8 @@
     "field_office_phone": "(404) 893-1210",
     "field_office": "Atlanta Field Office",
     "photo": "web/public/photos/folkston-d-ray-ice-processing-center.jpg",
-    "snapshot_ts": "20260621192429"
+    "snapshot_ts": "20260621192429",
+    "archived": false
   },
   {
     "slug": "folkston-ice-processing-center-annex",
@@ -921,7 +986,8 @@
     "field_office_phone": "(404) 893-1210",
     "field_office": "Atlanta Field Office",
     "photo": "web/public/photos/folkston-ice-processing-center-annex.jpg",
-    "snapshot_ts": "20260621192256"
+    "snapshot_ts": "20260621192256",
+    "archived": false
   },
   {
     "slug": "folkston-ice-processing-center-main",
@@ -935,7 +1001,8 @@
     "field_office_phone": "(404) 893-1210",
     "field_office": "Atlanta Field Office",
     "photo": "web/public/photos/folkston-ice-processing-center-main.jpg",
-    "snapshot_ts": "20260716152613"
+    "snapshot_ts": "20260716152613",
+    "archived": false
   },
   {
     "slug": "fort-bliss-detention-facility",
@@ -949,7 +1016,8 @@
     "field_office_phone": "(915) 856-2317",
     "field_office": "El Paso Field Office",
     "photo": null,
-    "snapshot_ts": "20251009005654"
+    "snapshot_ts": "20251009005654",
+    "archived": false
   },
   {
     "slug": "freeborn-county-jail-services",
@@ -963,7 +1031,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/freeborn-county-jail-services.jpg",
-    "snapshot_ts": "20260621191001"
+    "snapshot_ts": "20260621191001",
+    "archived": false
   },
   {
     "slug": "geauga-county-safety-center",
@@ -977,7 +1046,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/geauga-county-safety-center.jpg",
-    "snapshot_ts": "20260817145947"
+    "snapshot_ts": "20260817145947",
+    "archived": false
   },
   {
     "slug": "glades-county-detention-center",
@@ -991,7 +1061,8 @@
     "field_office_phone": "(954) 236-4900",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/glades-county-detention-center.jpg",
-    "snapshot_ts": "20260621191035"
+    "snapshot_ts": "20260621191035",
+    "archived": false
   },
   {
     "slug": "golden-state-annex",
@@ -1005,7 +1076,8 @@
     "field_office_phone": "(415) 365-8800",
     "field_office": "San Francisco Field Office",
     "photo": "web/public/photos/golden-state-annex.jpg",
-    "snapshot_ts": "20260621191712"
+    "snapshot_ts": "20260621191712",
+    "archived": false
   },
   {
     "slug": "grand-forks-county-correctional-center",
@@ -1019,7 +1091,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/grand-forks-county-correctional-center.jpg",
-    "snapshot_ts": "20260621192915"
+    "snapshot_ts": "20260621192915",
+    "archived": false
   },
   {
     "slug": "grayson-county-detention-center",
@@ -1033,7 +1106,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/grayson-county-detention-center.jpg",
-    "snapshot_ts": "20260621192801"
+    "snapshot_ts": "20260621192801",
+    "archived": false
   },
   {
     "slug": "greene-county-jail",
@@ -1047,7 +1121,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/greene-county-jail.jpg",
-    "snapshot_ts": "20260621192005"
+    "snapshot_ts": "20260621192005",
+    "archived": false
   },
   {
     "slug": "guam-department-corrections-hagatna-detention-facility",
@@ -1061,7 +1136,8 @@
     "field_office_phone": "(671) 475-0184",
     "field_office": "San Francisco Field Office",
     "photo": "web/public/photos/guam-department-corrections-hagatna-detention-facility.jpg",
-    "snapshot_ts": "20260621191537"
+    "snapshot_ts": "20260621191537",
+    "archived": false
   },
   {
     "slug": "henderson-detention-center",
@@ -1075,7 +1151,8 @@
     "field_office_phone": "(801) 736-1200",
     "field_office": "Salt Lake City Field Office",
     "photo": "web/public/photos/henderson-detention-center.jpg",
-    "snapshot_ts": "20260621193414"
+    "snapshot_ts": "20260621193414",
+    "archived": false
   },
   {
     "slug": "hopkins-county",
@@ -1089,7 +1166,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/hopkins-county.jpg",
-    "snapshot_ts": "20260621191300"
+    "snapshot_ts": "20260621191300",
+    "archived": false
   },
   {
     "slug": "houston-contract-detention-facility",
@@ -1103,7 +1181,8 @@
     "field_office_phone": "(281) 985-8400",
     "field_office": "Houston Field Office",
     "photo": "web/public/photos/houston-contract-detention-facility.jpg",
-    "snapshot_ts": "20260621193541"
+    "snapshot_ts": "20260621193541",
+    "archived": false
   },
   {
     "slug": "iah-polk-adult-detention-facility",
@@ -1117,7 +1196,8 @@
     "field_office_phone": "(281) 774-4816",
     "field_office": "Houston Field Office",
     "photo": "web/public/photos/iah-polk-adult-detention-facility.jpg",
-    "snapshot_ts": "20260621192902"
+    "snapshot_ts": "20260621192902",
+    "archived": false
   },
   {
     "slug": "imperial-regional-detention-facility",
@@ -1131,7 +1211,8 @@
     "field_office_phone": "(760) 336-4601",
     "field_office": "San Diego Field Office",
     "photo": "web/public/photos/imperial-regional-detention-facility.jpg",
-    "snapshot_ts": "20260621193845"
+    "snapshot_ts": "20260621193845",
+    "archived": false
   },
   {
     "slug": "irwin-county-detention-center",
@@ -1145,7 +1226,8 @@
     "field_office_phone": "(404) 893-1290",
     "field_office": "Atlanta Field Office",
     "photo": "web/public/photos/irwin-county-detention-center.jpg",
-    "snapshot_ts": "20260621193222"
+    "snapshot_ts": "20260621193222",
+    "archived": false
   },
   {
     "slug": "jackson-parish-correctional-center",
@@ -1159,7 +1241,8 @@
     "field_office_phone": "(504) 599-7800",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/jackson-parish-correctional-center.jpg",
-    "snapshot_ts": "20260621192811"
+    "snapshot_ts": "20260621192811",
+    "archived": false
   },
   {
     "slug": "joe-corley-processing-center",
@@ -1173,7 +1256,8 @@
     "field_office_phone": "(281) 774-4816",
     "field_office": "Houston Field Office",
     "photo": "web/public/photos/joe-corley-processing-center.jpg",
-    "snapshot_ts": "20260621193130"
+    "snapshot_ts": "20260621193130",
+    "archived": false
   },
   {
     "slug": "kandiyohi-county-jail",
@@ -1187,7 +1271,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/kandiyohi-county-jail.jpg",
-    "snapshot_ts": "20260621191335"
+    "snapshot_ts": "20260621191335",
+    "archived": false
   },
   {
     "slug": "karnes-county-ipc",
@@ -1201,7 +1286,8 @@
     "field_office_phone": "(210) 283-4750",
     "field_office": "San Antonio Field Office",
     "photo": "web/public/photos/karnes-county-ipc.jpg",
-    "snapshot_ts": "20260621191648"
+    "snapshot_ts": "20260621191648",
+    "archived": false
   },
   {
     "slug": "kay-county-detention-center",
@@ -1215,7 +1301,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/kay-county-detention-center.jpg",
-    "snapshot_ts": "20260621191851"
+    "snapshot_ts": "20260621191851",
+    "archived": false
   },
   {
     "slug": "kenton-county-detention-center",
@@ -1229,7 +1316,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/kenton-county-detention-center.jpg",
-    "snapshot_ts": "20260621192655"
+    "snapshot_ts": "20260621192655",
+    "archived": false
   },
   {
     "slug": "krome-north-service-processing-center",
@@ -1243,7 +1331,8 @@
     "field_office_phone": "(954) 236-4900",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/krome-north-service-processing-center.jpg",
-    "snapshot_ts": "20260730173535"
+    "snapshot_ts": "20260730173535",
+    "archived": false
   },
   {
     "slug": "la-salle-county-regional-detention-center",
@@ -1257,7 +1346,8 @@
     "field_office_phone": "(210) 283-4750",
     "field_office": "San Antonio Field Office",
     "photo": "web/public/photos/la-salle-county-regional-detention-center.jpg",
-    "snapshot_ts": "20260621192228"
+    "snapshot_ts": "20260621192228",
+    "archived": false
   },
   {
     "slug": "laredo-detention-center",
@@ -1271,12 +1361,13 @@
     "field_office_phone": "(956) 389-7884",
     "field_office": "Harlingen Field Office",
     "photo": "web/public/photos/laredo-detention-center.jpg",
-    "snapshot_ts": "20260621193956"
+    "snapshot_ts": "20260621193956",
+    "archived": false
   },
   {
     "slug": "liberty-county-sheriffs-office",
     "url": "https://www.ice.gov/detain/detention-facilities/liberty-county-sheriffs-office",
-    "name": "Liberty County Sheriff\u2019s Office",
+    "name": "Liberty County Sheriff’s Office",
     "address": "12422 NW Revell Road",
     "city": "Bristol",
     "state": "FL",
@@ -1285,7 +1376,8 @@
     "field_office_phone": "(850) 504-5200",
     "field_office": "Miami Field Office",
     "photo": "web/public/photos/liberty-county-sheriffs-office.jpg",
-    "snapshot_ts": "20260621192852"
+    "snapshot_ts": "20260621192852",
+    "archived": false
   },
   {
     "slug": "limestone-county-detention-center",
@@ -1299,7 +1391,8 @@
     "field_office_phone": "(281) 774-4816",
     "field_office": "Houston Field Office",
     "photo": "web/public/photos/limestone-county-detention-center.jpg",
-    "snapshot_ts": "20260621192115"
+    "snapshot_ts": "20260621192115",
+    "archived": false
   },
   {
     "slug": "lincoln-county-detention-center",
@@ -1313,7 +1406,8 @@
     "field_office_phone": "(612) 843-8600",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/lincoln-county-detention-center.jpg",
-    "snapshot_ts": "20260621191618"
+    "snapshot_ts": "20260621191618",
+    "archived": false
   },
   {
     "slug": "louisiana-ice-processing-center",
@@ -1327,7 +1421,8 @@
     "field_office_phone": "(225) 756-9400",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/louisiana-ice-processing-center.jpg",
-    "snapshot_ts": "20260621193012"
+    "snapshot_ts": "20260621193012",
+    "archived": false
   },
   {
     "slug": "mahoning-county-justice-center",
@@ -1341,7 +1436,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/mahoning-county-justice-center.jpg",
-    "snapshot_ts": "20260621194013"
+    "snapshot_ts": "20260621194013",
+    "archived": false
   },
   {
     "slug": "mccook-detention-center",
@@ -1355,7 +1451,8 @@
     "field_office_phone": "(402) 536-4929",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/mccook-detention-center.jpg",
-    "snapshot_ts": "20260621193649"
+    "snapshot_ts": "20260621193649",
+    "archived": false
   },
   {
     "slug": "mdc-brooklyn",
@@ -1369,7 +1466,8 @@
     "field_office_phone": "(212) 863-3401",
     "field_office": "New York City Field Office",
     "photo": "web/public/photos/mdc-brooklyn.jpg",
-    "snapshot_ts": "20260621192740"
+    "snapshot_ts": "20260621192740",
+    "archived": false
   },
   {
     "slug": "mesa-verde-ice-processing-facility",
@@ -1383,7 +1481,8 @@
     "field_office_phone": "(415) 365-8800",
     "field_office": "San Francisco Field Office",
     "photo": "web/public/photos/mesa-verde-ice-processing-facility.jpg",
-    "snapshot_ts": "20260624020858"
+    "snapshot_ts": "20260624020858",
+    "archived": false
   },
   {
     "slug": "miami-correctional-facility-mcf",
@@ -1397,7 +1496,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/miami-correctional-facility-mcf.jpg",
-    "snapshot_ts": "20260621192805"
+    "snapshot_ts": "20260621192805",
+    "archived": false
   },
   {
     "slug": "midwest-regional-reception-center",
@@ -1411,7 +1511,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/midwest-regional-reception-center.jpg",
-    "snapshot_ts": "20260621193506"
+    "snapshot_ts": "20260621193506",
+    "archived": false
   },
   {
     "slug": "monroe-county-jail",
@@ -1425,7 +1526,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/monroe-county-jail.jpg",
-    "snapshot_ts": "20260621191640"
+    "snapshot_ts": "20260621191640",
+    "archived": false
   },
   {
     "slug": "montgomery-processing-center",
@@ -1439,7 +1541,8 @@
     "field_office_phone": "(936) 520-5700",
     "field_office": "Houston Field Office",
     "photo": "web/public/photos/montgomery-processing-center.jpg",
-    "snapshot_ts": "20260621192735"
+    "snapshot_ts": "20260621192735",
+    "archived": false
   },
   {
     "slug": "moshannon-valley-processing-center",
@@ -1453,7 +1556,8 @@
     "field_office_phone": "(215) 656-7164",
     "field_office": "Philadelphia Field Office",
     "photo": "web/public/photos/moshannon-valley-processing-center.jpg",
-    "snapshot_ts": "20260621193608"
+    "snapshot_ts": "20260621193608",
+    "archived": false
   },
   {
     "slug": "muscatine-county-jail",
@@ -1467,7 +1571,8 @@
     "field_office_phone": "(612) 843-8600",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/muscatine-county-jail.jpg",
-    "snapshot_ts": "20260621193912"
+    "snapshot_ts": "20260621193912",
+    "archived": false
   },
   {
     "slug": "natrona-county-detention-center",
@@ -1481,7 +1586,8 @@
     "field_office_phone": "(720) 873-2899",
     "field_office": "Denver Field Office",
     "photo": "web/public/photos/natrona-county-detention-center.jpg",
-    "snapshot_ts": "20260621193329"
+    "snapshot_ts": "20260621193329",
+    "archived": false
   },
   {
     "slug": "nevada-southern-detention-center",
@@ -1495,7 +1601,8 @@
     "field_office_phone": "(801) 736-1200",
     "field_office": "Salt Lake City Field Office",
     "photo": "web/public/photos/nevada-southern-detention-center.jpg",
-    "snapshot_ts": "20260621192311"
+    "snapshot_ts": "20260621192311",
+    "archived": false
   },
   {
     "slug": "north-lake-processing-center",
@@ -1509,7 +1616,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/north-lake-processing-center.jpg",
-    "snapshot_ts": "20260621193750"
+    "snapshot_ts": "20260621193750",
+    "archived": false
   },
   {
     "slug": "northeast-ohio-correctional-center",
@@ -1523,7 +1631,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/northeast-ohio-correctional-center.jpg",
-    "snapshot_ts": "20260817145205"
+    "snapshot_ts": "20260817145205",
+    "archived": false
   },
   {
     "slug": "northwest-ice-processing-center-nwipc",
@@ -1537,7 +1646,8 @@
     "field_office_phone": "(206) 277-2000",
     "field_office": "Seattle Field Office",
     "photo": "web/public/photos/northwest-ice-processing-center-nwipc.jpg",
-    "snapshot_ts": "20260807221439"
+    "snapshot_ts": "20260807221439",
+    "archived": false
   },
   {
     "slug": "northwest-state-correctional-facility",
@@ -1551,7 +1661,8 @@
     "field_office_phone": "(781) 359-7500",
     "field_office": "Boston Field Office",
     "photo": "web/public/photos/northwest-state-correctional-facility.jpg",
-    "snapshot_ts": "20260621191214"
+    "snapshot_ts": "20260621191214",
+    "archived": false
   },
   {
     "slug": "oldham-county-detention-center",
@@ -1565,7 +1676,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/oldham-county-detention-center.jpg",
-    "snapshot_ts": "20260621191033"
+    "snapshot_ts": "20260621191033",
+    "archived": false
   },
   {
     "slug": "orange-county-jail",
@@ -1579,7 +1691,8 @@
     "field_office_phone": "(212) 863-3401",
     "field_office": "New York City Field Office",
     "photo": "web/public/photos/orange-county-jail.jpg",
-    "snapshot_ts": "20260621192648"
+    "snapshot_ts": "20260621192648",
+    "archived": false
   },
   {
     "slug": "otay-mesa-detention-center",
@@ -1593,7 +1706,8 @@
     "field_office_phone": "(619) 436-0410",
     "field_office": "San Diego Field Office",
     "photo": "web/public/photos/otay-mesa-detention-center.jpg",
-    "snapshot_ts": "20260621213311"
+    "snapshot_ts": "20260621213311",
+    "archived": false
   },
   {
     "slug": "otero-county-processing-center",
@@ -1607,7 +1721,8 @@
     "field_office_phone": "(915) 856-2317",
     "field_office": "El Paso Field Office",
     "photo": "web/public/photos/otero-county-processing-center.jpg",
-    "snapshot_ts": "20260621193631"
+    "snapshot_ts": "20260621193631",
+    "archived": false
   },
   {
     "slug": "ozark-county-jail",
@@ -1621,7 +1736,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/ozark-county-jail.jpg",
-    "snapshot_ts": "20260621193557"
+    "snapshot_ts": "20260621193557",
+    "archived": false
   },
   {
     "slug": "pennington-county-jail",
@@ -1635,7 +1751,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/pennington-county-jail.jpg",
-    "snapshot_ts": "20260621191537"
+    "snapshot_ts": "20260621191537",
+    "archived": false
   },
   {
     "slug": "phelps-county-jail",
@@ -1649,7 +1766,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/phelps-county-jail.jpg",
-    "snapshot_ts": "20260621191513"
+    "snapshot_ts": "20260621191513",
+    "archived": false
   },
   {
     "slug": "phelps-county-jail-0",
@@ -1663,7 +1781,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/phelps-county-jail-0.jpg",
-    "snapshot_ts": "20260621193857"
+    "snapshot_ts": "20260621193857",
+    "archived": false
   },
   {
     "slug": "pike-county-correctional-facility",
@@ -1677,7 +1796,8 @@
     "field_office_phone": "(272) 252-1050",
     "field_office": "Philadelphia Field Office",
     "photo": "web/public/photos/pike-county-correctional-facility.jpg",
-    "snapshot_ts": "20260621191146"
+    "snapshot_ts": "20260621191146",
+    "archived": false
   },
   {
     "slug": "pine-prairie-ice-processing-center",
@@ -1691,7 +1811,8 @@
     "field_office_phone": "(504) 599-7845",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/pine-prairie-ice-processing-center.jpg",
-    "snapshot_ts": "20260621191606"
+    "snapshot_ts": "20260621191606",
+    "archived": false
   },
   {
     "slug": "plymouth-county-correctional-facility",
@@ -1705,7 +1826,8 @@
     "field_office_phone": "(781) 359-7500",
     "field_office": "Boston Field Office",
     "photo": "web/public/photos/plymouth-county-correctional-facility.jpg",
-    "snapshot_ts": "20260621192909"
+    "snapshot_ts": "20260621192909",
+    "archived": false
   },
   {
     "slug": "polk-county-jail",
@@ -1719,7 +1841,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/polk-county-jail.jpg",
-    "snapshot_ts": "20260621193148"
+    "snapshot_ts": "20260621193148",
+    "archived": false
   },
   {
     "slug": "port-isabel-service-processing-center",
@@ -1733,7 +1856,8 @@
     "field_office_phone": "(956) 547-1700",
     "field_office": "Harlingen Field Office",
     "photo": "web/public/photos/port-isabel-service-processing-center.jpg",
-    "snapshot_ts": "20260624024711"
+    "snapshot_ts": "20260624024711",
+    "archived": false
   },
   {
     "slug": "pottawattamie-county-jail",
@@ -1747,7 +1871,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/pottawattamie-county-jail.jpg",
-    "snapshot_ts": "20260621191306"
+    "snapshot_ts": "20260621191306",
+    "archived": false
   },
   {
     "slug": "prairieland-detention-facility",
@@ -1761,7 +1886,8 @@
     "field_office_phone": "(972) 367-2200",
     "field_office": "Dallas Field Office",
     "photo": "web/public/photos/prairieland-detention-facility.jpg",
-    "snapshot_ts": "20260624015920"
+    "snapshot_ts": "20260624015920",
+    "archived": false
   },
   {
     "slug": "richwood-correctional-center",
@@ -1775,7 +1901,8 @@
     "field_office_phone": "(504) 599-7800",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/richwood-correctional-center.jpg",
-    "snapshot_ts": "20260621193642"
+    "snapshot_ts": "20260621193642",
+    "archived": false
   },
   {
     "slug": "rio-grande-detention-center",
@@ -1789,7 +1916,8 @@
     "field_office_phone": "(956) 389-7884",
     "field_office": "Harlingen Field Office",
     "photo": "web/public/photos/rio-grande-detention-center.jpg",
-    "snapshot_ts": "20260621193955"
+    "snapshot_ts": "20260621193955",
+    "archived": false
   },
   {
     "slug": "river-correctional-center",
@@ -1803,12 +1931,13 @@
     "field_office_phone": "(504) 599-7800",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/river-correctional-center.jpg",
-    "snapshot_ts": "20260621191314"
+    "snapshot_ts": "20260621191314",
+    "archived": false
   },
   {
     "slug": "robert-deyton-detention-facility",
     "url": "https://www.ice.gov/detain/detention-facilities/robert-deyton-detention-facility",
-    "name": "Archived: Robert A. Deyton Detention Facility",
+    "name": "Robert A. Deyton Detention Facility",
     "address": "11866 Hastings Bridge Road",
     "city": "Lovejoy",
     "state": "GA",
@@ -1817,7 +1946,8 @@
     "field_office_phone": "(770) 305-8000",
     "field_office": "Atlanta Field Office",
     "photo": null,
-    "snapshot_ts": "20260621192437"
+    "snapshot_ts": "20260621192437",
+    "archived": true
   },
   {
     "slug": "rolling-plains-detention-center",
@@ -1831,7 +1961,8 @@
     "field_office_phone": "(972) 367-2200",
     "field_office": "Dallas Field Office",
     "photo": "web/public/photos/rolling-plains-detention-center.jpg",
-    "snapshot_ts": "20260621193241"
+    "snapshot_ts": "20260621193241",
+    "archived": false
   },
   {
     "slug": "san-luis-regional-detention-center",
@@ -1845,7 +1976,8 @@
     "field_office_phone": "(619) 436-0410",
     "field_office": "San Diego Field Office",
     "photo": "web/public/photos/san-luis-regional-detention-center.jpg",
-    "snapshot_ts": "20260621193258"
+    "snapshot_ts": "20260621193258",
+    "archived": false
   },
   {
     "slug": "sarpy-county-department-corrections",
@@ -1859,7 +1991,8 @@
     "field_office_phone": "(612) 843-8600",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/sarpy-county-department-corrections.jpg",
-    "snapshot_ts": "20260621192601"
+    "snapshot_ts": "20260621192601",
+    "archived": false
   },
   {
     "slug": "seneca-county-jail",
@@ -1873,7 +2006,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/seneca-county-jail.jpg",
-    "snapshot_ts": "20260621192105"
+    "snapshot_ts": "20260621192105",
+    "archived": false
   },
   {
     "slug": "sherburne-county-jail-services",
@@ -1887,7 +2021,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/sherburne-county-jail-services.jpg",
-    "snapshot_ts": "20260621192445"
+    "snapshot_ts": "20260621192445",
+    "archived": false
   },
   {
     "slug": "sioux-county-jail",
@@ -1901,7 +2036,8 @@
     "field_office_phone": "(612) 409-7799",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/sioux-county-jail.jpg",
-    "snapshot_ts": "20260621192845"
+    "snapshot_ts": "20260621192845",
+    "archived": false
   },
   {
     "slug": "south-florida-detention-center",
@@ -1915,7 +2051,8 @@
     "field_office_phone": "(407) 440-5100",
     "field_office": "Miami Field Office",
     "photo": null,
-    "snapshot_ts": "20260413132001"
+    "snapshot_ts": "20260413132001",
+    "archived": false
   },
   {
     "slug": "south-louisiana-ice-processing-center",
@@ -1929,7 +2066,8 @@
     "field_office_phone": "(504) 599-7800",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/south-louisiana-ice-processing-center.jpg",
-    "snapshot_ts": "20260621192839"
+    "snapshot_ts": "20260621192839",
+    "archived": false
   },
   {
     "slug": "south-texas-ice-processing-center",
@@ -1943,7 +2081,8 @@
     "field_office_phone": "(210) 283-4750",
     "field_office": "San Antonio Field Office",
     "photo": "web/public/photos/south-texas-ice-processing-center.jpg",
-    "snapshot_ts": "20260621192850"
+    "snapshot_ts": "20260621192850",
+    "archived": false
   },
   {
     "slug": "st-clair-county-jail",
@@ -1957,7 +2096,8 @@
     "field_office_phone": "(313) 771-6601",
     "field_office": "Detroit Field Office",
     "photo": "web/public/photos/st-clair-county-jail.jpg",
-    "snapshot_ts": "20260621192424"
+    "snapshot_ts": "20260621192424",
+    "archived": false
   },
   {
     "slug": "ste-genevieve-county-detention-center",
@@ -1971,7 +2111,8 @@
     "field_office_phone": "(872) 351-3990",
     "field_office": "Chicago Field Office",
     "photo": "web/public/photos/ste-genevieve-county-detention-center.jpg",
-    "snapshot_ts": "20260621192713"
+    "snapshot_ts": "20260621192713",
+    "archived": false
   },
   {
     "slug": "stewart-detention-center",
@@ -1985,7 +2126,8 @@
     "field_office_phone": "(404) 893-1210",
     "field_office": "Atlanta Field Office",
     "photo": "web/public/photos/stewart-detention-center.jpg",
-    "snapshot_ts": "20260621193741"
+    "snapshot_ts": "20260621193741",
+    "archived": false
   },
   {
     "slug": "strafford-county-corrections",
@@ -1999,7 +2141,8 @@
     "field_office_phone": "(781) 359-7500",
     "field_office": "Boston Field Office",
     "photo": "web/public/photos/strafford-county-corrections.jpg",
-    "snapshot_ts": "20260621192201"
+    "snapshot_ts": "20260621192201",
+    "archived": false
   },
   {
     "slug": "sweetwater-county-detention-center",
@@ -2013,7 +2156,8 @@
     "field_office_phone": null,
     "field_office": "Denver Field Office",
     "photo": "web/public/photos/sweetwater-county-detention-center.jpg",
-    "snapshot_ts": "20260621191215"
+    "snapshot_ts": "20260621191215",
+    "archived": false
   },
   {
     "slug": "t-don-hutto-detention-center",
@@ -2027,7 +2171,8 @@
     "field_office_phone": "(210) 283-4750",
     "field_office": "San Antonio Field Office",
     "photo": "web/public/photos/t-don-hutto-detention-center.jpg",
-    "snapshot_ts": "20260621214803"
+    "snapshot_ts": "20260621214803",
+    "archived": false
   },
   {
     "slug": "torrance-county-detention-facility",
@@ -2041,7 +2186,8 @@
     "field_office_phone": "(915) 856-2317",
     "field_office": "El Paso Field Office",
     "photo": "web/public/photos/torrance-county-detention-facility.jpg",
-    "snapshot_ts": "20260621193056"
+    "snapshot_ts": "20260621193056",
+    "archived": false
   },
   {
     "slug": "two-bridges-regional-jail",
@@ -2055,7 +2201,8 @@
     "field_office_phone": "(781) 359-7500",
     "field_office": "Boston Field Office",
     "photo": "web/public/photos/two-bridges-regional-jail.jpg",
-    "snapshot_ts": "20260621193019"
+    "snapshot_ts": "20260621193019",
+    "archived": false
   },
   {
     "slug": "uinta-county-detention-center",
@@ -2069,7 +2216,8 @@
     "field_office_phone": "(801) 736-1200",
     "field_office": "Salt Lake City Field Office",
     "photo": "web/public/photos/uinta-county-detention-center.jpg",
-    "snapshot_ts": "20260621193937"
+    "snapshot_ts": "20260621193937",
+    "archived": false
   },
   {
     "slug": "washoe-county-jail",
@@ -2083,7 +2231,8 @@
     "field_office_phone": "(801) 736-1200",
     "field_office": "Salt Lake City Field Office",
     "photo": "web/public/photos/washoe-county-jail.jpg",
-    "snapshot_ts": "20260621191333"
+    "snapshot_ts": "20260621191333",
+    "archived": false
   },
   {
     "slug": "webb-county-detention-center",
@@ -2097,7 +2246,8 @@
     "field_office_phone": "(956) 389-7884",
     "field_office": "Harlingen Field Office",
     "photo": "web/public/photos/webb-county-detention-center.jpg",
-    "snapshot_ts": "20260621193831"
+    "snapshot_ts": "20260621193831",
+    "archived": false
   },
   {
     "slug": "west-tennessee-detention-facility",
@@ -2111,7 +2261,8 @@
     "field_office_phone": "(504) 599-7800",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/west-tennessee-detention-facility.jpg",
-    "snapshot_ts": "20260621191543"
+    "snapshot_ts": "20260621191543",
+    "archived": false
   },
   {
     "slug": "winn-correctional-center",
@@ -2125,7 +2276,8 @@
     "field_office_phone": "(504) 599-7800",
     "field_office": "New Orleans Field Office",
     "photo": "web/public/photos/winn-correctional-center.jpg",
-    "snapshot_ts": "20260621193659"
+    "snapshot_ts": "20260621193659",
+    "archived": false
   },
   {
     "slug": "woodbury-county-jail",
@@ -2139,7 +2291,8 @@
     "field_office_phone": "(612) 843-8600",
     "field_office": "St. Paul Field Office",
     "photo": "web/public/photos/woodbury-county-jail.jpg",
-    "snapshot_ts": "20260621192938"
+    "snapshot_ts": "20260621192938",
+    "archived": false
   },
   {
     "slug": "wyatt-detention-facility",
@@ -2153,6 +2306,7 @@
     "field_office_phone": "(781) 359-7600",
     "field_office": "Boston Field Office",
     "photo": "web/public/photos/wyatt-detention-facility.jpg",
-    "snapshot_ts": "20260621193939"
+    "snapshot_ts": "20260621193939",
+    "archived": false
   }
 ]

@@ -109,16 +109,25 @@ def parse_inspection_date(value):
     scheduled = re.fullmatch(r"(?i)scheduled\s*(FY\s*\d{2,4})", text)
     if scheduled:
         return None, scheduled.group(1).replace(" ", "").upper()
-    if re.fullmatch(r"\d{4,6}(\.0)?", text):
-        date = (EXCEL_EPOCH + pd.Timedelta(days=float(text))).date()
-    else:
-        try:
+    try:
+        if re.fullmatch(r"\d{4,6}(\.0)?", text):
+            date = (EXCEL_EPOCH + pd.Timedelta(days=float(text))).date()
+        else:
             date = pd.Timestamp(text).date()
-        except (ValueError, TypeError):
-            return None, None
+    except (ValueError, TypeError, OverflowError, pd.errors.OutOfBoundsDatetime, pd.errors.OutOfBoundsTimedelta):
+        return None, None
     if not 2008 <= date.year <= dt.date.today().year + 1:
         return None, None
     return date.isoformat(), None
+
+
+def first_present(row, *columns):
+    """First column whose value is neither missing nor blank."""
+    for column in columns:
+        value = row.get(column)
+        if value is not None and not (isinstance(value, float) and pd.isna(value)) and str(value).strip():
+            return value
+    return None
 
 
 def inspection(row: pd.Series):
@@ -127,10 +136,9 @@ def inspection(row: pd.Series):
     body = INSPECTION_BODIES.get(type_code)
     if not body:
         return None
-    rating = row.get("last_final_rating") or row.get("last_inspection_rating_final")
-    rating = str(rating).strip() if pd.notna(rating) and str(rating).strip() else None
+    rating = first_present(row, "last_final_rating", "last_inspection_rating_final")
     date_iso, scheduled = parse_inspection_date(
-        row.get("last_inspection_end_date") if pd.notna(row.get("last_inspection_end_date")) else row.get("last_inspection_date")
+        first_present(row, "last_inspection_end_date", "last_inspection_date")
     )
     standard = str(row.get("last_inspection_standard") or "").strip().upper()
     return {
@@ -155,9 +163,10 @@ def load_alos(path: pathlib.Path) -> dict:
         if counts[record.key] != 1:
             continue
         days = positive_number(record.alos)
-        if days is None or not 0 < days < 1000:
+        fiscal_year = positive_number(record.alos_fiscal_year)
+        if days is None or fiscal_year is None or not 0 < days < 1000:
             continue
-        lookup[record.key] = {"days": round(days), "fiscal_year": int(record.alos_fiscal_year)}
+        lookup[record.key] = {"days": round(days), "fiscal_year": int(fiscal_year)}
     return lookup
 
 
@@ -191,8 +200,11 @@ def deaths(deaths_df: pd.DataFrame, detloc: str):
 
 
 def load_json(name: str):
+    """Load a committed reference file; a missing file is a build error, not silent zero coverage."""
     path = REFERENCE_DIR / name
-    return json.loads(path.read_text()) if path.exists() else None
+    if not path.exists():
+        raise FileNotFoundError(f"required reference file missing: {path}")
+    return json.loads(path.read_text())
 
 
 def match_ice_site(records, aliases, names, city: str, state: str):
@@ -200,12 +212,15 @@ def match_ice_site(records, aliases, names, city: str, state: str):
     city has a single ICE page - near-identical tokens."""
     if not records:
         return None
-    in_state = [r for r in records if str(r.get("state", "")).upper() == state]
+    in_state = [
+        r for r in records if str(r.get("state", "")).upper() == state and not r.get("archived")
+    ]
     for name in names:
         key = f"{normalize(name)}|{state}"
         if aliases and key in aliases:
             slug = aliases[key]
-            return next((r for r in records if r.get("slug") == slug), None) if slug else None
+            record = next((r for r in records if r.get("slug") == slug), None) if slug else None
+            return None if record is None or record.get("archived") else record
     for name in names:
         for record in in_state:
             if normalize(record.get("name")) == normalize(name):

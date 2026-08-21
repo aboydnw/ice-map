@@ -36,7 +36,7 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT_JSON = REPO_ROOT / "pipeline" / "reference" / "ice_site.json"
 PHOTO_DIR = REPO_ROOT / "web" / "public" / "photos"
 
-CDX_API = "http://web.archive.org/cdx/search/cdx"
+CDX_API = "https://web.archive.org/cdx/search/cdx"
 WAYBACK_RAW = "https://web.archive.org/web/{timestamp}id_/{url}"
 FACILITY_PREFIX = "https://www.ice.gov/detain/detention-facilities/"
 LIST_URL = "https://www.ice.gov/detention-facilities"
@@ -125,7 +125,7 @@ class WaybackClient:
 def clean_text(value: str) -> str:
     """Strip tags, unescape entities, and collapse whitespace."""
     value = re.sub(r"<[^>]+>", " ", value)
-    value = re.sub(r"[​‌‍﻿\xa0]", " ", html.unescape(value))
+    value = re.sub(r"[\u200b\u200c\u200d\ufeff\xa0]", " ", html.unescape(value))
     return re.sub(r"\s+", " ", value).strip()
 
 
@@ -160,7 +160,8 @@ def parse_facility_page(page: str) -> dict:
     facility_phone = FACILITY_PHONE_RE.search(page)
     field_office_phone = FIELD_OFFICE_PHONE_RE.search(page)
     return {
-        "name": clean_text(title.group(1)) if title else "",
+        "name": split_archived(clean_text(title.group(1)) if title else "")[0],
+        "archived": split_archived(clean_text(title.group(1)) if title else "")[1],
         "address": address or None,
         "city": parts.get("locality") or None,
         "state": parts.get("administrative-area") or None,
@@ -247,6 +248,14 @@ def fetch_photo(
     if raw is None or not save_photo(raw, path):
         return None
     return relative
+
+
+def split_archived(name: str) -> tuple[str, bool]:
+    """ICE prefixes page titles of facilities it no longer lists with 'Archived:'."""
+    prefix = "Archived:"
+    if name.startswith(prefix):
+        return name[len(prefix):].strip(), True
+    return name, False
 
 
 def is_valid(record: dict) -> bool:

@@ -16,14 +16,14 @@
     "adp_share_resolved": 0.936
   },
   "enrichment_coverage": {
-    "ice_page": 143,
+    "ice_page": 142,
     "odo_report": 150,
     "threat": 208,
     "mandatory": 208,
     "alos": 208,
     "last_year": 202,
     "inspection": 159,
-    "deaths": 208,
+    "deaths": 56,
     "operator": 101,
     "photo": 141
   },

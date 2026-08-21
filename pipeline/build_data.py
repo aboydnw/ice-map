@@ -110,6 +110,11 @@ class Enrichment:
         self.coverage[key] = self.coverage.get(key, 0) + (1 if value is not None else 0)
         return value
 
+    def count_deaths(self, value):
+        """Deaths always render (zero reads 'no reported deaths'); coverage counts facilities with any."""
+        self.count("deaths", value if value["count"] > 0 else None)
+        return value
+
     def properties(self, row, group, info, adp, detloc):
         city = str(row.get("city") or "")
         state = str(row.get("state") or "").upper()
@@ -125,7 +130,7 @@ class Enrichment:
             "alos": self.count("alos", enrich.length_of_stay(self.alos, name)),
             "last_year": self.count("last_year", enrich.last_year_use(info, adp)),
             "inspection": self.count("inspection", enrich.inspection(row)),
-            "deaths": self.count("deaths", enrich.deaths(self.deaths, detloc)),
+            "deaths": self.count_deaths(enrich.deaths(self.deaths, detloc)),
             "operator": self.count(
                 "operator",
                 enrich.verify_operator(

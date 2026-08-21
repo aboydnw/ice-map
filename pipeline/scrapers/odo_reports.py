@@ -30,7 +30,7 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent.parent
 OUT_PATH = REPO_ROOT / "pipeline" / "reference" / "odo_reports.json"
 
 INDEX_URL = "https://www.ice.gov/foia/odo-facility-inspections"
-CDX_URL = "http://web.archive.org/cdx/search/cdx"
+CDX_URL = "https://web.archive.org/cdx/search/cdx"
 WAYBACK_RAW = "https://web.archive.org/web/{ts}id_/{url}"
 
 USER_AGENT = "ice-map-odo-scraper/1.0 (+https://github.com/aboydnw/ice-map)"

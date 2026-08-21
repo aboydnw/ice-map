@@ -251,7 +251,7 @@ export function DetailPanel({ facility, history, onClose }: Props) {
       )}
 
       <Box mt="5">
-        {history ? (
+        {history && history.length > 0 ? (
           <Sparkline
             points={history}
             guaranteedMinimum={p.guaranteed_minimum}
