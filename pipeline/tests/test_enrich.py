@@ -165,7 +165,7 @@ def test_inspection_rating_falls_back_past_nan():
     row = pd.Series(
         {
             "last_inspection_type": "ODO",
-            "last_final_rating": float("nan"),
+            "last_final_rating": pd.NA,
             "last_inspection_rating_final": "Pass",
             "last_inspection_end_date": float("nan"),
             "last_inspection_date": "2025-03-01",

@@ -125,7 +125,7 @@ def first_present(row, *columns):
     """First column whose value is neither missing nor blank."""
     for column in columns:
         value = row.get(column)
-        if value is not None and not (isinstance(value, float) and pd.isna(value)) and str(value).strip():
+        if value is not None and pd.notna(value) and str(value).strip():
             return value
     return None
 
