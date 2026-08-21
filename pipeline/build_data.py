@@ -123,7 +123,7 @@ class Enrichment:
             "threat": self.count("threat", enrich.threat_levels(group, adp)),
             "mandatory": self.count("mandatory", enrich.mandatory_detention(group, adp)),
             "alos": self.count("alos", enrich.length_of_stay(self.alos, name)),
-            "last_year": self.count("last_year", enrich.last_year_use(info)),
+            "last_year": self.count("last_year", enrich.last_year_use(info, adp)),
             "inspection": self.count("inspection", enrich.inspection(row)),
             "deaths": self.count("deaths", enrich.deaths(self.deaths, detloc)),
             "operator": self.count(

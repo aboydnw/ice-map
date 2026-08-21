@@ -50,6 +50,13 @@ def normalize(value) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
+def city_key(city, state: str) -> str:
+    """Normalized city with a trailing state suffix ('Tacoma, WA') removed."""
+    key = normalize(city)
+    suffix = f" {state}"
+    return key[: -len(suffix)] if key.endswith(suffix) else key
+
+
 def significant_tokens(value) -> set:
     return {t for t in normalize(value).split() if t not in STOPWORDS and len(t) > 1}
 
@@ -158,10 +165,14 @@ def length_of_stay(alos_lookup: dict, spreadsheet_name: str):
     return alos_lookup.get(normalize(spreadsheet_name))
 
 
-def last_year_use(master_row: pd.Series):
+def last_year_use(master_row: pd.Series, adp: float):
+    """Peak and days in use from DDP's individual-level data; omitted when it conflicts with
+    ICE's spreadsheet (a peak below half the current fiscal-year average cannot both be true)."""
     days = positive_number(master_row.get("days_with_detentions_daily_last_year"))
     peak = positive_number(master_row.get("max_daily_population_last_year"))
     if days is None or peak is None or not 0 < days <= 366 or peak < 1:
+        return None
+    if peak < 0.5 * adp:
         return None
     return {"peak": round(peak), "days_in_use": round(days), "window_end": INDIVIDUAL_DATA_THROUGH}
 
@@ -237,7 +248,7 @@ def verify_operator(candidates, types, name, city, state, type_detailed, lat, lo
         if str(row.get("state", "")).upper() != state:
             continue
         overlap = tokens & significant_tokens(row.get("name"))
-        same_city = normalize(row.get("city")) == normalize(city)
+        same_city = city_key(row.get("city"), state) == city_key(city, state)
         if (same_city and overlap) or len(overlap) >= 2:
             wiki = row
             break

@@ -149,6 +149,9 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
               fontSize="9"
               fill="#898781"
               fontFamily="inherit"
+              stroke="#fdfcfa"
+              strokeWidth="3"
+              paintOrder="stroke"
             >
               guaranteed min. {guaranteedMinimum.toLocaleString()} beds
             </text>
@@ -171,6 +174,9 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
               fontSize="9"
               fill="#52514e"
               fontFamily="inherit"
+              stroke="#fdfcfa"
+              strokeWidth="3"
+              paintOrder="stroke"
             >
               peak {points[peakIndex][1].toLocaleString()}
             </text>

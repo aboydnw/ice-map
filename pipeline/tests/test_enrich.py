@@ -78,9 +78,11 @@ def test_alos_drops_ambiguous_names(tmp_path):
 
 def test_last_year_use_bounds():
     ok = pd.Series({"days_with_detentions_daily_last_year": 365, "max_daily_population_last_year": 1595})
-    assert enrich.last_year_use(ok)["peak"] == 1595
+    assert enrich.last_year_use(ok, 1174)["peak"] == 1595
     bad = pd.Series({"days_with_detentions_daily_last_year": 400, "max_daily_population_last_year": 10})
-    assert enrich.last_year_use(bad) is None
+    assert enrich.last_year_use(bad, 5) is None
+    conflicting = pd.Series({"days_with_detentions_daily_last_year": 24, "max_daily_population_last_year": 9})
+    assert enrich.last_year_use(conflicting, 1076) is None
 
 
 def test_deaths_counts_and_last_date(tmp_path):
@@ -107,7 +109,7 @@ def test_match_odo_report_prefers_newest_same_city():
 def test_verify_operator_needs_independent_signal():
     candidates = {
         "wikipedia": {"rows": [
-            {"name": "Northwest ICE Processing Center", "city": "Tacoma", "state": "WA", "management": "GEO Group"},
+            {"name": "Northwest ICE Processing Center", "city": "Tacoma, WA", "state": "WA", "management": "GEO Group"},
             {"name": "Clark County Jail", "city": "Jeffersonville", "state": "IN", "management": "Clark County Sheriff"},
             {"name": "Mystery Center", "city": "Nowhere", "state": "TX", "management": "GEO Group"},
         ]},
