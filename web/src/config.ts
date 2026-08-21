@@ -33,11 +33,17 @@ export const BUCKETS: {
     color: "#4a3aa7",
     blurb: "Federal Bureau of Prisons institutions holding ICE detainees.",
   },
+  {
+    key: "other",
+    label: "Other",
+    color: "#898781",
+    blurb: "Facility types not covered by the groups above.",
+  },
 ];
 
-export const BUCKET_COLOR: Record<string, string> = Object.fromEntries(
+export const BUCKET_COLOR = Object.fromEntries(
   BUCKETS.map((b) => [b.key, b.color]),
-);
+) as Record<Bucket, string>;
 
 /** Circle area encodes population: radius is linear in sqrt(ADP). */
 export const RADIUS_MIN = 3;

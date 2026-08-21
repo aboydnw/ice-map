@@ -65,13 +65,29 @@ export function Sparkline({ points }: Props) {
     setHoverIndex(best);
   }
 
+  function handleKeyDown(event: React.KeyboardEvent<SVGSVGElement>) {
+    const current = hoverIndex ?? lastIndex;
+    let next: number | null = null;
+    if (event.key === "ArrowLeft") next = Math.max(0, current - 1);
+    else if (event.key === "ArrowRight")
+      next = Math.min(lastIndex, current + 1);
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = lastIndex;
+    if (next !== null) {
+      event.preventDefault();
+      setHoverIndex(next);
+    }
+  }
+
   return (
     <Box>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         width="100%"
         role="img"
-        aria-label="Average daily population over time"
+        aria-label="Average daily population over time. Use left and right arrow keys to step through snapshots; the date and value appear below the chart."
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
         onMouseMove={handleMove}
         onMouseLeave={() => setHoverIndex(null)}
         style={{ display: "block", cursor: "crosshair" }}
@@ -117,7 +133,12 @@ export function Sparkline({ points }: Props) {
           strokeWidth="1.5"
         />
       </svg>
-      <Box display="flex" justifyContent="space-between" mt="1">
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        mt="1"
+        aria-live="polite"
+      >
         <Text fontSize="xs" color="inkSecondary">
           {formatDate(points[active][0])}
         </Text>

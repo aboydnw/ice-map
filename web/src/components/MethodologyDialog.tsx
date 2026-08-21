@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Box, Heading, Link, Text } from "@chakra-ui/react";
 import { formatDate } from "../config";
 import type { MatchReport } from "../types";
@@ -31,6 +32,43 @@ function Section({
 }
 
 export function MethodologyDialog({ report, onClose }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    dialog.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialog) return;
+      const focusables = dialog.querySelectorAll<HTMLElement>(
+        'a[href], button, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [onClose]);
+
   return (
     <Box
       position="fixed"
@@ -44,6 +82,7 @@ export function MethodologyDialog({ report, onClose }: Props) {
       onClick={onClose}
     >
       <Box
+        ref={dialogRef}
         bg="panel"
         borderRadius="8px"
         maxW="620px"
@@ -55,6 +94,8 @@ export function MethodologyDialog({ report, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Methodology and sources"
+        tabIndex={-1}
+        outline="none"
       >
         <Box
           display="flex"

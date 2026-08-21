@@ -35,7 +35,9 @@ export function Legend({ data }: Props) {
       zIndex={4}
       maxW={{ base: "210px", md: "240px" }}
     >
-      {BUCKETS.map((bucket) => (
+      {BUCKETS.filter(
+        (bucket) => bucket.key !== "other" || (counts.get("other") ?? 0) > 0,
+      ).map((bucket) => (
         <Box
           key={bucket.key}
           display="flex"

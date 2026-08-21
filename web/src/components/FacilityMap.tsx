@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import * as maplibregl from "maplibre-gl";
-import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
+import type {
+  MapLayerMouseEvent,
+  MapMouseEvent,
+  StyleSpecification,
+} from "maplibre-gl";
 import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
+import type { Bucket, FacilityCollection } from "../types";
 
 // Vite (rolldown) does not emit maplibre's default sibling worker module in
 // production builds, so point maplibre at a bundled worker chunk explicitly.
 maplibregl.setWorkerUrl(maplibreWorkerUrl);
-import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
-import type { FacilityCollection } from "../types";
 
 const BASEMAP = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 const US_BOUNDS: [[number, number], [number, number]] = [
@@ -39,135 +43,149 @@ export function FacilityMap({ data, selected, onSelect }: Props) {
   const [mapFailed, setMapFailed] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
     if (!document.createElement("canvas").getContext("webgl2")) {
       setMapFailed(true);
       return;
     }
-    let map: maplibregl.Map;
-    try {
-      map = new maplibregl.Map({
-        container: containerRef.current,
-        style: BASEMAP,
-        bounds: US_BOUNDS,
-        fitBoundsOptions: { padding: 24 },
-        minZoom: 2.8,
-        attributionControl: { compact: true },
-      });
-    } catch {
-      setMapFailed(true);
-      return;
-    }
-    map.addControl(
-      new maplibregl.NavigationControl({ showCompass: false }),
-      "top-right",
-    );
-    mapRef.current = map;
 
-    map.on("load", () => {
-      // Test hook: lets Playwright drive the map in dev and preview builds.
-      (window as unknown as { __iceMap?: maplibregl.Map }).__iceMap = map;
-      map.addSource("facilities", { type: "geojson", data: data as never });
-      map.addLayer({
-        id: "facility-circles",
-        type: "circle",
-        source: "facilities",
-        layout: {
-          "circle-sort-key": ["*", -1, ["get", "adp"]],
-        },
-        paint: {
-          "circle-radius": [
-            "interpolate",
-            ["linear"],
-            ["sqrt", ["get", "adp"]],
-            0,
-            RADIUS_MIN,
-            SQRT_ADP_MAX,
-            RADIUS_MAX,
-          ],
-          "circle-color": [
-            "match",
-            ["get", "bucket"],
-            "dedicated",
-            BUCKET_COLOR.dedicated,
-            "county_jail",
-            BUCKET_COLOR.county_jail,
-            "usms",
-            BUCKET_COLOR.usms,
-            "federal_prison",
-            BUCKET_COLOR.federal_prison,
-            "#898781",
-          ],
-          "circle-opacity": 0.78,
-          "circle-stroke-color": "#fdfcfa",
-          "circle-stroke-width": 1.2,
-        },
-      });
-      map.addLayer({
-        id: "facility-selected",
-        type: "circle",
-        source: "facilities",
-        filter: ["==", ["get", "detloc"], ""],
-        paint: {
-          "circle-radius": [
-            "+",
-            2,
-            [
-              "interpolate",
-              ["linear"],
-              ["sqrt", ["get", "adp"]],
-              0,
-              RADIUS_MIN,
-              SQRT_ADP_MAX,
-              RADIUS_MAX,
-            ],
-          ],
-          "circle-color": "rgba(0,0,0,0)",
-          "circle-stroke-color": "#1a1817",
-          "circle-stroke-width": 2,
-        },
-      });
+    let map: maplibregl.Map | null = null;
+    let cancelled = false;
 
-      map.on("mousemove", "facility-circles", (event: MapLayerMouseEvent) => {
-        const feature = event.features?.[0];
-        if (!feature) return;
-        map.getCanvas().style.cursor = "pointer";
-        const props = feature.properties as {
-          name: string;
-          adp: number;
-          bucket: string;
-        };
-        setHover({
-          x: event.point.x,
-          y: event.point.y,
-          name: props.name,
-          adp: props.adp,
-          color: BUCKET_COLOR[props.bucket] ?? "#898781",
+    // Fetching the style ourselves makes a basemap outage a deterministic
+    // failure state instead of a silently blank map.
+    fetch(BASEMAP)
+      .then((response) => {
+        if (!response.ok) throw new Error(String(response.status));
+        return response.json();
+      })
+      .then((style: StyleSpecification) => {
+        if (cancelled) return;
+        const m = new maplibregl.Map({
+          container,
+          style,
+          bounds: US_BOUNDS,
+          fitBoundsOptions: { padding: 24 },
+          minZoom: 2.8,
+          attributionControl: { compact: true },
         });
-      });
-      map.on("mouseleave", "facility-circles", () => {
-        map.getCanvas().style.cursor = "";
-        setHover(null);
-      });
-      map.on("click", "facility-circles", (event: MapLayerMouseEvent) => {
-        const feature = event.features?.[0];
-        if (feature)
-          onSelectRef.current(
-            (feature.properties as { detloc: string }).detloc,
-          );
-      });
-      map.on("click", (event: MapMouseEvent) => {
-        const hits = map.queryRenderedFeatures(event.point, {
-          layers: ["facility-circles"],
+        map = m;
+        mapRef.current = m;
+        m.addControl(
+          new maplibregl.NavigationControl({ showCompass: false }),
+          "top-right",
+        );
+
+        m.on("load", () => {
+          // Test hook: lets Playwright drive the map in dev and preview builds.
+          (window as unknown as { __iceMap?: maplibregl.Map }).__iceMap = m;
+          m.addSource("facilities", { type: "geojson", data: data as never });
+          m.addLayer({
+            id: "facility-circles",
+            type: "circle",
+            source: "facilities",
+            layout: {
+              "circle-sort-key": ["*", -1, ["get", "adp"]],
+            },
+            paint: {
+              "circle-radius": [
+                "interpolate",
+                ["linear"],
+                ["sqrt", ["get", "adp"]],
+                0,
+                RADIUS_MIN,
+                SQRT_ADP_MAX,
+                RADIUS_MAX,
+              ],
+              "circle-color": [
+                "match",
+                ["get", "bucket"],
+                "dedicated",
+                BUCKET_COLOR.dedicated,
+                "county_jail",
+                BUCKET_COLOR.county_jail,
+                "usms",
+                BUCKET_COLOR.usms,
+                "federal_prison",
+                BUCKET_COLOR.federal_prison,
+                BUCKET_COLOR.other,
+              ],
+              "circle-opacity": 0.78,
+              "circle-stroke-color": "#fdfcfa",
+              "circle-stroke-width": 1.2,
+            },
+          });
+          m.addLayer({
+            id: "facility-selected",
+            type: "circle",
+            source: "facilities",
+            filter: ["==", ["get", "detloc"], ""],
+            paint: {
+              "circle-radius": [
+                "+",
+                2,
+                [
+                  "interpolate",
+                  ["linear"],
+                  ["sqrt", ["get", "adp"]],
+                  0,
+                  RADIUS_MIN,
+                  SQRT_ADP_MAX,
+                  RADIUS_MAX,
+                ],
+              ],
+              "circle-color": "rgba(0,0,0,0)",
+              "circle-stroke-color": "#1a1817",
+              "circle-stroke-width": 2,
+            },
+          });
+
+          m.on("mousemove", "facility-circles", (event: MapLayerMouseEvent) => {
+            const feature = event.features?.[0];
+            if (!feature) return;
+            m.getCanvas().style.cursor = "pointer";
+            const props = feature.properties as {
+              name: string;
+              adp: number;
+              bucket: Bucket;
+            };
+            setHover({
+              x: event.point.x,
+              y: event.point.y,
+              name: props.name,
+              adp: props.adp,
+              color: BUCKET_COLOR[props.bucket] ?? BUCKET_COLOR.other,
+            });
+          });
+          m.on("mouseleave", "facility-circles", () => {
+            m.getCanvas().style.cursor = "";
+            setHover(null);
+          });
+          m.on("click", "facility-circles", (event: MapLayerMouseEvent) => {
+            const feature = event.features?.[0];
+            if (feature)
+              onSelectRef.current(
+                (feature.properties as { detloc: string }).detloc,
+              );
+          });
+          m.on("click", (event: MapMouseEvent) => {
+            const hits = m.queryRenderedFeatures(event.point, {
+              layers: ["facility-circles"],
+            });
+            if (hits.length === 0) onSelectRef.current(null);
+          });
         });
-        if (hits.length === 0) onSelectRef.current(null);
+      })
+      .catch(() => {
+        if (!cancelled) setMapFailed(true);
       });
-    });
 
     return () => {
+      cancelled = true;
       mapRef.current = null;
       try {
-        map.remove();
+        map?.remove();
       } catch {
         // A map that failed to initialize (e.g. no WebGL) can throw on removal.
       }
@@ -196,8 +214,8 @@ export function FacilityMap({ data, selected, onSelect }: Props) {
         p="6"
       >
         <Text color="inkSecondary" maxW="420px" textAlign="center">
-          This map needs WebGL, which your browser doesn't support or has
-          disabled. The underlying data is available at
+          The map couldn't load — your browser may not support WebGL, or the
+          basemap service is unreachable. The underlying data is available at
           github.com/aboydnw/ice-map.
         </Text>
       </Box>

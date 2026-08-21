@@ -26,9 +26,11 @@ const config = defineConfig({
         bucketFederalPrison: { value: "#4a3aa7" },
       },
       fonts: {
-        heading: { value: `"Newsreader", Georgia, "Times New Roman", serif` },
+        heading: {
+          value: `"Newsreader Variable", Georgia, "Times New Roman", serif`,
+        },
         body: {
-          value: `"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif`,
+          value: `"Public Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif`,
         },
       },
     },
