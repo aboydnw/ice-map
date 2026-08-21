@@ -52,7 +52,7 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
   const active = hoverIndex ?? lastIndex;
   const [ax, ay] = coords[active];
   const [peakX, peakY] = coords[peakIndex];
-  const peakLabelLeft = peakX > WIDTH * 0.7;
+  const peakLabelLeft = peakX > WIDTH * 0.55;
 
   function handleMove(event: React.MouseEvent<SVGSVGElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -143,14 +143,14 @@ export function Sparkline({ points, guaranteedMinimum }: Props) {
               strokeDasharray="3 3"
             />
             <text
-              x={PAD.left}
+              x={WIDTH - PAD.right}
               y={gmY < 24 ? gmY + 11 : gmY - 4}
-              textAnchor="start"
+              textAnchor="end"
               fontSize="9"
               fill="#898781"
               fontFamily="inherit"
             >
-              {guaranteedMinimum.toLocaleString()} guaranteed-minimum beds
+              guaranteed min. {guaranteedMinimum.toLocaleString()} beds
             </text>
           </>
         )}

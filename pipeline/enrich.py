@@ -238,6 +238,8 @@ def verify_operator(candidates, types, name, city, state, type_detailed, lat, lo
     entity = types.get(normalize(wiki["management"]))
     if not entity:
         return None
+    if "generic" in str(entity.get("notes", "")).lower():
+        return derive_local_operator(name, wiki["management"], type_detailed)
     signals = []
     entity_tokens = significant_tokens(entity["display"]) | significant_tokens(wiki["management"])
     if entity_tokens & tokens:
@@ -256,3 +258,29 @@ def verify_operator(candidates, types, name, city, state, type_detailed, lat, lo
     if not signals:
         return None
     return {"name": entity["display"], "kind": entity["type"], "sources": ["wikipedia", *signals]}
+
+
+LOCAL_JAIL_TYPES = {"IGSA", "USMS IGA", "STATE"}
+
+
+def derive_local_operator(name: str, management: str, type_detailed: str):
+    """Name the county/city behind Wikipedia's generic 'County (Sheriff)'-style values."""
+    if type_detailed not in LOCAL_JAIL_TYPES:
+        return None
+    label = normalize(management)
+    unit = "PARISH" if "PARISH" in normalize(name) else "COUNTY" if "COUNTY" in normalize(name) else None
+    if unit is None or not label.startswith(("COUNTY", "CITY")):
+        return None
+    if label.startswith("CITY"):
+        return None
+    match = re.match(r"^(.*?\b" + unit + r")\b", normalize(name))
+    if not match or len(match.group(1).split()) > 4:
+        return None
+    place = " ".join(word.title() for word in match.group(1).split())
+    if "SHERIFF" in label:
+        display = f"{place} Sheriff"
+    elif "CORRECTIONS" in label:
+        display = f"{place} Corrections"
+    else:
+        display = place
+    return {"name": display, "kind": "public", "sources": ["wikipedia", "name"]}

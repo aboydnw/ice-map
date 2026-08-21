@@ -122,3 +122,14 @@ def test_verify_operator_needs_independent_signal():
     clark = enrich.verify_operator(candidates, types, "CLARK COUNTY JAIL (IN)", "JEFFERSONVILLE", "IN", "USMS IGA", 38.3, -85.7)
     assert clark["kind"] == "public" and "name" in clark["sources"]
     assert enrich.verify_operator(candidates, types, "MYSTERY CENTER", "NOWHERE", "TX", "CDF", 30.0, -97.0) is None
+
+
+def test_derive_local_operator_from_generic_county_value():
+    assert enrich.derive_local_operator("CLARK COUNTY JAIL (IN)", "County (Sheriff)", "USMS IGA") == {
+        "name": "Clark County Sheriff",
+        "kind": "public",
+        "sources": ["wikipedia", "name"],
+    }
+    assert enrich.derive_local_operator("ST CLAIR COUNTY JAIL", "County", "IGSA")["name"] == "St Clair County"
+    assert enrich.derive_local_operator("RICHWOOD CORRECTIONAL CENTER", "County (Sheriff)", "IGSA") is None
+    assert enrich.derive_local_operator("ADELANTO ICE PROCESSING CENTER", "County (Sheriff)", "CDF") is None
