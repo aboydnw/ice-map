@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ChakraProvider } from "@chakra-ui/react";
+import { Analytics } from "@vercel/analytics/react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@fontsource-variable/newsreader";
 import "@fontsource-variable/public-sans";
@@ -12,5 +13,6 @@ createRoot(document.getElementById("root")!).render(
     <ChakraProvider value={system}>
       <App />
     </ChakraProvider>
+    <Analytics />
   </StrictMode>,
 );
