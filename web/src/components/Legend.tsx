@@ -1,14 +1,31 @@
-import { Box, Text } from "@chakra-ui/react";
-import { BUCKETS, radiusFor } from "../config";
-import type { FacilityCollection } from "../types";
+import { Box, Text, chakra } from "@chakra-ui/react";
+import { BUCKETS, formatDate, radiusFor } from "../config";
+import { sourceYears } from "../consular";
+import type {
+  ConsularCollection,
+  ConsularCountry,
+  FacilityCollection,
+} from "../types";
 
 const SIZE_STEPS = [10, 100, 1000];
 
+const CountrySelect = chakra("select");
+
 interface Props {
   data: FacilityCollection;
+  countries: ConsularCountry[];
+  selectedCountry: string | null;
+  onCountryChange: (key: string | null) => void;
+  districts: ConsularCollection | null;
 }
 
-export function Legend({ data }: Props) {
+export function Legend({
+  data,
+  countries,
+  selectedCountry,
+  onCountryChange,
+  districts,
+}: Props) {
   const counts = new Map<string, number>();
   for (const feature of data.features) {
     counts.set(
@@ -65,6 +82,7 @@ export function Legend({ data }: Props) {
           </Text>
         </Box>
       ))}
+
       <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
         <Text fontSize="xs" color="inkSecondary" mb="1">
           Circle size = avg. daily population
@@ -103,6 +121,52 @@ export function Legend({ data }: Props) {
           })}
         </svg>
       </Box>
+
+      {countries.length > 0 && (
+        <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
+          <Box
+            as="label"
+            display="flex"
+            alignItems="center"
+            gap="2"
+            fontSize="xs"
+            color="inkSecondary"
+          >
+            <Text as="span" whiteSpace="nowrap">
+              Consular districts
+            </Text>
+            <CountrySelect
+              aria-label="Consular districts overlay"
+              value={selectedCountry ?? ""}
+              onChange={(event) => onCountryChange(event.target.value || null)}
+              ml="auto"
+              fontSize="xs"
+              color="ink"
+              bg="paper"
+              borderWidth="1px"
+              borderColor="hairline"
+              borderRadius="4px"
+              px="1"
+              py="2px"
+              maxW="110px"
+            >
+              <option value="">None</option>
+              {countries.map((country) => (
+                <option key={country.key} value={country.key}>
+                  {country.name}
+                </option>
+              ))}
+            </CountrySelect>
+          </Box>
+          {districts && (
+            <Text fontSize="10px" color="inkMuted" mt="1" lineHeight="1.3">
+              {districts.meta.districts} jurisdictions as published by{" "}
+              {districts.meta.source}, sources {sourceYears(districts)} · built{" "}
+              {formatDate(districts.meta.built)}
+            </Text>
+          )}
+        </Box>
+      )}
     </Box>
   );
 }

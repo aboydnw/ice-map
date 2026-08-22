@@ -1,0 +1,14 @@
+[
+  {
+    "key": "mexico",
+    "name": "Mexico",
+    "file": "mexico.geojson",
+    "districts": 53,
+    "source": "Secretar\u00eda de Relaciones Exteriores",
+    "source_dates": [
+      "2018-09-12",
+      "2026-08-22"
+    ],
+    "built": "2026-08-22"
+  }
+]
