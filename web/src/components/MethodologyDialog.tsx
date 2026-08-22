@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Box, Heading, Link, Text } from "@chakra-ui/react";
-import { formatDate } from "../config";
+import { formatDate, formatMonthYear } from "../config";
 import type { MatchReport } from "../types";
 
 interface Props {
@@ -226,8 +226,11 @@ export function MethodologyDialog({ report, onClose }: Props) {
             people apprehended by CBP at the border are absent from the arrest
             data, so border facilities link only a small share of their arrivals
             and each board states its own coverage. These figures come from
-            DDP's individual-level records, which run from October 2022 through
-            March 2026 and lag the population figures above by several months.
+            DDP's individual-level records, which lag the population figures
+            above by several months
+            {report.flows &&
+              ` and run from ${formatMonthYear(report.flows.window_start)} through ${formatMonthYear(report.flows.as_of)}`}
+            .
           </Text>
         </Section>
 

@@ -1,5 +1,11 @@
 import { Box, Text } from "@chakra-ui/react";
-import { BUCKETS, FLOW_COLORS, radiusFor } from "../config";
+import {
+  BUCKETS,
+  FLOW_COLORS,
+  formatDate,
+  formatMonthYear,
+  radiusFor,
+} from "../config";
 import { QUANTUM } from "../flows";
 import type { FacilityCollection, FacilityFlows } from "../types";
 
@@ -100,8 +106,9 @@ export function Legend({ data, flows }: Props) {
             </Box>
           ))}
           <Text fontSize="10px" color="inkMuted" mt="1" lineHeight="1.3">
-            {flows.window[0]} – {flows.window[1]} · after {flows.as_of}, not yet
-            reported
+            {formatMonthYear(flows.window[0])} –{" "}
+            {formatMonthYear(flows.window[1])} · after {formatDate(flows.as_of)}
+            , not yet reported
           </Text>
         </Box>
       )}

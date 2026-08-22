@@ -2,20 +2,9 @@ import { ArcLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 import type { Layer } from "@deck.gl/core";
 import { flowRgb } from "./config";
-import { TRAVEL_MS } from "./flowScene";
+import { TRAVEL_MS, alphaFor } from "./flowScene";
 import type { FlowScene, Marker } from "./flowScene";
 import type { FlowArc, FlowTrip } from "./flows";
-
-const DIMMED = 0.16;
-
-function alphaFor(
-  key: string,
-  highlighted: string | null,
-  base: number,
-): number {
-  if (!highlighted) return base;
-  return key === highlighted ? 255 : Math.round(base * DIMMED);
-}
 
 /**
  * Fresh layer instances for one frame. They share the scene's data arrays, so

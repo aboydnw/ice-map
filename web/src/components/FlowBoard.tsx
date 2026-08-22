@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
-import { FLOW_COLORS } from "../config";
+import { FLOW_COLORS, formatMonthYear } from "../config";
 import { TOP_EDGES, boardCsv, familyOf, remainderOf } from "../flows";
 import type { BoardRow } from "../flows";
 import type { FacilityFlows, FlowDirection } from "../types";
@@ -174,7 +174,8 @@ export function FlowBoard({
       </Box>
 
       <Text fontSize="11px" color="inkMuted" lineHeight="1.35" mb="2">
-        Stints, not people · {flows.window[0]} – {flows.window[1]} · source: DDP
+        Stints, not people · {formatMonthYear(flows.window[0])} –{" "}
+        {formatMonthYear(flows.window[1])} · source: DDP
       </Text>
 
       <Box display="flex" alignItems="baseline" gap="2" mb="1">

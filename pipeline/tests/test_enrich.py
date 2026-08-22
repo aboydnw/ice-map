@@ -201,3 +201,12 @@ def test_display_name_preserves_mixed_case_and_acronyms():
     )
     assert enrich.display_name("MONTGOMERY COUNTY JAIL") == "Montgomery County Jail"
     assert enrich.display_name("FCI ATLANTA") == "FCI Atlanta"
+
+
+def test_display_name_keeps_possessives_ordinals_and_initials_readable():
+    assert enrich.display_name("CULBERSON COUNTY SHERIFF'S") == "Culberson County Sheriff's"
+    assert enrich.display_name("ST. JOHN'S COUNTY JAIL") == "St. John's County Jail"
+    assert enrich.display_name("CBP O'HARE AIRPORT TRM 5 B.C. EXT") == (
+        "Cbp O'Hare Airport Trm 5 B.C. Ext"
+    )
+    assert enrich.display_name("41ST STREET ANNEX") == "41st Street Annex"

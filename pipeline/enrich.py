@@ -45,13 +45,22 @@ STOPWORDS = {
 }
 
 
+# str.title() capitalizes after any non-letter, which turns "SHERIFF'S" into
+# "Sheriff'S" and "1ST" into "1St". Initials like "B.C." need that behaviour, so
+# the two wrong cases are repaired rather than the rule replaced.
+POSSESSIVE = re.compile(r"(?<=[A-Za-z])'([A-Za-z])\b")
+ORDINAL = re.compile(r"\b(\d+)(St|Nd|Rd|Th)\b")
+
+
 def display_name(name: str) -> str:
     """Title-case all-caps names, preserving known acronyms; keep mixed case as-is."""
     if name != name.upper():
         return name
-    return " ".join(
+    titled = " ".join(
         word if word.strip("().,") in ACRONYMS else word.title() for word in name.split(" ")
     )
+    titled = POSSESSIVE.sub(lambda match: f"'{match.group(1).lower()}", titled)
+    return ORDINAL.sub(lambda match: f"{match.group(1)}{match.group(2).lower()}", titled)
 
 
 def normalize(value) -> str:

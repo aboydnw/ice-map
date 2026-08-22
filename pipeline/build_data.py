@@ -81,11 +81,15 @@ def download(url: str, path: pathlib.Path) -> pathlib.Path:
     """Stream a source to the cache. Set ICE_MAP_REUSE_CACHE=1 to skip re-downloads."""
     if path.exists() and os.environ.get("ICE_MAP_REUSE_CACHE"):
         return path
+    # A dropped connection on the 253 MB stints file would otherwise leave a
+    # truncated parquet that the next cached run happily tries to read.
+    partial = path.with_name(path.name + ".partial")
     with requests.get(url, timeout=600, stream=True) as response:
         response.raise_for_status()
-        with path.open("wb") as handle:
+        with partial.open("wb") as handle:
             for chunk in response.iter_content(chunk_size=1 << 20):
                 handle.write(chunk)
+    partial.replace(path)
     return path
 
 
@@ -395,10 +399,11 @@ def main() -> int:
         f"snapshot {pull_date}: {len(matched)}/{len(snapshot)} facilities matched, "
         f"national ADP {report['national_adp']:,}, unmatched ADP {report['unmatched_adp']:,}"
     )
+    link_rate = flow_report["arrest_link_rate"]["national"]
     print(
         f"flows through {flow_report['as_of']}: {flow_report['facilities_written']} facilities, "
         f"{flow_report['book_outs_in_window']:,} book-outs, "
-        f"origin linked for {flow_report['arrest_link_rate']['national']:.1%} of arrivals"
+        f"origin linked for {f'{link_rate:.1%}' if link_rate is not None else 'none'} of arrivals"
     )
     return 0
 

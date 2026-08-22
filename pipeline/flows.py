@@ -337,8 +337,12 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
     arrivals = arrivals.assign(in_key=collapse_unlocated(arrivals["in_key"], located))
     departures = departures.assign(out_key=collapse_unlocated(departures["out_key"], located))
 
+    # A facility that drops out of the snapshot would otherwise leave its file
+    # behind, and the frontend would serve those stale counts forever.
     flows_dir = pathlib.Path(out_dir) / "flows"
     flows_dir.mkdir(parents=True, exist_ok=True)
+    for stale in flows_dir.glob("*.json"):
+        stale.unlink()
     (flows_dir / "endpoints.json").write_text(
         json.dumps({"as_of": as_of, "facilities": endpoints}, separators=(",", ":"))
     )

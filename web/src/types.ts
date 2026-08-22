@@ -75,6 +75,14 @@ export interface MatchReport {
   matched: number;
   unmatched: number;
   national_adp: number;
+  flows?: {
+    window_start: string;
+    as_of: string;
+    arrest_link_rate: {
+      national: number | null;
+      median_facility: number | null;
+    };
+  };
 }
 
 export type FlowDirection = "in" | "out";

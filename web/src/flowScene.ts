@@ -7,6 +7,25 @@ export const LOOP_MS = 16_000;
 export const TRAVEL_MS = 3_200;
 export const CYCLE_MS = LOOP_MS + TRAVEL_MS;
 
+const DIMMED = 0.16;
+const HIGHLIGHTED = 1.7;
+
+/**
+ * Highlight and dim scale the base alpha rather than replacing it: a gate stub
+ * fades to nothing at its far end, and must keep doing so when highlighted —
+ * a solid line to a synthetic point would be exactly the fabricated geography
+ * the rest of the design refuses.
+ */
+export function alphaFor(
+  key: string,
+  highlighted: string | null,
+  base: number,
+): number {
+  if (!highlighted) return base;
+  const scale = key === highlighted ? HIGHLIGHTED : DIMMED;
+  return Math.min(255, Math.round(base * scale));
+}
+
 export interface Marker {
   position: [number, number];
   label: string;

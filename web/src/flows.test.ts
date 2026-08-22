@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { alphaFor } from "./flowScene";
 import {
   GATE_RADIUS,
   QUANTUM,
@@ -229,6 +230,9 @@ describe("quantize", () => {
     const schedule = quantize([edge("a", 100, [["2019-01", 100]])], axis);
 
     expect(schedule[0].departures).toHaveLength(schedule[0].dots);
+    expect(schedule[0].departures.every((time) => time >= 0 && time < 1)).toBe(
+      true,
+    );
   });
 });
 
@@ -385,5 +389,21 @@ describe("buildTrips", () => {
     );
 
     expect(trips.every((trip) => trip.path === trips[0].path)).toBe(true);
+  });
+});
+
+describe("alphaFor", () => {
+  it("leaves alpha alone when nothing is highlighted", () => {
+    expect(alphaFor("a", null, 145)).toBe(145);
+  });
+
+  it("keeps a highlighted gate stub fading to nothing", () => {
+    expect(alphaFor("released:paroled", "released:paroled", 0)).toBe(0);
+  });
+
+  it("lifts the highlighted row and dims the rest, never past opaque", () => {
+    expect(alphaFor("a", "a", 145)).toBeGreaterThan(145);
+    expect(alphaFor("a", "a", 235)).toBe(255);
+    expect(alphaFor("b", "a", 145)).toBeLessThan(145);
   });
 });
