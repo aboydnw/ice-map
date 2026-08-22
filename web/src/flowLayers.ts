@@ -25,13 +25,13 @@ export function flowLayers(
       getTargetPosition: (arc) => arc.target,
       getSourceColor: (arc) => [
         ...flowRgb(arc.family),
-        alphaFor(arc.key, highlighted, 80),
+        alphaFor(arc.key, highlighted, 130),
       ],
       getTargetColor: (arc) => [
         ...flowRgb(arc.family),
-        alphaFor(arc.key, highlighted, arc.gate ? 0 : 145),
+        alphaFor(arc.key, highlighted, arc.gate ? 0 : 205),
       ],
-      getWidth: (arc) => (arc.key === highlighted ? 2.4 : 1.1),
+      getWidth: (arc) => (arc.key === highlighted ? 3 : 1.6),
       widthUnits: "pixels",
       updateTriggers: {
         getSourceColor: highlighted,
@@ -52,7 +52,7 @@ export function flowLayers(
           ...flowRgb(family.get(trip.key) ?? "other"),
           alphaFor(trip.key, highlighted, trip.hollow ? 110 : 235),
         ],
-        getWidth: (trip) => (trip.hollow ? 1.3 : 2.4),
+        getWidth: (trip) => (trip.hollow ? 1.6 : 3),
         widthUnits: "pixels",
         capRounded: true,
         jointRounded: true,

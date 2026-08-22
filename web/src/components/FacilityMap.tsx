@@ -269,15 +269,29 @@ export function FacilityMap({
       .then(({ MapboxOverlay, flowLayers }) => {
         if (cancelled) return;
         if (!overlayRef.current) {
-          // Interleaved shares maplibre's context, so flows and circles stay
-          // in one canvas. Created empty and driven with setProps thereafter.
+          // Overlaid, not interleaved: deck.gl's interleaved path routes every
+          // layer through resolveLayerGroups, which returns silently unless
+          // maplibre's private style._loaded is set — a failure that draws
+          // nothing and reports nothing. Its own canvas needs no such privates,
+          // and flows belong above the circles anyway.
           overlayRef.current = new MapboxOverlay({
-            interleaved: true,
+            interleaved: false,
             layers: [],
           });
-          map.addControl(overlayRef.current);
+          // top-left so deck's absolutely-positioned container lines up with
+          // the map origin rather than a right-anchored control corner.
+          map.addControl(overlayRef.current, "top-left");
         }
         const overlay = overlayRef.current;
+        // Test hook, alongside __iceMap: lets a visual check confirm what the
+        // overlay was actually handed without reading pixels.
+        (
+          window as unknown as { __iceFlows?: Record<string, number> }
+        ).__iceFlows = {
+          arcs: scene.arcs.length,
+          trips: scene.trips.length,
+          markers: scene.markers.length,
+        };
         if (scene.trips.length === 0) {
           overlay.setProps({ layers: flowLayers(scene, highlightedKey, 0) });
           return;
@@ -302,7 +316,10 @@ export function FacilityMap({
         };
         frame = requestAnimationFrame(tick);
       })
-      .catch(() => {});
+      .catch((error) => {
+        // Data absence is silent by design; a broken renderer is not.
+        console.error("Facility flows failed to render", error);
+      });
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
