@@ -27,5 +27,41 @@
     "operator": 101,
     "photo": 141
   },
+  "flows": {
+    "as_of": "2026-03-10",
+    "window_start": "2022-10-01",
+    "facilities_written": 205,
+    "stints_at_mapped_facilities": 1773481,
+    "book_ins_in_window": 1750322,
+    "book_outs_in_window": 1715066,
+    "out_families": {
+      "transfer": 906686,
+      "removed": 539828,
+      "released": 211068,
+      "not-reported": 31254,
+      "custody": 16052,
+      "other": 10178
+    },
+    "unknown_shares": {
+      "transfer_unknown": 0.0058,
+      "transfer_no_location": 0.0277,
+      "removed_unknown": 0.0055,
+      "not_reported": 0.0182
+    },
+    "endpoints": {
+      "referenced": 626,
+      "with_coordinates": 486,
+      "coordinate_share": 0.7764
+    },
+    "arrest_link_rate": {
+      "national": 0.2817,
+      "median_facility": 0.764,
+      "facilities_measured": 204
+    },
+    "unmapped_departure_countries": {
+      "UNKNOWN": 8,
+      "USSR": 1
+    }
+  },
   "unmatched_facilities": []
 }

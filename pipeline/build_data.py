@@ -10,6 +10,7 @@ validates the result, and writes:
 """
 
 import json
+import os
 import pathlib
 import re
 import sys
@@ -18,6 +19,7 @@ import pandas as pd
 import requests
 
 import enrich
+import flows
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parent.parent
 CACHE_DIR = REPO_ROOT / "pipeline" / "cache"
@@ -29,6 +31,8 @@ SOURCES = {
     "crosswalk": f"{LFS_BASE}/ice-detention-facilities/main/data/facilities-name-state-match.parquet",
     "timeseries": f"{LFS_BASE}/ice-detention-management/main/data/facilities.parquet",
     "alos": f"{LFS_BASE}/ice-detention-management/main/data/facility-alos.parquet",
+    "stints": f"{LFS_BASE}/ice/main/data/detention-stints-latest.parquet",
+    "arrests": f"{LFS_BASE}/ice/main/data/arrests-latest.parquet",
 }
 DEATHS_URL = (
     "https://raw.githubusercontent.com/uclalawbehindbars/ICE_custody_mortality/main/"
@@ -73,20 +77,24 @@ def to_number(series: pd.Series) -> pd.Series:
     return pd.to_numeric(cleaned, errors="coerce")
 
 
+def download(url: str, path: pathlib.Path) -> pathlib.Path:
+    """Stream a source to the cache. Set ICE_MAP_REUSE_CACHE=1 to skip re-downloads."""
+    if path.exists() and os.environ.get("ICE_MAP_REUSE_CACHE"):
+        return path
+    with requests.get(url, timeout=600, stream=True) as response:
+        response.raise_for_status()
+        with path.open("wb") as handle:
+            for chunk in response.iter_content(chunk_size=1 << 20):
+                handle.write(chunk)
+    return path
+
+
 def download_sources() -> dict[str, pathlib.Path]:
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    paths = {}
-    for key, url in SOURCES.items():
-        path = CACHE_DIR / f"{key}.parquet"
-        response = requests.get(url, timeout=120)
-        response.raise_for_status()
-        path.write_bytes(response.content)
-        paths[key] = path
-    deaths_path = CACHE_DIR / "deaths.csv"
-    response = requests.get(DEATHS_URL, timeout=120)
-    response.raise_for_status()
-    deaths_path.write_bytes(response.content)
-    paths["deaths"] = deaths_path
+    paths = {
+        key: download(url, CACHE_DIR / f"{key}.parquet") for key, url in SOURCES.items()
+    }
+    paths["deaths"] = download(DEATHS_URL, CACHE_DIR / "deaths.csv")
     return paths
 
 
@@ -356,6 +364,15 @@ def main() -> int:
     enrichment.history = history
     features = build_features(matched, master, enrichment)
 
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    flow_report = flows.build(
+        paths["stints"],
+        paths["arrests"],
+        master,
+        {feature["properties"]["detloc"] for feature in features},
+        OUT_DIR,
+    )
+
     pull_date = str(latest_date)[:10]
     report = {
         "pull_date": pull_date,
@@ -367,6 +384,7 @@ def main() -> int:
         "unmatched_adp": round(float(unmatched["adp"].sum())),
         "history_coverage": history_coverage,
         "enrichment_coverage": enrichment.coverage,
+        "flows": flow_report,
         "unmatched_facilities": [
             {
                 "name": str(row["name"]),
@@ -378,7 +396,6 @@ def main() -> int:
         ],
     }
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
     geojson = {"type": "FeatureCollection", "meta": {"pull_date": pull_date}, "features": features}
     (OUT_DIR / "facilities.geojson").write_text(json.dumps(geojson, separators=(",", ":")))
     (OUT_DIR / "history.json").write_text(json.dumps(history, separators=(",", ":")))
@@ -387,6 +404,11 @@ def main() -> int:
     print(
         f"snapshot {pull_date}: {len(matched)}/{len(snapshot)} facilities matched, "
         f"national ADP {report['national_adp']:,}, unmatched ADP {report['unmatched_adp']:,}"
+    )
+    print(
+        f"flows through {flow_report['as_of']}: {flow_report['facilities_written']} facilities, "
+        f"{flow_report['book_outs_in_window']:,} book-outs, "
+        f"origin linked for {flow_report['arrest_link_rate']['national']:.1%} of arrivals"
     )
     return 0
 
