@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  GATE_RADIUS,
   QUANTUM,
   boardCsv,
+  buildArcs,
   buildBoardRows,
+  buildTrips,
+  familyOf,
+  greatCircle,
   monthAxis,
   quantize,
   remainderOf,
@@ -251,5 +256,134 @@ describe("boardCsv", () => {
     expect(boardCsv("X", "out", flows, rows).split("\n")[2]).toBe(
       '"The ""Annex""",1,1.0000',
     );
+  });
+});
+
+describe("familyOf", () => {
+  it("groups keys by what happened, not by their exact value", () => {
+    expect(familyOf("transfer:JENATLA")).toBe("transfer");
+    expect(familyOf("removed:GUATEMALA")).toBe("removed");
+    expect(familyOf("arrested:TEXAS")).toBe("arrested");
+    expect(familyOf("arrived:unlinked")).toBe("arrested");
+    expect(familyOf("released:paroled")).toBe("released");
+    expect(familyOf("not-reported")).toBe("other");
+    expect(familyOf("custody:other-agency")).toBe("other");
+  });
+});
+
+describe("buildArcs", () => {
+  const facility: [number, number] = [-92.13, 31.68];
+
+  it("draws an out arc from the facility and an in arc towards it", () => {
+    const flows = flowsFor(
+      [edge("removed:GUATEMALA", 10)],
+      [edge("arrested:TEXAS", 10)],
+    );
+    const [outArc] = buildArcs(
+      buildBoardRows(flows, "out", endpoints, states, countries),
+      facility,
+      "out",
+    );
+    const [inArc] = buildArcs(
+      buildBoardRows(flows, "in", endpoints, states, countries),
+      facility,
+      "in",
+    );
+
+    expect(outArc.source).toEqual(facility);
+    expect(outArc.target).toEqual([-90.23, 15.78]);
+    expect(inArc.source).toEqual([-97.56, 31.05]);
+    expect(inArc.target).toEqual(facility);
+  });
+
+  it("fans destination-less rows around the facility instead of placing them", () => {
+    const flows = flowsFor([
+      edge("released:paroled", 10),
+      edge("released:bonded-out", 8),
+      edge("not-reported", 4),
+    ]);
+    const arcs = buildArcs(
+      buildBoardRows(flows, "out", endpoints, states, countries),
+      facility,
+      "out",
+    );
+
+    expect(arcs.every((arc) => arc.gate)).toBe(true);
+    for (const arc of arcs) {
+      const dx = arc.target[0] - facility[0];
+      const dy = arc.target[1] - facility[1];
+      expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(GATE_RADIUS + 1e-9);
+      expect(Math.hypot(dx, dy)).toBeGreaterThan(0);
+    }
+    const targets = new Set(arcs.map((arc) => arc.target.join()));
+    expect(targets.size).toBe(3);
+  });
+});
+
+describe("greatCircle", () => {
+  it("keeps both ends and bends between them", () => {
+    const path = greatCircle([-92, 31], [-90.23, 15.78], 8);
+
+    expect(path).toHaveLength(9);
+    expect(path[0][0]).toBeCloseTo(-92, 4);
+    expect(path[0][1]).toBeCloseTo(31, 4);
+    expect(path[8][0]).toBeCloseTo(-90.23, 4);
+    expect(path[8][1]).toBeCloseTo(15.78, 4);
+  });
+
+  it("degenerates safely when both ends are the same point", () => {
+    expect(greatCircle([-92, 31], [-92, 31], 8)).toEqual([
+      [-92, 31],
+      [-92, 31],
+    ]);
+  });
+});
+
+describe("buildTrips", () => {
+  const axis = monthAxis(["2022-10-01", "2026-03-10"]);
+  const facility: [number, number] = [-92.13, 31.68];
+
+  it("emits one trip per dot, each finishing within the cycle", () => {
+    const flows = flowsFor([
+      edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
+      edge("released:paroled", 4, [["2023-02", 4]]),
+    ]);
+    const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+    const arcs = buildArcs(rows, facility, "out");
+    const trips = buildTrips(arcs, flows.out, axis, 16_000, 3_200);
+
+    expect(trips).toHaveLength(Math.round(500 / QUANTUM) + 1);
+    expect(
+      trips.every((trip) => trip.timestamps.length === trip.path.length),
+    ).toBe(true);
+    expect(
+      trips.every((trip) =>
+        trip.timestamps.every(
+          (time, index) => index === 0 || time > trip.timestamps[index - 1],
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      trips.every(
+        (trip) => trip.timestamps[trip.timestamps.length - 1] <= 16_000 + 3_200,
+      ),
+    ).toBe(true);
+    expect(trips.filter((trip) => trip.hollow)).toHaveLength(1);
+  });
+
+  it("reuses one path per edge so deck.gl sees stable geometry", () => {
+    const flows = flowsFor([
+      edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
+    ]);
+    const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+    const trips = buildTrips(
+      buildArcs(rows, facility, "out"),
+      flows.out,
+      axis,
+      16_000,
+      3_200,
+    );
+
+    expect(trips.every((trip) => trip.path === trips[0].path)).toBe(true);
   });
 });

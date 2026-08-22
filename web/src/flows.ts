@@ -223,6 +223,159 @@ function scheduleDepartures(
   return departures.slice(0, dots).sort((a, b) => a - b);
 }
 
+export type FlowFamily =
+  "transfer" | "removed" | "arrested" | "released" | "other";
+
+const FAMILIES: Record<string, FlowFamily> = {
+  transfer: "transfer",
+  removed: "removed",
+  arrested: "arrested",
+  arrived: "arrested",
+  released: "released",
+};
+
+export function familyOf(key: string): FlowFamily {
+  const separator = key.indexOf(":");
+  return FAMILIES[separator === -1 ? key : key.slice(0, separator)] ?? "other";
+}
+
+/**
+ * How far a gate stub reaches from the facility, in degrees. Releases have no
+ * recorded destination, so their dots leave the gate and stop — drawing them
+ * travelling anywhere would be fabricated geography.
+ */
+export const GATE_RADIUS = 1.4;
+
+export interface FlowArc {
+  key: string;
+  label: string;
+  count: number;
+  family: FlowFamily;
+  source: [number, number];
+  target: [number, number];
+  /** True when the far end is a gate stub rather than a recorded location. */
+  gate: boolean;
+}
+
+export interface FlowTrip {
+  key: string;
+  path: [number, number][];
+  /** One timestamp per path vertex, as TripsLayer requires. */
+  timestamps: number[];
+  hollow: boolean;
+}
+
+/**
+ * Arcs for the visible rows. Rows without a recorded destination get a short
+ * stub fanned around the facility instead of a location they never had.
+ */
+export function buildArcs(
+  rows: BoardRow[],
+  facility: [number, number],
+  direction: FlowDirection,
+): FlowArc[] {
+  const gateCount = rows.filter((row) => !row.lonLat).length;
+  let gateIndex = 0;
+  return rows.map((row) => {
+    let far = row.lonLat;
+    const gate = far === null;
+    if (far === null) {
+      const angle = (gateIndex / Math.max(gateCount, 1)) * Math.PI * 2;
+      gateIndex += 1;
+      far = [
+        facility[0] + Math.cos(angle) * GATE_RADIUS,
+        facility[1] + Math.sin(angle) * GATE_RADIUS * 0.6,
+      ];
+    }
+    return {
+      key: row.key,
+      label: row.label,
+      count: row.count,
+      family: familyOf(row.key),
+      source: direction === "out" ? facility : far,
+      target: direction === "out" ? far : facility,
+      gate,
+    };
+  });
+}
+
+/** Points along the great circle between two coordinates, ends included. */
+export function greatCircle(
+  from: [number, number],
+  to: [number, number],
+  steps: number,
+): [number, number][] {
+  const toRad = Math.PI / 180;
+  const [lon1, lat1] = [from[0] * toRad, from[1] * toRad];
+  const [lon2, lat2] = [to[0] * toRad, to[1] * toRad];
+  const delta =
+    2 *
+    Math.asin(
+      Math.min(
+        1,
+        Math.sqrt(
+          Math.sin((lat2 - lat1) / 2) ** 2 +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin((lon2 - lon1) / 2) ** 2,
+        ),
+      ),
+    );
+  if (delta === 0) return [from, to];
+  const points: [number, number][] = [];
+  for (let step = 0; step <= steps; step += 1) {
+    const fraction = step / steps;
+    const a = Math.sin((1 - fraction) * delta) / Math.sin(delta);
+    const b = Math.sin(fraction * delta) / Math.sin(delta);
+    const x =
+      a * Math.cos(lat1) * Math.cos(lon1) + b * Math.cos(lat2) * Math.cos(lon2);
+    const y =
+      a * Math.cos(lat1) * Math.sin(lon1) + b * Math.cos(lat2) * Math.sin(lon2);
+    const z = a * Math.sin(lat1) + b * Math.sin(lat2);
+    points.push([
+      Math.atan2(y, x) / toRad,
+      Math.atan2(z, Math.sqrt(x * x + y * y)) / toRad,
+    ]);
+  }
+  return points;
+}
+
+/** One trip per dot, sharing the path of the arc it travels along. */
+export function buildTrips(
+  arcs: FlowArc[],
+  edges: FlowEdge[],
+  axis: string[],
+  loop: number,
+  travel: number,
+  quantum = QUANTUM,
+): FlowTrip[] {
+  const byKey = new Map(edges.map((edge) => [edge.key, edge]));
+  const schedules = quantize(
+    arcs.map(
+      (arc) =>
+        byKey.get(arc.key) ?? { key: arc.key, count: arc.count, months: [] },
+    ),
+    axis,
+    quantum,
+  );
+  const trips: FlowTrip[] = [];
+  arcs.forEach((arc, index) => {
+    const schedule = schedules[index];
+    const path = arc.gate
+      ? [arc.source, arc.target]
+      : greatCircle(arc.source, arc.target, 24);
+    const offsets = path.map((_, step) => (step / (path.length - 1)) * travel);
+    for (const departure of schedule.departures) {
+      const start = departure * loop;
+      trips.push({
+        key: arc.key,
+        path,
+        timestamps: offsets.map((offset) => start + offset),
+        hollow: schedule.hollow,
+      });
+    }
+  });
+  return trips;
+}
+
 /** The board is the citable record, so the copied table carries its own stamp. */
 export function boardCsv(
   facilityName: string,

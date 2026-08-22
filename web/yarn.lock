@@ -235,6 +235,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@deck.gl/extensions@npm:^9.3.10":
+  version: 9.3.10
+  resolution: "@deck.gl/extensions@npm:9.3.10"
+  dependencies:
+    "@luma.gl/shadertools": "npm:^9.3.5"
+    "@luma.gl/webgl": "npm:^9.3.5"
+    "@math.gl/core": "npm:^4.1.0"
+  peerDependencies:
+    "@deck.gl/core": ~9.3.0
+    "@luma.gl/core": ~9.3.5
+    "@luma.gl/engine": ~9.3.5
+  checksum: 10c0/ed3b480102bb5dc0a83058d3696d32442ab78c89da99781c2cf1df0598e551f7c16be2a15252fe49b2aac184a941017aa9579dad3d18154be2621faab8333e05
+  languageName: node
+  linkType: hard
+
 "@deck.gl/geo-layers@npm:^9.3.10":
   version: 9.3.10
   resolution: "@deck.gl/geo-layers@npm:9.3.10"
@@ -300,6 +315,24 @@ __metadata:
     "@luma.gl/core": ~9.3.5
     "@math.gl/web-mercator": ^4.1.0
   checksum: 10c0/d1d1cb7582800c16b1c78a32d4d58d0c58c4e3e74c8d61170fd50f99a453e53ca2716180e17654657dd24b4278a646952dc7d9ac2bb9f3ec3a1b92a3cdb90a3b
+  languageName: node
+  linkType: hard
+
+"@deck.gl/mesh-layers@npm:^9.3.10":
+  version: 9.3.10
+  resolution: "@deck.gl/mesh-layers@npm:9.3.10"
+  dependencies:
+    "@loaders.gl/gltf": "npm:^4.4.3"
+    "@loaders.gl/schema": "npm:^4.4.3"
+    "@luma.gl/gltf": "npm:^9.3.5"
+    "@luma.gl/shadertools": "npm:^9.3.5"
+  peerDependencies:
+    "@deck.gl/core": ~9.3.0
+    "@luma.gl/core": ~9.3.5
+    "@luma.gl/engine": ~9.3.5
+    "@luma.gl/gltf": ~9.3.5
+    "@luma.gl/shadertools": ~9.3.5
+  checksum: 10c0/bbc83ae709701e242982b9b8ccc4236266febfd3573799920cebacd88cfc665a10ae9cd342b4d882f29a009fa0a48e71bbcbd0c11392c7f862e4ca42c82e7ae2
   languageName: node
   linkType: hard
 
@@ -653,7 +686,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@loaders.gl/gltf@npm:4.4.5, @loaders.gl/gltf@npm:~4.4.0":
+"@loaders.gl/gltf@npm:4.4.5, @loaders.gl/gltf@npm:^4.4.3, @loaders.gl/gltf@npm:~4.4.0":
   version: 4.4.5
   resolution: "@loaders.gl/gltf@npm:4.4.5"
   dependencies:
@@ -4264,9 +4297,11 @@ __metadata:
   dependencies:
     "@chakra-ui/react": "npm:^3.36.1"
     "@deck.gl/core": "npm:^9.3.10"
+    "@deck.gl/extensions": "npm:^9.3.10"
     "@deck.gl/geo-layers": "npm:^9.3.10"
     "@deck.gl/layers": "npm:^9.3.10"
     "@deck.gl/mapbox": "npm:^9.3.10"
+    "@deck.gl/mesh-layers": "npm:^9.3.10"
     "@emotion/react": "npm:^11.14.0"
     "@fontsource-variable/newsreader": "npm:^5.3.0"
     "@fontsource-variable/public-sans": "npm:^5.3.0"

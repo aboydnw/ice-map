@@ -208,6 +208,29 @@ export function MethodologyDialog({ report, onClose }: Props) {
           </Text>
         </Section>
 
+        <Section title="Flows: arrivals and departures">
+          <Text fontSize="sm" color="inkSecondary">
+            The flows shown when you select a facility count <b>stints</b>, not
+            people: one booking into one facility. Someone moved three times
+            appears three times. Every stint has exactly one way in and one way
+            out, so the board always sums to the facility's book-ins and
+            book-outs. Departures come from ICE's own release reason — a
+            transfer to the next facility, a deportation to a named country, or
+            a release into the community. Releases have{" "}
+            <b>no destination in ICE's data</b>, so the map draws them leaving
+            the gate and stopping rather than inventing a place they went. Where
+            ICE redacted the reason, the row reads "Not reported by ICE".
+            Arrivals are transfers from another facility, or an ICE arrest
+            matched to the person within 10 days before or 5 days after book-in.
+            That match only works for <b>interior arrests by ICE's ERO</b> —
+            people apprehended by CBP at the border are absent from the arrest
+            data, so border facilities link only a small share of their arrivals
+            and each board states its own coverage. These figures come from
+            DDP's individual-level records, which run from October 2022 through
+            March 2026 and lag the population figures above by several months.
+          </Text>
+        </Section>
+
         <Section title="Publication cadence">
           <Text fontSize="sm" color="inkSecondary">
             ICE was required to publish these figures every two weeks until

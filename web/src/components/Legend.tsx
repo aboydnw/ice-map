@@ -1,14 +1,23 @@
 import { Box, Text } from "@chakra-ui/react";
-import { BUCKETS, radiusFor } from "../config";
-import type { FacilityCollection } from "../types";
+import { BUCKETS, FLOW_COLORS, radiusFor } from "../config";
+import { QUANTUM } from "../flows";
+import type { FacilityCollection, FacilityFlows } from "../types";
+
+const FLOW_KEYS: { family: string; label: string }[] = [
+  { family: "transfer", label: "Transfer" },
+  { family: "removed", label: "Deportation" },
+  { family: "arrested", label: "Arrest" },
+  { family: "released", label: "Release — no destination recorded" },
+];
 
 const SIZE_STEPS = [10, 100, 1000];
 
 interface Props {
   data: FacilityCollection;
+  flows: FacilityFlows | null;
 }
 
-export function Legend({ data }: Props) {
+export function Legend({ data, flows }: Props) {
   const counts = new Map<string, number>();
   for (const feature of data.features) {
     counts.set(
@@ -65,6 +74,38 @@ export function Legend({ data }: Props) {
           </Text>
         </Box>
       ))}
+      {flows && (
+        <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
+          <Text fontSize="xs" color="inkSecondary" mb="1">
+            ● = {QUANTUM} stints, not people
+          </Text>
+          {FLOW_KEYS.map((entry) => (
+            <Box
+              key={entry.family}
+              display="flex"
+              alignItems="center"
+              gap="2"
+              py="1px"
+            >
+              <Box
+                width="14px"
+                height="2px"
+                borderRadius="1px"
+                bg={FLOW_COLORS[entry.family]}
+                flexShrink={0}
+              />
+              <Text fontSize="11px" color="ink" lineHeight="1.25">
+                {entry.label}
+              </Text>
+            </Box>
+          ))}
+          <Text fontSize="10px" color="inkMuted" mt="1" lineHeight="1.3">
+            {flows.window[0]} – {flows.window[1]} · after {flows.as_of}, not yet
+            reported
+          </Text>
+        </Box>
+      )}
+
       <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
         <Text fontSize="xs" color="inkSecondary" mb="1">
           Circle size = avg. daily population

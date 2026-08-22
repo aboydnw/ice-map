@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import * as maplibregl from "maplibre-gl";
 import type {
@@ -7,8 +7,14 @@ import type {
   StyleSpecification,
 } from "maplibre-gl";
 import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import type { MapboxOverlay } from "@deck.gl/mapbox";
 import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
-import type { Bucket, FacilityCollection } from "../types";
+import { loadFlowOverlay } from "../flowOverlay";
+import { CYCLE_MS, buildFlowScene } from "../flowScene";
+import type { FlowScene } from "../flowScene";
+import type { BoardRow } from "../flows";
+import type { Bucket, FacilityCollection, FlowDirection } from "../types";
+import type { FlowData } from "../useFlows";
 
 // Vite (rolldown) does not emit maplibre's default sibling worker module in
 // production builds, so point maplibre at a bundled worker chunk explicitly.
@@ -32,15 +38,48 @@ interface Props {
   data: FacilityCollection;
   selected: string | null;
   onSelect: (detloc: string | null) => void;
+  flows: FlowData | null;
+  flowRows: BoardRow[];
+  direction: FlowDirection;
+  highlightedKey: string | null;
 }
 
-export function FacilityMap({ data, selected, onSelect }: Props) {
+function prefersReducedMotion(): boolean {
+  return (
+    typeof matchMedia === "function" &&
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+export function FacilityMap({
+  data,
+  selected,
+  onSelect,
+  flows,
+  flowRows,
+  direction,
+  highlightedKey,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const overlayRef = useRef<MapboxOverlay | null>(null);
+  const animatedSceneRef = useRef<FlowScene | null>(null);
+  const clockStartRef = useRef(0);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [mapFailed, setMapFailed] = useState(false);
+
+  const mappedCodes = useMemo(
+    () => new Set(data.features.map((feature) => feature.properties.detloc)),
+    [data],
+  );
+  const facilityLonLat = useMemo(() => {
+    const feature = data.features.find(
+      (candidate) => candidate.properties.detloc === selected,
+    );
+    return feature ? feature.geometry.coordinates : null;
+  }, [data, selected]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -184,6 +223,7 @@ export function FacilityMap({ data, selected, onSelect }: Props) {
     return () => {
       cancelled = true;
       mapRef.current = null;
+      overlayRef.current = null;
       try {
         map?.remove();
       } catch {
@@ -203,6 +243,71 @@ export function FacilityMap({ data, selected, onSelect }: Props) {
       selected ?? "",
     ]);
   }, [selected]);
+
+  const scene = useMemo(() => {
+    if (!flows || !facilityLonLat || flowRows.length === 0) return null;
+    return buildFlowScene({
+      flows: flows.flows,
+      direction,
+      rows: flowRows,
+      facility: facilityLonLat,
+      mappedCodes,
+      animate: !prefersReducedMotion(),
+    });
+  }, [flows, facilityLonLat, flowRows, direction, mappedCodes]);
+
+  useEffect(() => {
+    if (!scene) {
+      overlayRef.current?.setProps({ layers: [] });
+      return;
+    }
+    const map = mapRef.current;
+    if (!map) return;
+    let cancelled = false;
+    let frame = 0;
+    loadFlowOverlay()
+      .then(({ MapboxOverlay, flowLayers }) => {
+        if (cancelled) return;
+        if (!overlayRef.current) {
+          // Interleaved shares maplibre's context, so flows and circles stay
+          // in one canvas. Created empty and driven with setProps thereafter.
+          overlayRef.current = new MapboxOverlay({
+            interleaved: true,
+            layers: [],
+          });
+          map.addControl(overlayRef.current);
+        }
+        const overlay = overlayRef.current;
+        if (scene.trips.length === 0) {
+          overlay.setProps({ layers: flowLayers(scene, highlightedKey, 0) });
+          return;
+        }
+        // Highlighting restarts this effect; keeping the clock outside it
+        // means hovering a board row does not rewind the animation.
+        if (animatedSceneRef.current !== scene) {
+          animatedSceneRef.current = scene;
+          clockStartRef.current = performance.now();
+        }
+        // Runs only while a facility is selected, and is torn down on
+        // deselect, on unmount, and whenever the scene changes.
+        const tick = () => {
+          overlay.setProps({
+            layers: flowLayers(
+              scene,
+              highlightedKey,
+              (performance.now() - clockStartRef.current) % CYCLE_MS,
+            ),
+          });
+          frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [scene, highlightedKey]);
 
   if (mapFailed) {
     return (

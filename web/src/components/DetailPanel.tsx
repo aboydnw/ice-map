@@ -7,14 +7,24 @@ import {
   formatDate,
   formatMonthYear,
 } from "../config";
+import { FlowBoard } from "./FlowBoard";
 import { Sparkline } from "./Sparkline";
 import { ThreatBar } from "./ThreatBar";
-import type { FacilityFeature } from "../types";
+import type { BoardRow } from "../flows";
+import type { FacilityFeature, FacilityFlows, FlowDirection } from "../types";
 
 interface Props {
   facility: FacilityFeature;
   history: [string, number][] | undefined;
   onClose: () => void;
+  flows: FacilityFlows | null;
+  flowRows: BoardRow[];
+  flowDirection: FlowDirection;
+  onFlowDirectionChange: (direction: FlowDirection) => void;
+  showAllFlows: boolean;
+  onShowAllFlowsChange: (showAll: boolean) => void;
+  highlightedFlowKey: string | null;
+  onHighlightFlow: (key: string | null) => void;
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -98,7 +108,19 @@ function ExternalLink({
   );
 }
 
-export function DetailPanel({ facility, history, onClose }: Props) {
+export function DetailPanel({
+  facility,
+  history,
+  onClose,
+  flows,
+  flowRows,
+  flowDirection,
+  onFlowDirectionChange,
+  showAllFlows,
+  onShowAllFlowsChange,
+  highlightedFlowKey,
+  onHighlightFlow,
+}: Props) {
   const p = facility.properties;
   const bucket = BUCKETS.find((b) => b.key === p.bucket);
   const inspection = p.inspection;
@@ -265,6 +287,20 @@ export function DetailPanel({ facility, history, onClose }: Props) {
           </>
         )}
       </Box>
+
+      {flows && flowRows.length > 0 && (
+        <FlowBoard
+          facilityName={p.name}
+          flows={flows}
+          direction={flowDirection}
+          onDirectionChange={onFlowDirectionChange}
+          rows={flowRows}
+          showAll={showAllFlows}
+          onShowAllChange={onShowAllFlowsChange}
+          highlightedKey={highlightedFlowKey}
+          onHighlight={onHighlightFlow}
+        />
+      )}
 
       {showStay && (
         <Box mt="5">

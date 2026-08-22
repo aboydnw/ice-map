@@ -5,7 +5,14 @@ import { FacilityMap } from "./components/FacilityMap";
 import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
 import { STALE_AFTER_DAYS, formatDate } from "./config";
-import type { FacilityCollection, History, MatchReport } from "./types";
+import { TOP_EDGES, buildBoardRows } from "./flows";
+import { useFacilityFlows } from "./useFlows";
+import type {
+  FacilityCollection,
+  FlowDirection,
+  History,
+  MatchReport,
+} from "./types";
 
 interface Loaded {
   facilities: FacilityCollection;
@@ -18,6 +25,43 @@ export default function App() {
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [showMethodology, setShowMethodology] = useState(false);
+  const [flowDirection, setFlowDirection] = useState<FlowDirection>("out");
+  const [showAllFlows, setShowAllFlows] = useState(false);
+  const [highlightedFlowKey, setHighlightedFlowKey] = useState<string | null>(
+    null,
+  );
+  const flowData = useFacilityFlows(selected);
+
+  const flowRows = useMemo(
+    () =>
+      flowData
+        ? buildBoardRows(
+            flowData.flows,
+            flowDirection,
+            flowData.endpoints,
+            flowData.states,
+            flowData.countries,
+          )
+        : [],
+    [flowData, flowDirection],
+  );
+  const mapFlowRows = useMemo(
+    () => (showAllFlows ? flowRows : flowRows.slice(0, TOP_EDGES)),
+    [flowRows, showAllFlows],
+  );
+
+  function selectFacility(detloc: string | null) {
+    setSelected(detloc);
+    setFlowDirection("out");
+    setShowAllFlows(false);
+    setHighlightedFlowKey(null);
+  }
+
+  function changeFlowDirection(direction: FlowDirection) {
+    setFlowDirection(direction);
+    setShowAllFlows(false);
+    setHighlightedFlowKey(null);
+  }
 
   useEffect(() => {
     Promise.all(
@@ -144,14 +188,26 @@ export default function App() {
         <FacilityMap
           data={data.facilities}
           selected={selected}
-          onSelect={setSelected}
+          onSelect={selectFacility}
+          flows={flowData}
+          flowRows={mapFlowRows}
+          direction={flowDirection}
+          highlightedKey={highlightedFlowKey}
         />
-        <Legend data={data.facilities} />
+        <Legend data={data.facilities} flows={flowData?.flows ?? null} />
         {selectedFeature && (
           <DetailPanel
             facility={selectedFeature}
             history={data.history[selectedFeature.properties.detloc]}
-            onClose={() => setSelected(null)}
+            onClose={() => selectFacility(null)}
+            flows={flowData?.flows ?? null}
+            flowRows={flowRows}
+            flowDirection={flowDirection}
+            onFlowDirectionChange={changeFlowDirection}
+            showAllFlows={showAllFlows}
+            onShowAllFlowsChange={setShowAllFlows}
+            highlightedFlowKey={highlightedFlowKey}
+            onHighlightFlow={setHighlightedFlowKey}
           />
         )}
       </Box>
