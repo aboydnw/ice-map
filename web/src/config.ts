@@ -82,6 +82,21 @@ export const THREAT_COLORS = {
   level_1: "#1c5cab",
 };
 
+/**
+ * Muted tints for consular-district fills, drawn under the circles. The
+ * pipeline assigns each district a color index so touching districts differ.
+ */
+export const CONSULAR_COLORS = [
+  "#c8a96e",
+  "#8db4a3",
+  "#b59fc6",
+  "#d8a08f",
+  "#97b3d2",
+  "#c4c08b",
+];
+export const CONSULAR_OUTLINE = "#7a6a4e";
+export const CONSULAR_FILL_OPACITY = 0.3;
+
 export const HOTLINE = {
   label: "National Immigration Detention Hotline",
   number: "209-757-3733",

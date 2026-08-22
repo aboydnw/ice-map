@@ -76,3 +76,43 @@ export interface MatchReport {
   unmatched: number;
   national_adp: number;
 }
+
+/** One country whose consular districts can be overlaid; the picker reads these. */
+export interface ConsularCountry {
+  key: string;
+  name: string;
+  file: string;
+  districts: number;
+  source: string;
+  source_dates: [string, string];
+  built: string;
+}
+
+export interface ConsularDistrictProperties {
+  id: string;
+  name: string;
+  city: string;
+  state: string;
+  county_count: number;
+  states: string[];
+  source_url: string;
+  source_date: string;
+  /** Index into CONSULAR_COLORS; neighbouring districts never share one. */
+  color: number;
+}
+
+export interface ConsularDistrictFeature {
+  type: "Feature";
+  id: string;
+  geometry: {
+    type: "Polygon" | "MultiPolygon";
+    coordinates: number[][][] | number[][][][];
+  };
+  properties: ConsularDistrictProperties;
+}
+
+export interface ConsularCollection {
+  type: "FeatureCollection";
+  meta: ConsularCountry;
+  features: ConsularDistrictFeature[];
+}

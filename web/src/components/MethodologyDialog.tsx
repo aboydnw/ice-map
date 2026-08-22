@@ -208,6 +208,25 @@ export function MethodologyDialog({ report, onClose }: Props) {
           </Text>
         </Section>
 
+        <Section title="Consular districts">
+          <Text fontSize="sm" color="inkSecondary">
+            The optional overlay draws the jurisdiction of each foreign
+            consulate in the United States — the area whose detained nationals
+            that consulate is responsible for. Governments publish these only as
+            lists of counties, so the polygons are built by joining each
+            consulate's published list to the U.S. Census county boundaries
+            (2021 cartographic files) and merging the counties. For Mexico the
+            lists come from the Secretaría de Relaciones Exteriores: each
+            consulate's own circunscripción page where one is archived, the
+            SRE's 2018 consular directory otherwise, with the June 2022
+            redistricting applied. The build refuses to run unless every county
+            in the 50 states, DC, Puerto Rico, and the U.S. Virgin Islands
+            belongs to exactly one consulate, so a stale list cannot draw a
+            district short. Hover a district for its consulate; the legend gives
+            the range of source dates.
+          </Text>
+        </Section>
+
         <Section title="Publication cadence">
           <Text fontSize="sm" color="inkSecondary">
             ICE was required to publish these figures every two weeks until

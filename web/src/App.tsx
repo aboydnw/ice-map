@@ -5,6 +5,7 @@ import { FacilityMap } from "./components/FacilityMap";
 import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
 import { STALE_AFTER_DAYS, formatDate } from "./config";
+import { useConsular } from "./useConsular";
 import type { FacilityCollection, History, MatchReport } from "./types";
 
 interface Loaded {
@@ -18,6 +19,7 @@ export default function App() {
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [showMethodology, setShowMethodology] = useState(false);
+  const consular = useConsular();
 
   useEffect(() => {
     Promise.all(
@@ -145,8 +147,15 @@ export default function App() {
           data={data.facilities}
           selected={selected}
           onSelect={setSelected}
+          districts={consular.districts}
         />
-        <Legend data={data.facilities} />
+        <Legend
+          data={data.facilities}
+          countries={consular.countries}
+          selectedCountry={consular.selected}
+          onCountryChange={consular.select}
+          districts={consular.districts}
+        />
         {selectedFeature && (
           <DetailPanel
             facility={selectedFeature}
