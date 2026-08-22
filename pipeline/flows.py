@@ -24,6 +24,8 @@ import pandas as pd
 import pyarrow.parquet
 import pyarrow.types
 
+import enrich
+
 REFERENCE_DIR = pathlib.Path(__file__).resolve().parent / "reference"
 
 WINDOW_START = "2022-10-01"
@@ -277,7 +279,7 @@ def build_endpoints(master: pd.DataFrame, referenced_codes: set) -> dict:
             continue
         endpoints.setdefault(
             code,
-            {"name": str(row.name), "lon": round(lon, 5), "lat": round(lat, 5)},
+            {"name": enrich.display_name(str(row.name)), "lon": round(lon, 5), "lat": round(lat, 5)},
         )
     return endpoints
 

@@ -31,6 +31,7 @@ INSPECTION_BODIES = {
 }
 INSPECTION_STANDARDS = {"NDS 2000", "NDS 2019", "NDS 2025", "PBNDS 2008", "PBNDS 2011", "FPBDS", "FRS"}
 EXCEL_EPOCH = pd.Timestamp("1899-12-30")
+ACRONYMS = {"ICE", "US", "USP", "FCI", "FDC", "MDC", "CCA", "SPC", "IPC", "NWIPC", "CLIPC", "MCF", "CCNO"}
 
 # DDP's individual-level detention data (source of peak / days-in-use) ends here.
 INDIVIDUAL_DATA_THROUGH = "2026-03-10"
@@ -42,6 +43,15 @@ STOPWORDS = {
     "ANNEX", "MAIN", "UNIT", "SHERIFF", "SHERIFFS", "OFFICE", "DEPARTMENT", "DEPT", "CITY",
     "TOWN", "PARISH", "STATE", "PRISON", "COMPLEX", "ADULT", "SECURE", "CAMP",
 }
+
+
+def display_name(name: str) -> str:
+    """Title-case all-caps names, preserving known acronyms; keep mixed case as-is."""
+    if name != name.upper():
+        return name
+    return " ".join(
+        word if word.strip("().,") in ACRONYMS else word.title() for word in name.split(" ")
+    )
 
 
 def normalize(value) -> str:

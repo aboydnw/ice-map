@@ -193,3 +193,11 @@ def test_match_ice_site_skips_archived_pages():
 def test_load_json_requires_reference_file():
     with pytest.raises(FileNotFoundError):
         enrich.load_json("definitely-missing.json")
+
+
+def test_display_name_preserves_mixed_case_and_acronyms():
+    assert enrich.display_name("Northwest ICE Processing Center (NWIPC)") == (
+        "Northwest ICE Processing Center (NWIPC)"
+    )
+    assert enrich.display_name("MONTGOMERY COUNTY JAIL") == "Montgomery County Jail"
+    assert enrich.display_name("FCI ATLANTA") == "FCI Atlanta"

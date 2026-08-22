@@ -76,3 +76,36 @@ export interface MatchReport {
   unmatched: number;
   national_adp: number;
 }
+
+export type FlowDirection = "in" | "out";
+
+/** One destination or origin for a facility, with a monthly breakdown. */
+export interface FlowEdge {
+  key: string;
+  count: number;
+  months: [string, number][];
+}
+
+export interface FacilityFlows {
+  detloc: string;
+  as_of: string;
+  window: [string, string];
+  totals: Record<FlowDirection, number>;
+  coverage: { origin_linked: number | null; origin_linked_of: number };
+  in: FlowEdge[];
+  out: FlowEdge[];
+}
+
+export interface Centroid {
+  name: string;
+  lon: number;
+  lat: number;
+}
+
+export interface FlowEndpoints {
+  as_of: string;
+  facilities: Record<string, Centroid>;
+}
+
+/** Centroid tables keyed by ICE's own spellings, as written by the pipeline. */
+export type Centroids = Record<string, Centroid>;

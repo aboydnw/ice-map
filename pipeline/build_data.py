@@ -234,7 +234,6 @@ def coalesce(row, *columns):
 
 
 EXCEL_EPOCH = pd.Timestamp("1899-12-30")
-ACRONYMS = {"ICE", "US", "USP", "FCI", "FDC", "MDC", "CCA", "SPC", "IPC", "NWIPC", "CLIPC", "MCF", "CCNO"}
 
 
 def format_inspection_date(value) -> str | None:
@@ -245,15 +244,6 @@ def format_inspection_date(value) -> str | None:
     if re.fullmatch(r"\d{4,6}(\.0)?", text):
         return str((EXCEL_EPOCH + pd.Timedelta(days=float(text))).date())
     return text[:10]
-
-
-def display_name(name: str) -> str:
-    """Title-case all-caps names, preserving known acronyms; keep mixed case as-is."""
-    if name != name.upper():
-        return name
-    return " ".join(
-        word if word.strip("().,") in ACRONYMS else word.title() for word in name.split(" ")
-    )
 
 
 def build_features(matched: pd.DataFrame, master: pd.DataFrame, enrichment: Enrichment) -> list[dict]:
@@ -276,7 +266,7 @@ def build_features(matched: pd.DataFrame, master: pd.DataFrame, enrichment: Enri
                 },
                 "properties": {
                     "detloc": detloc,
-                    "name": display_name(str(info["name"])),
+                    "name": enrich.display_name(str(info["name"])),
                     "address": str(info["address_full"]),
                     "bucket": bucket_for(row["type_detailed"]),
                     "type_detailed": row["type_detailed"],
