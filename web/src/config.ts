@@ -91,11 +91,21 @@ export const FLOW_COLORS: Record<string, string> = {
   other: "#6b6862",
 };
 
-export function flowRgb(family: string): [number, number, number] {
-  const hex = FLOW_COLORS[family] ?? FLOW_COLORS.other;
+/**
+ * Channels are a neutral route, not a data value: colour belongs to the dots
+ * travelling them, so a facility with mixed destinations does not turn into a
+ * tangle of competing hues.
+ */
+export const FLOW_CHANNEL = "#b8b1a4";
+
+export function hexRgb(hex: string): [number, number, number] {
   return [1, 3, 5].map((offset) =>
     parseInt(hex.slice(offset, offset + 2), 16),
   ) as [number, number, number];
+}
+
+export function flowRgb(family: string): [number, number, number] {
+  return hexRgb(FLOW_COLORS[family] ?? FLOW_COLORS.other);
 }
 
 export const HOTLINE = {

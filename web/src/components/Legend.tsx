@@ -1,6 +1,7 @@
 import { Box, Text } from "@chakra-ui/react";
 import {
   BUCKETS,
+  FLOW_CHANNEL,
   FLOW_COLORS,
   formatDate,
   formatMonthYear,
@@ -85,6 +86,18 @@ export function Legend({ data, flows }: Props) {
           <Text fontSize="xs" color="inkSecondary" mb="1">
             ● = {QUANTUM} stints, not people
           </Text>
+          <Box display="flex" alignItems="center" gap="2" py="1px" mb="1px">
+            <Box
+              width="14px"
+              height="4px"
+              borderRadius="2px"
+              bg={FLOW_CHANNEL}
+              flexShrink={0}
+            />
+            <Text fontSize="11px" color="inkSecondary" lineHeight="1.25">
+              A route people are moved along
+            </Text>
+          </Box>
           {FLOW_KEYS.map((entry) => (
             <Box
               key={entry.family}
@@ -94,9 +107,9 @@ export function Legend({ data, flows }: Props) {
               py="1px"
             >
               <Box
-                width="14px"
-                height="2px"
-                borderRadius="1px"
+                width="7px"
+                height="7px"
+                borderRadius="full"
                 bg={FLOW_COLORS[entry.family]}
                 flexShrink={0}
               />

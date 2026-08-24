@@ -253,6 +253,8 @@ export interface FlowArc {
   family: FlowFamily;
   source: [number, number];
   target: [number, number];
+  /** The route itself. Dots ride this exact path, so they never drift off it. */
+  path: [number, number][];
   /** True when the far end is a gate stub rather than a recorded location. */
   gate: boolean;
 }
@@ -265,8 +267,11 @@ export interface FlowTrip {
   hollow: boolean;
 }
 
+/** Great-circle samples per route; enough to read as a curve at any zoom. */
+const PATH_STEPS = 24;
+
 /**
- * Arcs for the visible rows. Rows without a recorded destination get a short
+ * Routes for the visible rows. Rows without a recorded destination get a short
  * stub fanned around the facility instead of a location they never had.
  */
 export function buildArcs(
@@ -287,13 +292,16 @@ export function buildArcs(
         facility[1] + Math.sin(angle) * GATE_RADIUS * 0.6,
       ];
     }
+    const source = direction === "out" ? facility : far;
+    const target = direction === "out" ? far : facility;
     return {
       key: row.key,
       label: row.label,
       count: row.count,
       family: familyOf(row.key),
-      source: direction === "out" ? facility : far,
-      target: direction === "out" ? far : facility,
+      source,
+      target,
+      path: gate ? [source, target] : greatCircle(source, target, PATH_STEPS),
       gate,
     };
   });
@@ -359,9 +367,7 @@ export function buildTrips(
   const trips: FlowTrip[] = [];
   arcs.forEach((arc, index) => {
     const schedule = schedules[index];
-    const path = arc.gate
-      ? [arc.source, arc.target]
-      : greatCircle(arc.source, arc.target, 24);
+    const path = arc.path;
     const offsets = path.map((_, step) => (step / (path.length - 1)) * travel);
     for (const departure of schedule.departures) {
       const start = departure * loop;

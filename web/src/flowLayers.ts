@@ -1,8 +1,8 @@
-import { ArcLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import { TripsLayer } from "@deck.gl/geo-layers";
 import type { Layer } from "@deck.gl/core";
-import { flowRgb } from "./config";
-import { TRAVEL_MS, alphaFor } from "./flowScene";
+import { FLOW_CHANNEL, flowRgb, hexRgb } from "./config";
+import { DASH_MS, TRAVEL_MS, alphaFor } from "./flowScene";
 import type { FlowScene, Marker } from "./flowScene";
 import type { FlowArc, FlowTrip } from "./flows";
 
@@ -17,27 +17,22 @@ export function flowLayers(
 ): Layer[] {
   const family = new Map(scene.arcs.map((arc) => [arc.key, arc.family]));
   const layers: Layer[] = [
-    new ArcLayer<FlowArc>({
-      id: "flow-arcs",
-      data: scene.arcs,
-      greatCircle: true,
-      getSourcePosition: (arc) => arc.source,
-      getTargetPosition: (arc) => arc.target,
-      getSourceColor: (arc) => [
-        ...flowRgb(arc.family),
-        alphaFor(arc.key, highlighted, 130),
-      ],
-      getTargetColor: (arc) => [
-        ...flowRgb(arc.family),
-        alphaFor(arc.key, highlighted, arc.gate ? 0 : 205),
-      ],
-      getWidth: (arc) => (arc.key === highlighted ? 3 : 1.6),
+    // The channel is permanent: it says a route exists whether or not a dot
+    // happens to be passing. Small facilities move a handful of people a year,
+    // so without it their connections would be invisible most of the time.
+    new PathLayer<FlowArc>({
+      id: "flow-channels",
+      data: scene.channels,
+      getPath: (arc) => arc.path,
+      getColor: (arc) =>
+        arc.key === highlighted
+          ? [...flowRgb(arc.family), 120]
+          : [...hexRgb(FLOW_CHANNEL), alphaFor(arc.key, highlighted, 120)],
+      getWidth: (arc) => (arc.key === highlighted ? 7 : 5),
       widthUnits: "pixels",
-      updateTriggers: {
-        getSourceColor: highlighted,
-        getTargetColor: highlighted,
-        getWidth: highlighted,
-      },
+      capRounded: true,
+      jointRounded: true,
+      updateTriggers: { getColor: highlighted, getWidth: highlighted },
     }),
   ];
 
@@ -50,14 +45,41 @@ export function flowLayers(
         getTimestamps: (trip) => trip.timestamps,
         getColor: (trip) => [
           ...flowRgb(family.get(trip.key) ?? "other"),
-          alphaFor(trip.key, highlighted, trip.hollow ? 110 : 235),
+          alphaFor(trip.key, highlighted, trip.hollow ? 130 : 255),
         ],
-        getWidth: (trip) => (trip.hollow ? 1.6 : 3),
+        getWidth: (trip) => (trip.hollow ? 2 : 3.4),
         widthUnits: "pixels",
         capRounded: true,
         jointRounded: true,
+        // A crisp dash rather than a comet tail: these are countable units,
+        // and a fading smear reads as continuous flow.
+        fadeTrail: false,
+        trailLength: DASH_MS,
+        currentTime,
+        updateTriggers: { getColor: highlighted },
+      }),
+    );
+  }
+
+  if (scene.gateTrips.length > 0) {
+    layers.push(
+      new TripsLayer<FlowTrip>({
+        id: "flow-gate-trips",
+        data: scene.gateTrips,
+        getPath: (trip) => trip.path,
+        getTimestamps: (trip) => trip.timestamps,
+        getColor: (trip) => [
+          ...flowRgb(family.get(trip.key) ?? "other"),
+          alphaFor(trip.key, highlighted, trip.hollow ? 130 : 235),
+        ],
+        getWidth: (trip) => (trip.hollow ? 2 : 3.4),
+        widthUnits: "pixels",
+        capRounded: true,
+        jointRounded: true,
+        // These leave the gate and fade: ICE records no destination, and the
+        // trail dying out is the honest way to draw not knowing.
         fadeTrail: true,
-        trailLength: TRAVEL_MS * 0.3,
+        trailLength: TRAVEL_MS * 0.45,
         currentTime,
         updateTriggers: { getColor: highlighted },
       }),

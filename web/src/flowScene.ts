@@ -6,6 +6,8 @@ import type { FacilityFlows, FlowDirection } from "./types";
 export const LOOP_MS = 16_000;
 export const TRAVEL_MS = 3_200;
 export const CYCLE_MS = LOOP_MS + TRAVEL_MS;
+/** Length of a travelling dash, as a slice of its journey time. */
+export const DASH_MS = TRAVEL_MS * 0.08;
 
 const DIMMED = 0.16;
 const HIGHLIGHTED = 1.7;
@@ -37,7 +39,15 @@ export interface Marker {
  */
 export interface FlowScene {
   arcs: FlowArc[];
+  /**
+   * Routes to a recorded place, drawn as a permanent channel. A release has no
+   * recorded destination, so it gets no channel: the absence is the point.
+   */
+  channels: FlowArc[];
+  /** Dots travelling a channel. */
   trips: FlowTrip[];
+  /** Dots leaving the gate for nowhere, drawn with a trail that fades out. */
+  gateTrips: FlowTrip[];
   markers: Marker[];
 }
 
@@ -64,6 +74,10 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
       )
     : [];
 
+  const gateKeys = new Set(
+    arcs.filter((arc) => arc.gate).map((arc) => arc.key),
+  );
+
   const seen = new Set<string>();
   const markers: Marker[] = [];
   rows.forEach((row) => {
@@ -74,5 +88,11 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
     markers.push({ position: row.lonLat, label: row.label });
   });
 
-  return { arcs, trips, markers };
+  return {
+    arcs,
+    channels: arcs.filter((arc) => !arc.gate),
+    trips: trips.filter((trip) => !gateKeys.has(trip.key)),
+    gateTrips: trips.filter((trip) => gateKeys.has(trip.key)),
+    markers,
+  };
 }

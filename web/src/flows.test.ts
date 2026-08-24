@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { alphaFor } from "./flowScene";
+import { alphaFor, buildFlowScene } from "./flowScene";
 import {
   GATE_RADIUS,
   QUANTUM,
@@ -405,5 +405,72 @@ describe("alphaFor", () => {
     expect(alphaFor("a", "a", 145)).toBeGreaterThan(145);
     expect(alphaFor("a", "a", 235)).toBe(255);
     expect(alphaFor("b", "a", 145)).toBeLessThan(145);
+  });
+});
+
+describe("routes and channels", () => {
+  const facility: [number, number] = [-92.13, 31.68];
+
+  function sceneFor(out: FlowEdge[]) {
+    const flows = flowsFor(out);
+    const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+    return buildFlowScene({
+      flows,
+      direction: "out",
+      rows,
+      facility,
+      mappedCodes: new Set<string>(),
+      animate: true,
+    });
+  }
+
+  it("samples a curve for a recorded destination and a stub for a gate", () => {
+    const flows = flowsFor([
+      edge("removed:GUATEMALA", 100, [["2023-01", 100]]),
+      edge("released:paroled", 100, [["2023-01", 100]]),
+    ]);
+    const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+    const [geographic, gate] = buildArcs(rows, facility, "out");
+
+    expect(geographic.path.length).toBeGreaterThan(2);
+    expect(geographic.path[0]).toEqual(facility);
+    expect(gate.path).toHaveLength(2);
+    expect(gate.path[0]).toEqual(facility);
+  });
+
+  it("gives a channel only to routes that lead somewhere recorded", () => {
+    const scene = sceneFor([
+      edge("removed:GUATEMALA", 100, [["2023-01", 100]]),
+      edge("released:paroled", 100, [["2023-01", 100]]),
+      edge("not-reported", 100, [["2023-01", 100]]),
+    ]);
+
+    expect(scene.arcs).toHaveLength(3);
+    expect(scene.channels.map((arc) => arc.key)).toEqual(["removed:GUATEMALA"]);
+    expect(scene.channels.every((arc) => !arc.gate)).toBe(true);
+  });
+
+  it("routes destination-less dots to the fading gate layer", () => {
+    const scene = sceneFor([
+      edge("removed:GUATEMALA", 100, [["2023-01", 100]]),
+      edge("released:paroled", 100, [["2023-01", 100]]),
+    ]);
+
+    expect(new Set(scene.trips.map((trip) => trip.key))).toEqual(
+      new Set(["removed:GUATEMALA"]),
+    );
+    expect(new Set(scene.gateTrips.map((trip) => trip.key))).toEqual(
+      new Set(["released:paroled"]),
+    );
+  });
+
+  it("makes every dot ride the exact path its channel draws", () => {
+    const scene = sceneFor([
+      edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
+    ]);
+    const channel = scene.channels[0];
+
+    expect(scene.trips.length).toBeGreaterThan(1);
+    expect(scene.trips.every((trip) => trip.path === channel.path)).toBe(true);
   });
 });
