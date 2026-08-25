@@ -10,9 +10,10 @@ import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import type { MapboxOverlay } from "@deck.gl/mapbox";
 import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
 import { loadFlowOverlay } from "../flowOverlay";
-import { CYCLE_MS, buildFlowScene, processingSites } from "../flowScene";
-import type { FlowScene, ProcessingSite } from "../flowScene";
+import { LOOP_MS, buildFlowScene, processingSites } from "../flowScene";
+import type { ProcessingSite } from "../flowScene";
 import type { BoardRow } from "../flows";
+import { US_RINGS } from "../usOutline";
 import type {
   Bucket,
   FacilityCollection,
@@ -30,6 +31,12 @@ const US_BOUNDS: [[number, number], [number, number]] = [
   [-126, 23.5],
   [-65.5, 50],
 ];
+/** Spacing between fanned lanes on screen. */
+const LANE_PX = 7;
+/** Web Mercator, 512px tiles: degrees of longitude per pixel at a zoom. */
+function degreesPerPixel(zoom: number): number {
+  return 360 / (512 * 2 ** zoom);
+}
 
 interface HoverInfo {
   x: number;
@@ -72,8 +79,9 @@ export function FacilityMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
-  const animatedSceneRef = useRef<FlowScene | null>(null);
+  const animatedKeyRef = useRef<string | null>(null);
   const clockStartRef = useRef(0);
+  const [zoom, setZoom] = useState(3);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const [hover, setHover] = useState<HoverInfo | null>(null);
@@ -126,6 +134,8 @@ export function FacilityMap({
           new maplibregl.NavigationControl({ showCompass: false }),
           "top-right",
         );
+        setZoom(m.getZoom());
+        m.on("zoomend", () => setZoom(m.getZoom()));
 
         m.on("load", () => {
           // Test hook: lets Playwright drive the map in dev and preview builds.
@@ -289,8 +299,10 @@ export function FacilityMap({
       facility: facilityLonLat,
       mappedCodes,
       animate: !prefersReducedMotion(),
+      rings: US_RINGS,
+      laneWidthDeg: LANE_PX * degreesPerPixel(zoom),
     });
-  }, [flows, facilityLonLat, flowRows, direction, mappedCodes]);
+  }, [flows, facilityLonLat, flowRows, direction, mappedCodes, zoom]);
 
   useEffect(() => {
     const wanted = Boolean(scene) || processing.length > 0;
@@ -346,16 +358,17 @@ export function FacilityMap({
           paint(0);
           return;
         }
-        // Highlighting restarts this effect; keeping the clock outside it
-        // means hovering a board row does not rewind the animation.
-        if (animatedSceneRef.current !== scene) {
-          animatedSceneRef.current = scene;
+        // Highlighting and zooming both rebuild the scene; keying the clock on
+        // the selection means neither rewinds the animation.
+        const animatedKey = `${selected ?? ""}|${direction}`;
+        if (animatedKeyRef.current !== animatedKey) {
+          animatedKeyRef.current = animatedKey;
           clockStartRef.current = performance.now();
         }
         // Runs only while a facility is selected, and is torn down on
         // deselect, on unmount, and whenever the scene changes.
         const tick = () => {
-          paint((performance.now() - clockStartRef.current) % CYCLE_MS);
+          paint((performance.now() - clockStartRef.current) % LOOP_MS);
           frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
@@ -368,7 +381,7 @@ export function FacilityMap({
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [scene, highlightedKey, processing, handleSiteHover, selected]);
+  }, [scene, highlightedKey, processing, handleSiteHover, selected, direction]);
 
   if (mapFailed) {
     return (

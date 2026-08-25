@@ -1,16 +1,13 @@
-import { buildArcs, buildDots, monthAxis } from "./flows";
-import type { BoardRow, FlowArc, FlowDot } from "./flows";
+import { buildArcs, buildDots, quantumFor } from "./flows";
+import type { BoardRow, FlowArc, FlowDot, RouteOptions } from "./flows";
 import type { FacilityFlows, FlowDirection, FlowEndpoints } from "./types";
 
-/** One pass of the animation covers the whole data window. */
-export const LOOP_MS = 16_000;
 /**
- * How long a dot takes to cross its route. Longer means slower; because
- * departures are fixed to the month they happened, it also means more dots in
- * flight at once.
+ * The animation clock wraps here. Every route emits its dots evenly across
+ * one loop, so the stream is continuous — a dot's timing says nothing about
+ * when the move happened, only how many there were.
  */
-export const TRAVEL_MS = 6_400;
-export const CYCLE_MS = LOOP_MS + TRAVEL_MS;
+export const LOOP_MS = 16_000;
 
 const DIMMED = 0.16;
 const HIGHLIGHTED = 1.7;
@@ -64,11 +61,20 @@ export function processingSites(
 export interface Marker {
   position: [number, number];
   label: string;
+  /**
+   * An endpoint is a place and gets a ring. An exit is where a route crosses
+   * the border: it is labelled so the destination can be read without zooming
+   * out, but never marked, because nothing says anyone departed from there.
+   */
+  kind: "endpoint" | "exit";
+  /** Stacks labels of routes leaving through the same stretch of border. */
+  lane: number;
 }
 
 /**
- * The geometry for one facility's flows. Built once per selection so the
- * animation frame only has to swap a timestamp, never rebuild attributes.
+ * The geometry for one facility's flows. Built once per selection (and per
+ * zoom, for the lane width) so the animation frame only has to swap a
+ * timestamp, never rebuild attributes.
  */
 export interface FlowScene {
   arcs: FlowArc[];
@@ -77,12 +83,16 @@ export interface FlowScene {
    * recorded destination, so it gets no channel: the absence is the point.
    */
   channels: FlowArc[];
+  /** Routes that leave the country; their `tail` is drawn faint beyond the exit. */
+  tails: FlowArc[];
   /** Every dot, with its departure time; the renderer places them per frame. */
   dots: FlowDot[];
   markers: Marker[];
+  /** Stints per dot for this selection. */
+  quantum: number;
 }
 
-export interface SceneOptions {
+export interface SceneOptions extends RouteOptions {
   flows: FacilityFlows;
   direction: FlowDirection;
   rows: BoardRow[];
@@ -93,11 +103,13 @@ export interface SceneOptions {
 }
 
 export function buildFlowScene(options: SceneOptions): FlowScene {
-  const { flows, direction, rows, facility } = options;
-  const arcs = buildArcs(rows, facility, direction);
-  const dots = options.animate
-    ? buildDots(arcs, flows[direction], monthAxis(flows.window), LOOP_MS)
-    : [];
+  const { direction, rows, facility } = options;
+  const arcs = buildArcs(rows, facility, direction, {
+    rings: options.rings,
+    laneWidthDeg: options.laneWidthDeg,
+  });
+  const quantum = quantumFor(rows.map((row) => row.count));
+  const dots = options.animate ? buildDots(arcs, LOOP_MS, quantum) : [];
 
   const seen = new Set<string>();
   const markers: Marker[] = [];
@@ -106,8 +118,31 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
     const code = row.key.slice("transfer:".length);
     if (options.mappedCodes.has(code) || seen.has(code)) return;
     seen.add(code);
-    markers.push({ position: row.lonLat, label: row.label });
+    markers.push({
+      position: row.lonLat,
+      label: row.label,
+      kind: "endpoint",
+      lane: 0,
+    });
   });
+  const arrow = direction === "out" ? "→" : "←";
+  arcs
+    .filter((arc) => arc.exit)
+    .forEach((arc, index) => {
+      markers.push({
+        position: arc.exit as [number, number],
+        label: `${arrow} ${arc.label} · ${arc.count.toLocaleString()}`,
+        kind: "exit",
+        lane: index,
+      });
+    });
 
-  return { arcs, channels: arcs.filter((arc) => !arc.gate), dots, markers };
+  return {
+    arcs,
+    channels: arcs.filter((arc) => !arc.gate),
+    tails: arcs.filter((arc) => arc.tail),
+    dots,
+    markers,
+    quantum,
+  };
 }

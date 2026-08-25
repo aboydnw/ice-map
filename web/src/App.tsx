@@ -6,7 +6,7 @@ import { FacilityMap } from "./components/FacilityMap";
 import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
 import { STALE_AFTER_DAYS, formatDate } from "./config";
-import { TOP_EDGES, buildBoardRows } from "./flows";
+import { TOP_EDGES, buildBoardRows, quantumFor } from "./flows";
 import { useFacilityFlows, useFlowEndpoints } from "./useFlows";
 import type {
   FacilityCollection,
@@ -207,6 +207,7 @@ export default function App() {
         <Legend
           data={data.facilities}
           flows={flowData?.flows ?? null}
+          quantum={quantumFor(mapFlowRows.map((row) => row.count))}
           showProcessing={showProcessing}
           onShowProcessingChange={setShowProcessing}
         />

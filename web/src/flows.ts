@@ -2,14 +2,10 @@ import type {
   Centroids,
   FacilityFlows,
   FlowDirection,
-  FlowEdge,
   FlowEndpoints,
 } from "./types";
 
-/**
- * One animated dot stands for this many stints. Fixed globally and printed in
- * the legend: a per-facility quantum would make dots uncountable across the map.
- */
+/** No dot ever stands for fewer stints than this, so small routes stay countable. */
 export const QUANTUM = 25;
 
 /** Map rendering stops here by default; the board's "Show all" lifts it. */
@@ -39,8 +35,6 @@ export interface DotSchedule {
   dots: number;
   /** Sub-quantum edges get a single outline dot so they are never erased. */
   hollow: boolean;
-  /** Departure offsets in [0, 1), one per dot, spread across the edge's months. */
-  departures: number[];
 }
 
 const FIXED_LABELS: Record<string, string> = {
@@ -165,62 +159,65 @@ export function monthAxis(window: [string, string]): string[] {
   return axis;
 }
 
+/** The busiest route in a selection gets this many dots; the rest scale down. */
+export const MAX_DOTS = 80;
+
+/**
+ * Stints per dot for one selection: the fixed minimum unless the busiest
+ * route would overflow `MAX_DOTS`. Printed in the legend, since it can change
+ * from one facility to the next.
+ */
+export function quantumFor(
+  counts: number[],
+  maxDots = MAX_DOTS,
+  minimum = QUANTUM,
+): number {
+  const largest = Math.max(0, ...counts);
+  return Math.max(minimum, Math.ceil(largest / maxDots));
+}
+
 /**
  * Allocate whole dots across edges by cumulative rounding, so the dots on
  * screen sum to `round(total / quantum)` however the counts split. Edges that
  * round down to nothing keep one hollow dot.
  */
 export function quantize(
-  edges: FlowEdge[],
-  axis: string[],
+  edges: { key: string; count: number }[],
   quantum = QUANTUM,
 ): DotSchedule[] {
-  const slots = new Map(axis.map((month, index) => [month, index]));
   let running = 0;
   return edges.map((edge) => {
     const before = Math.round(running / quantum);
     running += edge.count;
     const allocated = Math.round(running / quantum) - before;
     const hollow = allocated === 0;
-    const dots = hollow ? 1 : allocated;
-    return {
-      key: edge.key,
-      dots,
-      hollow,
-      departures: scheduleDepartures(edge, dots, slots, axis.length),
-    };
+    return { key: edge.key, dots: hollow ? 1 : allocated, hollow };
   });
 }
 
+function hashOf(text: string): number {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash;
+}
+
 /**
- * Spread an edge's dots over the months it actually happened in, so departures
- * leave in monthly pulses instead of an evenly-spaced river.
+ * Evenly spaced departures across the loop, phase-shifted by the edge key so
+ * ten routes do not all fire on the same beat.
  */
-function scheduleDepartures(
-  edge: FlowEdge,
+export function emitSchedule(
+  key: string,
   dots: number,
-  slots: Map<string, number>,
-  span: number,
+  loop: number,
 ): number[] {
-  const departures: number[] = [];
-  if (span > 0 && edge.count > 0) {
-    let running = 0;
-    for (const [month, count] of edge.months) {
-      const before = Math.round((running / edge.count) * dots);
-      running += count;
-      const share = Math.round((running / edge.count) * dots) - before;
-      const slot = slots.get(month);
-      if (slot === undefined) continue;
-      for (let dot = 0; dot < share; dot += 1) {
-        departures.push((slot + (dot + 0.5) / share) / span);
-      }
-    }
-  }
-  // Months outside the axis leave gaps; fill them so the dot count still matches.
-  for (let index = departures.length; index < dots; index += 1) {
-    departures.push((index + 0.5) / dots);
-  }
-  return departures.slice(0, dots).sort((a, b) => a - b);
+  const phase = (hashOf(key) % 1000) / 1000;
+  return Array.from(
+    { length: dots },
+    (_, index) => ((index + phase) / dots) * loop,
+  );
 }
 
 export type FlowFamily =
@@ -246,6 +243,9 @@ export function familyOf(key: string): FlowFamily {
  */
 export const GATE_RADIUS = 1.4;
 
+/** Routes closer in bearing than this share a trunk and fan apart at the end. */
+export const LANE_ANGLE = 12;
+
 export interface FlowArc {
   key: string;
   label: string;
@@ -253,10 +253,21 @@ export interface FlowArc {
   family: FlowFamily;
   source: [number, number];
   target: [number, number];
-  /** The route itself. Dots ride this exact path, so they never drift off it. */
+  /**
+   * The route the dots ride. For a route that leaves the country this is only
+   * the leg inside it; the rest is `tail`.
+   */
   path: [number, number][];
   /** True when the far end is a gate stub rather than a recorded location. */
   gate: boolean;
+  /** Where the route crosses the border, when it does. Labelled, never marked. */
+  exit: [number, number] | null;
+  /** The part of the route beyond the exit, drawn faint so it stays traceable. */
+  tail: [number, number][] | null;
+  /** Lateral lane within a bearing cluster; 0 when the route has the corridor to itself. */
+  lane: number;
+  /** How long a dot takes to cross `path`, in ms. */
+  travel: number;
 }
 
 export interface FlowDot {
@@ -264,6 +275,7 @@ export interface FlowDot {
   path: [number, number][];
   /** Offset within the loop at which this dot sets off, in ms. */
   start: number;
+  travel: number;
   hollow: boolean;
   /** Gate dots have nowhere to arrive, so they fade out instead. */
   gate: boolean;
@@ -278,21 +290,33 @@ export interface PlacedDot {
   opacity: number;
 }
 
-/** Great-circle samples per route; enough to read as a curve at any zoom. */
-const PATH_STEPS = 24;
+/** Great-circle samples per route; enough for the lane fan to read as a curve. */
+const PATH_STEPS = 48;
+
+export interface RouteOptions {
+  /** Border rings; a route crossing out of them is split at the crossing. */
+  rings?: [number, number][][];
+  /** Lane spacing in degrees at the current zoom; 0 disables the fan. */
+  laneWidthDeg?: number;
+}
 
 /**
  * Routes for the visible rows. Rows without a recorded destination get a short
- * stub fanned around the facility instead of a location they never had.
+ * stub fanned around the facility instead of a location they never had. Routes
+ * that leave the country are split at the border, and routes sharing a bearing
+ * are fanned into lanes so neighbours stay distinguishable.
  */
 export function buildArcs(
   rows: BoardRow[],
   facility: [number, number],
   direction: FlowDirection,
+  options: RouteOptions = {},
 ): FlowArc[] {
+  const rings = options.rings ?? [];
+  const laneWidth = options.laneWidthDeg ?? 0;
   const gateCount = rows.filter((row) => !row.lonLat).length;
   let gateIndex = 0;
-  return rows.map((row) => {
+  const arcs = rows.map((row): FlowArc => {
     let far = row.lonLat;
     const gate = far === null;
     if (far === null) {
@@ -305,6 +329,11 @@ export function buildArcs(
     }
     const source = direction === "out" ? facility : far;
     const target = direction === "out" ? far : facility;
+    const full = gate
+      ? [source, target]
+      : greatCircle(source, target, PATH_STEPS);
+    const split = gate || rings.length === 0 ? null : splitAtExit(full, rings);
+    const path = split ? split.leg : full;
     return {
       key: row.key,
       label: row.label,
@@ -312,10 +341,23 @@ export function buildArcs(
       family: familyOf(row.key),
       source,
       target,
-      path: gate ? [source, target] : greatCircle(source, target, PATH_STEPS),
+      path,
       gate,
+      exit: split?.exit ?? null,
+      tail: split?.tail ?? null,
+      lane: 0,
+      travel: travelFor(path),
     };
   });
+  const lanes = assignLanes(arcs, facility);
+  for (const arc of arcs) {
+    const lane = lanes.get(arc.key) ?? 0;
+    arc.lane = lane;
+    if (lane !== 0 && laneWidth > 0) {
+      arc.path = fanPath(arc.path, lane * laneWidth, direction === "in");
+    }
+  }
+  return arcs;
 }
 
 /** Points along the great circle between two coordinates, ends included. */
@@ -357,31 +399,195 @@ export function greatCircle(
   return points;
 }
 
-/** One dot per quantum, released onto the path of the route it travels. */
+/** Ray-cast point-in-polygon across every ring. */
+export function pointInRings(
+  point: [number, number],
+  rings: [number, number][][],
+): boolean {
+  const [x, y] = point;
+  for (const ring of rings) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
+      const [xi, yi] = ring[i];
+      const [xj, yj] = ring[j];
+      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+        inside = !inside;
+      }
+    }
+    if (inside) return true;
+  }
+  return false;
+}
+
+export interface ExitSplit {
+  /** The part of the route inside the rings, in travel order. */
+  leg: [number, number][];
+  /** The part outside, in travel order. */
+  tail: [number, number][];
+  exit: [number, number];
+}
+
+/**
+ * Cut a route where it leaves the rings, walking from whichever end is
+ * inside. Null when the route never crosses — both ends inside, or neither.
+ */
+export function splitAtExit(
+  path: [number, number][],
+  rings: [number, number][][],
+): ExitSplit | null {
+  const startInside = pointInRings(path[0], rings);
+  const endInside = pointInRings(path[path.length - 1], rings);
+  if (startInside === endInside) return null;
+  const ordered = startInside ? path : [...path].reverse();
+  let index = 0;
+  while (
+    index + 1 < ordered.length &&
+    pointInRings(ordered[index + 1], rings)
+  ) {
+    index += 1;
+  }
+  let inside = ordered[index];
+  let outside = ordered[index + 1];
+  for (let step = 0; step < 20; step += 1) {
+    const mid: [number, number] = [
+      (inside[0] + outside[0]) / 2,
+      (inside[1] + outside[1]) / 2,
+    ];
+    if (pointInRings(mid, rings)) inside = mid;
+    else outside = mid;
+  }
+  const exit: [number, number] = [
+    (inside[0] + outside[0]) / 2,
+    (inside[1] + outside[1]) / 2,
+  ];
+  const within = [...ordered.slice(0, index + 1), exit];
+  const beyond = [exit, ...ordered.slice(index + 1)];
+  return startInside
+    ? { leg: within, tail: beyond, exit }
+    : { leg: within.reverse(), tail: beyond.reverse(), exit };
+}
+
+function bearingFrom(from: [number, number], to: [number, number]): number {
+  const scale = Math.cos((from[1] * Math.PI) / 180);
+  const degrees =
+    (Math.atan2((to[0] - from[0]) * scale, to[1] - from[1]) * 180) / Math.PI;
+  return (degrees + 360) % 360;
+}
+
+/**
+ * Group routes by the direction they leave the facility and give each member
+ * of a group its own lane, centred on the trunk. Lane order follows bearing,
+ * so the same facility always fans the same way.
+ */
+export function assignLanes(
+  arcs: FlowArc[],
+  facility: [number, number],
+): Map<string, number> {
+  const routed = arcs
+    .filter((arc) => !arc.gate)
+    .map((arc) => ({
+      key: arc.key,
+      bearing: bearingFrom(
+        facility,
+        arc.source === facility ? arc.target : arc.source,
+      ),
+    }))
+    .sort((a, b) => a.bearing - b.bearing);
+  const lanes = new Map<string, number>();
+  let cluster: typeof routed = [];
+  const flush = () => {
+    cluster.forEach((member, index) => {
+      lanes.set(member.key, index - (cluster.length - 1) / 2);
+    });
+    cluster = [];
+  };
+  for (const route of routed) {
+    const previous = cluster[cluster.length - 1];
+    if (previous && route.bearing - previous.bearing > LANE_ANGLE) flush();
+    cluster.push(route);
+  }
+  flush();
+  return lanes;
+}
+
+const FAN_START = 0.8;
+const FAN_FULL = 0.9;
+const FAN_HOLD = 0.96;
+
+/**
+ * Push the far end of a route sideways by `offsetDeg`, ramping in over the
+ * last stretch and folding back so the dot still lands on its destination.
+ */
+export function fanPath(
+  path: [number, number][],
+  offsetDeg: number,
+  farEndFirst: boolean,
+): [number, number][] {
+  const last = path.length - 1;
+  if (last < 1) return path;
+  return path.map((point, index) => {
+    const along = farEndFirst ? 1 - index / last : index / last;
+    let weight = 0;
+    if (along >= FAN_FULL && along <= FAN_HOLD) weight = 1;
+    else if (along > FAN_START && along < FAN_FULL) {
+      weight = (along - FAN_START) / (FAN_FULL - FAN_START);
+    } else if (along > FAN_HOLD && along < 1) {
+      weight = (1 - along) / (1 - FAN_HOLD);
+    }
+    if (weight === 0) return point;
+    const before = path[Math.max(index - 1, 0)];
+    const after = path[Math.min(index + 1, last)];
+    const scale = Math.cos((point[1] * Math.PI) / 180);
+    const dx = (after[0] - before[0]) * scale;
+    const dy = after[1] - before[1];
+    const length = Math.hypot(dx, dy) || 1;
+    const amount = offsetDeg * weight;
+    return [
+      point[0] + ((-dy / length) * amount) / scale,
+      point[1] + (dx / length) * amount,
+    ];
+  });
+}
+
+/** Milliseconds per degree of route; longer roads take longer to cross. */
+export const MS_PER_DEGREE = 400;
+export const TRAVEL_MIN_MS = 4_000;
+export const TRAVEL_MAX_MS = 14_000;
+
+/** Crossing time proportional to the route's length, within sane bounds. */
+export function travelFor(path: [number, number][]): number {
+  let length = 0;
+  for (let index = 1; index < path.length; index += 1) {
+    const [x0, y0] = path[index - 1];
+    const [x1, y1] = path[index];
+    const scale = Math.cos(((y0 + y1) / 2) * (Math.PI / 180));
+    length += Math.hypot((x1 - x0) * scale, y1 - y0);
+  }
+  return Math.min(
+    TRAVEL_MAX_MS,
+    Math.max(TRAVEL_MIN_MS, Math.round(length * MS_PER_DEGREE)),
+  );
+}
+
+/**
+ * One dot per quantum, released onto its route at a steady rate. When a dot
+ * left is not encoded; how many there are is.
+ */
 export function buildDots(
   arcs: FlowArc[],
-  edges: FlowEdge[],
-  axis: string[],
   loop: number,
-  quantum = QUANTUM,
+  quantum: number,
 ): FlowDot[] {
-  const byKey = new Map(edges.map((edge) => [edge.key, edge]));
-  const schedules = quantize(
-    arcs.map(
-      (arc) =>
-        byKey.get(arc.key) ?? { key: arc.key, count: arc.count, months: [] },
-    ),
-    axis,
-    quantum,
-  );
+  const schedules = quantize(arcs, quantum);
   const dots: FlowDot[] = [];
   arcs.forEach((arc, index) => {
     const schedule = schedules[index];
-    for (const departure of schedule.departures) {
+    for (const start of emitSchedule(arc.key, schedule.dots, loop)) {
       dots.push({
         key: arc.key,
         path: arc.path,
-        start: departure * loop,
+        start,
+        travel: arc.travel,
         hollow: schedule.hollow,
         gate: arc.gate,
       });
@@ -394,19 +600,21 @@ export function buildDots(
 const GATE_SOLID = 0.45;
 
 /**
- * Where every in-flight dot sits at `currentTime`. Pure, so the animation's
- * arithmetic is testable without a GL context — the renderer only paints what
- * this returns.
+ * Where every in-flight dot sits at `currentTime`. The clock wraps every
+ * `loop` ms, so the stream never drains. Pure, so the animation's arithmetic
+ * is testable without a GL context — the renderer only paints what this
+ * returns.
  */
 export function placeDots(
   dots: FlowDot[],
   currentTime: number,
-  travel: number,
+  loop: number,
 ): PlacedDot[] {
   const placed: PlacedDot[] = [];
   for (const dot of dots) {
-    const progress = (currentTime - dot.start) / travel;
-    if (progress < 0 || progress > 1) continue;
+    const elapsed = (((currentTime - dot.start) % loop) + loop) % loop;
+    const progress = elapsed / dot.travel;
+    if (progress > 1) continue;
     const steps = dot.path.length - 1;
     const exact = progress * steps;
     const index = Math.min(Math.floor(exact), steps - 1);

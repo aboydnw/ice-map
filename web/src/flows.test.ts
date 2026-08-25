@@ -2,19 +2,29 @@ import { describe, expect, it } from "vitest";
 import { alphaFor, buildFlowScene, processingSites } from "./flowScene";
 import {
   GATE_RADIUS,
+  MAX_DOTS,
   QUANTUM,
+  TRAVEL_MAX_MS,
+  TRAVEL_MIN_MS,
+  assignLanes,
   boardCsv,
   buildArcs,
   buildBoardRows,
   buildDots,
+  emitSchedule,
   familyOf,
+  fanPath,
   placeDots,
   greatCircle,
   monthAxis,
   quantize,
+  quantumFor,
   remainderOf,
   resolveEndpoint,
+  splitAtExit,
+  travelFor,
 } from "./flows";
+import { US_RINGS } from "./usOutline";
 import type {
   Centroids,
   FacilityFlows,
@@ -173,9 +183,9 @@ describe("remainderOf", () => {
 });
 
 describe("quantize", () => {
-  const axis = monthAxis(["2022-10-01", "2026-03-10"]);
-
   it("builds one month per step across the window", () => {
+    const axis = monthAxis(["2022-10-01", "2026-03-10"]);
+
     expect(axis).toHaveLength(42);
     expect(axis[0]).toBe("2022-10");
     expect(axis[41]).toBe("2026-03");
@@ -189,51 +199,52 @@ describe("quantize", () => {
       edge("d", 41),
     ];
     const total = edges.reduce((sum, row) => sum + row.count, 0);
-    const schedule = quantize(edges, axis);
+    const schedule = quantize(edges);
 
     expect(schedule.reduce((sum, row) => sum + row.dots, 0)).toBe(
       Math.round(total / QUANTUM),
     );
-    expect(schedule.every((row) => row.departures.length === row.dots)).toBe(
-      true,
-    );
   });
 
   it("keeps a sub-quantum edge visible as a single hollow dot", () => {
-    const schedule = quantize([edge("big", 1000), edge("tiny", 3)], axis);
+    const schedule = quantize([edge("big", 1000), edge("tiny", 3)]);
 
     expect(schedule[1]).toMatchObject({ key: "tiny", dots: 1, hollow: true });
     expect(schedule[0].hollow).toBe(false);
   });
+});
 
-  it("schedules departures inside the months the stints actually happened", () => {
-    const schedule = quantize(
-      [
-        edge("a", 100, [
-          ["2022-10", 50],
-          ["2026-03", 50],
-        ]),
-      ],
-      axis,
-      QUANTUM,
-    );
-    const [first, ...rest] = schedule[0].departures;
-
-    expect(schedule[0].dots).toBe(4);
-    expect(first).toBeLessThan(1 / 42);
-    expect(rest[rest.length - 1]).toBeGreaterThan(41 / 42);
-    expect(schedule[0].departures.every((time) => time >= 0 && time < 1)).toBe(
-      true,
-    );
+describe("quantumFor", () => {
+  it("stays at the minimum for small selections", () => {
+    expect(quantumFor([400, 120, 30])).toBe(QUANTUM);
   });
 
-  it("still emits the right number of dots when a month is off the axis", () => {
-    const schedule = quantize([edge("a", 100, [["2019-01", 100]])], axis);
+  it("grows so the busiest route never exceeds the dot cap", () => {
+    const quantum = quantumFor([38_330, 6_031]);
 
-    expect(schedule[0].departures).toHaveLength(schedule[0].dots);
-    expect(schedule[0].departures.every((time) => time >= 0 && time < 1)).toBe(
-      true,
-    );
+    expect(quantum).toBeGreaterThan(QUANTUM);
+    expect(Math.round(38_330 / quantum)).toBeLessThanOrEqual(MAX_DOTS);
+    expect(Math.round(38_330 / quantum)).toBeGreaterThan(MAX_DOTS - 2);
+  });
+});
+
+describe("emitSchedule", () => {
+  it("spaces departures evenly across the loop", () => {
+    const starts = emitSchedule("transfer:AAA", 4, 16_000);
+
+    expect(starts).toHaveLength(4);
+    expect(starts.every((start) => start >= 0 && start < 16_000)).toBe(true);
+    for (let index = 1; index < starts.length; index += 1) {
+      expect(starts[index] - starts[index - 1]).toBeCloseTo(4_000, 6);
+    }
+  });
+
+  it("offsets different routes so they do not fire together", () => {
+    const a = emitSchedule("transfer:AAA", 4, 16_000)[0];
+    const b = emitSchedule("removed:MEXICO", 4, 16_000)[0];
+
+    expect(a).not.toBeCloseTo(b, 0);
+    expect(emitSchedule("transfer:AAA", 4, 16_000)[0]).toBe(a);
   });
 });
 
@@ -345,17 +356,16 @@ describe("greatCircle", () => {
 });
 
 describe("buildDots", () => {
-  const axis = monthAxis(["2022-10-01", "2026-03-10"]);
   const facility: [number, number] = [-92.13, 31.68];
 
   it("emits one dot per quantum, each departing inside the loop", () => {
     const flows = flowsFor([
-      edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
-      edge("released:paroled", 4, [["2023-02", 4]]),
+      edge("removed:GUATEMALA", 500),
+      edge("released:paroled", 4),
     ]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
     const arcs = buildArcs(rows, facility, "out");
-    const dots = buildDots(arcs, flows.out, axis, 16_000);
+    const dots = buildDots(arcs, 16_000, QUANTUM);
 
     expect(dots).toHaveLength(Math.round(500 / QUANTUM) + 1);
     expect(dots.every((dot) => dot.start >= 0 && dot.start < 16_000)).toBe(
@@ -366,14 +376,26 @@ describe("buildDots", () => {
   });
 
   it("puts every dot on the path of the route it belongs to", () => {
-    const flows = flowsFor([
-      edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
-    ]);
+    const flows = flowsFor([edge("removed:GUATEMALA", 500)]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
     const arcs = buildArcs(rows, facility, "out");
-    const dots = buildDots(arcs, flows.out, axis, 16_000);
+    const dots = buildDots(arcs, 16_000, QUANTUM);
 
     expect(dots.every((dot) => dot.path === arcs[0].path)).toBe(true);
+    expect(dots.every((dot) => dot.travel === arcs[0].travel)).toBe(true);
+  });
+});
+
+describe("travelFor", () => {
+  it("takes longer to cross a longer route, within bounds", () => {
+    const short = travelFor(greatCircle([-92, 31], [-91, 31], 8));
+    const medium = travelFor(greatCircle([-92, 31], [-72, 31], 8));
+    const long = travelFor(greatCircle([-92, 31], [80, 20], 8));
+
+    expect(short).toBe(TRAVEL_MIN_MS);
+    expect(medium).toBeGreaterThan(short);
+    expect(medium).toBeLessThan(TRAVEL_MAX_MS);
+    expect(long).toBe(TRAVEL_MAX_MS);
   });
 });
 
@@ -383,35 +405,164 @@ describe("placeDots", () => {
     [10, 0],
     [20, 0],
   ];
-  const dot = { key: "a", path, start: 1000, hollow: false, gate: false };
+  const dot = {
+    key: "a",
+    path,
+    start: 1000,
+    travel: 2000,
+    hollow: false,
+    gate: false,
+  };
+  const loop = 10_000;
 
   it("shows a dot only while it is travelling", () => {
-    expect(placeDots([dot], 900, 2000)).toHaveLength(0);
-    expect(placeDots([dot], 1000, 2000)).toHaveLength(1);
-    expect(placeDots([dot], 3000, 2000)).toHaveLength(1);
-    expect(placeDots([dot], 3100, 2000)).toHaveLength(0);
+    expect(placeDots([dot], 900, loop)).toHaveLength(0);
+    expect(placeDots([dot], 1000, loop)).toHaveLength(1);
+    expect(placeDots([dot], 3000, loop)).toHaveLength(1);
+    expect(placeDots([dot], 3100, loop)).toHaveLength(0);
   });
 
   it("walks the dot along its path in step with the clock", () => {
-    expect(placeDots([dot], 1000, 2000)[0].position).toEqual([0, 0]);
-    expect(placeDots([dot], 2000, 2000)[0].position[0]).toBeCloseTo(10, 6);
-    expect(placeDots([dot], 3000, 2000)[0].position[0]).toBeCloseTo(20, 6);
-    expect(placeDots([dot], 1500, 2000)[0].position[0]).toBeCloseTo(5, 6);
+    expect(placeDots([dot], 1000, loop)[0].position).toEqual([0, 0]);
+    expect(placeDots([dot], 2000, loop)[0].position[0]).toBeCloseTo(10, 6);
+    expect(placeDots([dot], 3000, loop)[0].position[0]).toBeCloseTo(20, 6);
+    expect(placeDots([dot], 1500, loop)[0].position[0]).toBeCloseTo(5, 6);
+  });
+
+  it("sets off again every loop, so the stream never drains", () => {
+    expect(placeDots([dot], 11_500, loop)[0].position[0]).toBeCloseTo(5, 6);
+    expect(placeDots([dot], 21_000, loop)[0].position[0]).toBeCloseTo(0, 6);
   });
 
   it("keeps a routed dot at full strength the whole way", () => {
     for (const time of [1000, 2000, 2900, 3000]) {
-      expect(placeDots([dot], time, 2000)[0].opacity).toBe(1);
+      expect(placeDots([dot], time, loop)[0].opacity).toBe(1);
     }
   });
 
   it("fades a gate dot out, since nothing records where it went", () => {
     const gate = { ...dot, gate: true };
 
-    expect(placeDots([gate], 1000, 2000)[0].opacity).toBe(1);
-    expect(placeDots([gate], 1800, 2000)[0].opacity).toBe(1);
-    expect(placeDots([gate], 3000, 2000)[0].opacity).toBeCloseTo(0, 6);
-    expect(placeDots([gate], 2500, 2000)[0].opacity).toBeLessThan(1);
+    expect(placeDots([gate], 1000, loop)[0].opacity).toBe(1);
+    expect(placeDots([gate], 1800, loop)[0].opacity).toBe(1);
+    expect(placeDots([gate], 3000, loop)[0].opacity).toBeCloseTo(0, 6);
+    expect(placeDots([gate], 2500, loop)[0].opacity).toBeLessThan(1);
+  });
+});
+
+describe("splitAtExit", () => {
+  const texas: [number, number] = [-98.5, 29.4];
+
+  it("cuts a route to Mexico at the land border", () => {
+    const path = greatCircle(texas, [-99.1, 19.4], 24);
+    const split = splitAtExit(path, US_RINGS);
+
+    expect(split).not.toBeNull();
+    expect(split?.exit[1]).toBeGreaterThan(25);
+    expect(split?.exit[1]).toBeLessThan(28);
+    expect(split?.leg[0][0]).toBeCloseTo(texas[0], 6);
+    expect(split?.leg[0][1]).toBeCloseTo(texas[1], 6);
+    expect(split?.leg[split.leg.length - 1]).toEqual(split?.exit);
+    expect(split?.tail[0]).toEqual(split?.exit);
+    expect(split?.tail[split.tail.length - 1][1]).toBeCloseTo(19.4, 3);
+  });
+
+  it("cuts a route to Venezuela at the coast", () => {
+    const georgia: [number, number] = [-83.6, 32.8];
+    const split = splitAtExit(greatCircle(georgia, [-66.6, 6.4], 24), US_RINGS);
+
+    expect(split).not.toBeNull();
+    expect(split?.exit[1]).toBeGreaterThan(24);
+    expect(split?.exit[1]).toBeLessThan(32);
+    expect(split?.exit[0]).toBeGreaterThan(-84);
+    expect(split?.exit[0]).toBeLessThan(-78);
+  });
+
+  it("leaves a domestic route whole", () => {
+    expect(
+      splitAtExit(greatCircle(texas, [-118, 34], 24), US_RINGS),
+    ).toBeNull();
+  });
+
+  it("keeps travel order when the far end comes first", () => {
+    const path = greatCircle([-99.1, 19.4], texas, 24);
+    const split = splitAtExit(path, US_RINGS);
+
+    expect(split?.tail[0][1]).toBeCloseTo(19.4, 3);
+    expect(split?.leg[split.leg.length - 1][1]).toBeCloseTo(texas[1], 6);
+  });
+});
+
+describe("assignLanes", () => {
+  const facility: [number, number] = [-92.13, 31.68];
+
+  function arcsTo(targets: Record<string, [number, number]>) {
+    return Object.entries(targets).map(([key, target]) => ({
+      key,
+      label: key,
+      count: 1,
+      family: "transfer" as const,
+      source: facility,
+      target,
+      path: [facility, target],
+      gate: false,
+      exit: null,
+      tail: null,
+      lane: 0,
+      travel: 0,
+    }));
+  }
+
+  it("gives neighbours their own lanes and a lone route none", () => {
+    const lanes = assignLanes(
+      arcsTo({
+        houston: [-95.4, 29.8],
+        sanAntonio: [-98.5, 29.4],
+        dallas: [-96.8, 32.8],
+        seattle: [-122.3, 47.6],
+        austin: [-97.7, 30.3],
+      }),
+      facility,
+    );
+
+    expect(lanes.get("seattle")).toBe(0);
+    expect(
+      new Set([
+        lanes.get("houston"),
+        lanes.get("sanAntonio"),
+        lanes.get("austin"),
+      ]),
+    ).toEqual(new Set([-1, 0, 1]));
+    expect(lanes.get("dallas")).toBe(0);
+  });
+
+  it("ignores gate stubs", () => {
+    const [stub] = arcsTo({ stub: [-92, 32] });
+    stub.gate = true;
+
+    expect(assignLanes([stub], facility).size).toBe(0);
+  });
+});
+
+describe("fanPath", () => {
+  const path = greatCircle([-92, 31], [-72, 31], 40);
+
+  it("leaves the trunk and both ends alone, and bends only the last stretch", () => {
+    const fanned = fanPath(path, 0.5, false);
+
+    expect(fanned[0]).toEqual(path[0]);
+    expect(fanned[40]).toEqual(path[40]);
+    for (let index = 0; index <= 32; index += 1) {
+      expect(fanned[index]).toEqual(path[index]);
+    }
+    expect(Math.abs(fanned[37][1] - path[37][1])).toBeCloseTo(0.5, 2);
+  });
+
+  it("bends the first stretch instead when the far end comes first", () => {
+    const fanned = fanPath(path, 0.5, true);
+
+    expect(fanned[3]).not.toEqual(path[3]);
+    expect(fanned[37]).toEqual(path[37]);
   });
 });
 
@@ -483,6 +634,36 @@ describe("routes and channels", () => {
     );
 
     expect(gated).toEqual(new Set(["released:paroled"]));
+  });
+
+  it("splits a foreign route at the border and labels the exit", () => {
+    const flows = flowsFor([edge("removed:GUATEMALA", 100)]);
+    const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+    const scene = buildFlowScene({
+      flows,
+      direction: "out",
+      rows,
+      facility,
+      mappedCodes: new Set<string>(),
+      animate: true,
+      rings: US_RINGS,
+    });
+    const [arc] = scene.arcs;
+
+    expect(arc.exit).not.toBeNull();
+    expect(scene.tails).toHaveLength(1);
+    expect(arc.path[arc.path.length - 1]).toEqual(arc.exit);
+    expect(scene.dots.every((dot) => dot.path === arc.path)).toBe(true);
+    expect(scene.markers).toEqual([
+      expect.objectContaining({ kind: "exit", label: "→ Guatemala · 100" }),
+    ]);
+  });
+
+  it("reports the quantum the dots were counted in", () => {
+    expect(sceneFor([edge("removed:GUATEMALA", 100)]).quantum).toBe(QUANTUM);
+    expect(sceneFor([edge("removed:GUATEMALA", 40_000)]).quantum).toBe(
+      quantumFor([40_000]),
+    );
   });
 
   it("makes every dot ride the exact path its channel draws", () => {

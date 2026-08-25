@@ -1,7 +1,7 @@
 import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { Layer } from "@deck.gl/core";
 import { FLOW_CHANNEL, flowRgb, hexRgb } from "./config";
-import { TRAVEL_MS, alphaFor } from "./flowScene";
+import { LOOP_MS, alphaFor } from "./flowScene";
 import type { FlowScene, Marker, ProcessingSite } from "./flowScene";
 import { placeDots } from "./flows";
 import type { FlowArc, PlacedDot } from "./flows";
@@ -68,6 +68,26 @@ export function flowLayers(frame: FlowFrame): Layer[] {
   if (!scene) return layers;
 
   const family = new Map(scene.arcs.map((arc) => [arc.key, arc.family]));
+  if (scene.tails.length > 0) {
+    layers.push(
+      // Beyond the border the route is drawn faint: still traceable when the
+      // reader zooms out, but nothing on screen depends on following it.
+      new PathLayer<FlowArc>({
+        id: "flow-tails",
+        data: scene.tails,
+        getPath: (arc) => arc.tail ?? [],
+        getColor: (arc) => [
+          ...hexRgb(FLOW_CHANNEL),
+          alphaFor(arc.key, highlighted, 55),
+        ],
+        getWidth: 3,
+        widthUnits: "pixels",
+        capRounded: true,
+        jointRounded: true,
+        updateTriggers: { getColor: highlighted },
+      }),
+    );
+  }
   layers.push(
     // The channel is permanent: it says a route exists whether or not a dot
     // happens to be passing. Small facilities move a handful of people a year,
@@ -92,7 +112,7 @@ export function flowLayers(frame: FlowFrame): Layer[] {
     // Round dots at a fixed pixel radius. TripsLayer was drawing trails whose
     // on-screen length scaled with the route, so a long route smeared into a
     // streak; a dot is the same countable mark everywhere.
-    const placed = placeDots(scene.dots, currentTime, TRAVEL_MS);
+    const placed = placeDots(scene.dots, currentTime, LOOP_MS);
     layers.push(
       new ScatterplotLayer<PlacedDot>({
         id: "flow-dots",
@@ -105,7 +125,7 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         lineWidthUnits: "pixels",
         getLineWidth: 1.2,
         // A sub-quantum dot is drawn as an outline so it is never mistaken for
-        // a full unit of 25 stints.
+        // a full unit.
         getFillColor: (dot) => [
           ...flowRgb(family.get(dot.key) ?? "other"),
           dot.hollow ? 0 : alphaFor(dot.key, highlighted, 255) * dot.opacity,
@@ -122,11 +142,14 @@ export function flowLayers(frame: FlowFrame): Layer[] {
     );
   }
 
-  if (scene.markers.length > 0) {
+  const endpoints = scene.markers.filter(
+    (marker) => marker.kind === "endpoint",
+  );
+  if (endpoints.length > 0) {
     layers.push(
       new ScatterplotLayer<Marker>({
         id: "flow-endpoint-dots",
-        data: scene.markers,
+        data: endpoints,
         getPosition: (marker) => marker.position,
         getRadius: 6,
         radiusUnits: "pixels",
@@ -139,6 +162,11 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         lineWidthUnits: "pixels",
         getLineWidth: 1.6,
       }),
+    );
+  }
+
+  if (scene.markers.length > 0) {
+    layers.push(
       new TextLayer<Marker>({
         id: "flow-endpoint-labels",
         data: scene.markers,
@@ -147,7 +175,7 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         getSize: 11,
         sizeUnits: "pixels",
         getColor: [26, 24, 23, 225],
-        getPixelOffset: [0, -12],
+        getPixelOffset: (marker) => [0, -12 - marker.lane * 13],
         outlineWidth: 3,
         outlineColor: [253, 252, 250, 255],
         fontSettings: { sdf: true },

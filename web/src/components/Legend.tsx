@@ -7,7 +7,6 @@ import {
   formatMonthYear,
   radiusFor,
 } from "../config";
-import { QUANTUM } from "../flows";
 import type { FacilityCollection, FacilityFlows } from "../types";
 
 const FLOW_KEYS: { family: string; label: string }[] = [
@@ -22,6 +21,8 @@ const SIZE_STEPS = [10, 100, 1000];
 interface Props {
   data: FacilityCollection;
   flows: FacilityFlows | null;
+  /** Stints per dot for the current selection. */
+  quantum: number;
   showProcessing: boolean;
   onShowProcessingChange: (show: boolean) => void;
 }
@@ -29,6 +30,7 @@ interface Props {
 export function Legend({
   data,
   flows,
+  quantum,
   showProcessing,
   onShowProcessingChange,
 }: Props) {
@@ -91,7 +93,7 @@ export function Legend({
       {flows && (
         <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
           <Text fontSize="xs" color="inkSecondary" mb="1">
-            ● = {QUANTUM} stints, not people
+            ● = {quantum} stints, not people
           </Text>
           <Box display="flex" alignItems="center" gap="2" py="1px" mb="1px">
             <Box
