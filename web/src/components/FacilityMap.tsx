@@ -88,6 +88,9 @@ export function FacilityMap({
   const fittedRef = useRef<string | null>(null);
   const clockStartRef = useRef(0);
   const [zoom, setZoom] = useState(3);
+  // The endpoint table often arrives before the map does; the overlay effect
+  // must run again once there is a map to attach to.
+  const [mapReady, setMapReady] = useState(false);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const [hover, setHover] = useState<HoverInfo | null>(null);
@@ -152,6 +155,7 @@ export function FacilityMap({
         m.on("zoomend", () => setZoom(m.getZoom()));
 
         m.on("load", () => {
+          setMapReady(true);
           // Test hook: lets Playwright drive the map in dev and preview builds.
           (window as unknown as { __iceMap?: maplibregl.Map }).__iceMap = m;
           m.addSource("facilities", { type: "geojson", data: data as never });
@@ -375,7 +379,7 @@ export function FacilityMap({
       return;
     }
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !mapReady) return;
     let cancelled = false;
     let frame = 0;
     loadFlowOverlay()
@@ -454,6 +458,7 @@ export function FacilityMap({
     handleMarkerHover,
     selected,
     direction,
+    mapReady,
   ]);
 
   if (mapFailed) {
