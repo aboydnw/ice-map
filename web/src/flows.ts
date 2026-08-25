@@ -279,7 +279,7 @@ export interface PlacedDot {
   hollow: boolean;
 }
 
-/** Great-circle samples per route; enough for the lane fan to read as a curve. */
+/** Samples per route; enough for the lane fan to read as a curve. */
 const PATH_STEPS = 48;
 
 export interface RouteOptions {
@@ -310,7 +310,7 @@ export function buildArcs(
     if (!far) continue;
     const source = direction === "out" ? facility : far;
     const target = direction === "out" ? far : facility;
-    const path = greatCircle(source, target, PATH_STEPS);
+    const path = straightLine(source, target, PATH_STEPS);
     const split = rings.length === 0 ? null : splitAtExit(path, rings);
     arcs.push({
       key: row.key,
@@ -336,40 +336,23 @@ export function buildArcs(
   return arcs;
 }
 
-/** Points along the great circle between two coordinates, ends included. */
-export function greatCircle(
+/**
+ * Evenly spaced points on the straight line between two coordinates, ends
+ * included. Straight, not a great circle: a curve implied a flight path the
+ * data never records, and over the map's extent the difference is only the
+ * bend. Sampled so the lane fan has vertices to bend.
+ */
+export function straightLine(
   from: [number, number],
   to: [number, number],
   steps: number,
 ): [number, number][] {
-  const toRad = Math.PI / 180;
-  const [lon1, lat1] = [from[0] * toRad, from[1] * toRad];
-  const [lon2, lat2] = [to[0] * toRad, to[1] * toRad];
-  const delta =
-    2 *
-    Math.asin(
-      Math.min(
-        1,
-        Math.sqrt(
-          Math.sin((lat2 - lat1) / 2) ** 2 +
-            Math.cos(lat1) * Math.cos(lat2) * Math.sin((lon2 - lon1) / 2) ** 2,
-        ),
-      ),
-    );
-  if (delta === 0) return [from, to];
   const points: [number, number][] = [];
   for (let step = 0; step <= steps; step += 1) {
     const fraction = step / steps;
-    const a = Math.sin((1 - fraction) * delta) / Math.sin(delta);
-    const b = Math.sin(fraction * delta) / Math.sin(delta);
-    const x =
-      a * Math.cos(lat1) * Math.cos(lon1) + b * Math.cos(lat2) * Math.cos(lon2);
-    const y =
-      a * Math.cos(lat1) * Math.sin(lon1) + b * Math.cos(lat2) * Math.sin(lon2);
-    const z = a * Math.sin(lat1) + b * Math.sin(lat2);
     points.push([
-      Math.atan2(y, x) / toRad,
-      Math.atan2(z, Math.sqrt(x * x + y * y)) / toRad,
+      from[0] + (to[0] - from[0]) * fraction,
+      from[1] + (to[1] - from[1]) * fraction,
     ]);
   }
   return points;

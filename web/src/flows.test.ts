@@ -14,7 +14,7 @@ import {
   familyOf,
   fanPath,
   placeDots,
-  greatCircle,
+  straightLine,
   monthAxis,
   quantize,
   quantumFor,
@@ -327,22 +327,14 @@ describe("buildArcs", () => {
   });
 });
 
-describe("greatCircle", () => {
-  it("keeps both ends and bends between them", () => {
-    const path = greatCircle([-92, 31], [-90.23, 15.78], 8);
+describe("straightLine", () => {
+  it("keeps both ends and runs straight between them", () => {
+    const path = straightLine([-92, 31], [-90, 15], 8);
 
     expect(path).toHaveLength(9);
-    expect(path[0][0]).toBeCloseTo(-92, 4);
-    expect(path[0][1]).toBeCloseTo(31, 4);
-    expect(path[8][0]).toBeCloseTo(-90.23, 4);
-    expect(path[8][1]).toBeCloseTo(15.78, 4);
-  });
-
-  it("degenerates safely when both ends are the same point", () => {
-    expect(greatCircle([-92, 31], [-92, 31], 8)).toEqual([
-      [-92, 31],
-      [-92, 31],
-    ]);
+    expect(path[0]).toEqual([-92, 31]);
+    expect(path[8]).toEqual([-90, 15]);
+    expect(path[4]).toEqual([-91, 23]);
   });
 });
 
@@ -378,9 +370,9 @@ describe("buildDots", () => {
 
 describe("travelFor", () => {
   it("takes longer to cross a longer route, within bounds", () => {
-    const short = travelFor(greatCircle([-92, 31], [-91, 31], 8));
-    const medium = travelFor(greatCircle([-92, 31], [-82, 31], 8));
-    const long = travelFor(greatCircle([-92, 31], [80, 20], 8));
+    const short = travelFor(straightLine([-92, 31], [-91, 31], 8));
+    const medium = travelFor(straightLine([-92, 31], [-82, 31], 8));
+    const long = travelFor(straightLine([-92, 31], [80, 20], 8));
 
     expect(short).toBe(TRAVEL_MIN_MS);
     expect(medium).toBeGreaterThan(short);
@@ -428,7 +420,7 @@ describe("splitAtExit", () => {
   const texas: [number, number] = [-98.5, 29.4];
 
   it("cuts a route to Mexico at the land border", () => {
-    const path = greatCircle(texas, [-99.1, 19.4], 24);
+    const path = straightLine(texas, [-99.1, 19.4], 24);
     const split = splitAtExit(path, US_RINGS);
 
     expect(split).not.toBeNull();
@@ -443,7 +435,10 @@ describe("splitAtExit", () => {
 
   it("cuts a route to Venezuela at the coast", () => {
     const georgia: [number, number] = [-83.6, 32.8];
-    const split = splitAtExit(greatCircle(georgia, [-66.6, 6.4], 24), US_RINGS);
+    const split = splitAtExit(
+      straightLine(georgia, [-66.6, 6.4], 24),
+      US_RINGS,
+    );
 
     expect(split).not.toBeNull();
     expect(split?.exit[1]).toBeGreaterThan(24);
@@ -454,12 +449,12 @@ describe("splitAtExit", () => {
 
   it("leaves a domestic route whole", () => {
     expect(
-      splitAtExit(greatCircle(texas, [-118, 34], 24), US_RINGS),
+      splitAtExit(straightLine(texas, [-118, 34], 24), US_RINGS),
     ).toBeNull();
   });
 
   it("keeps travel order when the far end comes first", () => {
-    const path = greatCircle([-99.1, 19.4], texas, 24);
+    const path = straightLine([-99.1, 19.4], texas, 24);
     const split = splitAtExit(path, US_RINGS);
 
     expect(split?.tail[0][1]).toBeCloseTo(19.4, 3);
@@ -516,7 +511,7 @@ describe("assignLanes", () => {
 });
 
 describe("fanPath", () => {
-  const path = greatCircle([-92, 31], [-72, 31], 40);
+  const path = straightLine([-92, 31], [-72, 31], 40);
 
   it("leaves the trunk and both ends alone, and bends only the last stretch", () => {
     const fanned = fanPath(path, 0.5, false);
