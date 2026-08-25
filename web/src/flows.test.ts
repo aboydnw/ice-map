@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { alphaFor, buildFlowScene, processingSites } from "./flowScene";
 import {
-  GATE_RADIUS,
   MAX_DOTS,
   QUANTUM,
   TRAVEL_MAX_MS,
@@ -312,7 +311,7 @@ describe("buildArcs", () => {
     expect(inArc.target).toEqual(facility);
   });
 
-  it("fans destination-less rows around the facility instead of placing them", () => {
+  it("gives destination-less rows no route at all", () => {
     const flows = flowsFor([
       edge("released:paroled", 10),
       edge("released:bonded-out", 8),
@@ -324,15 +323,7 @@ describe("buildArcs", () => {
       "out",
     );
 
-    expect(arcs.every((arc) => arc.gate)).toBe(true);
-    for (const arc of arcs) {
-      const dx = arc.target[0] - facility[0];
-      const dy = arc.target[1] - facility[1];
-      expect(Math.hypot(dx, dy)).toBeLessThanOrEqual(GATE_RADIUS + 1e-9);
-      expect(Math.hypot(dx, dy)).toBeGreaterThan(0);
-    }
-    const targets = new Set(arcs.map((arc) => arc.target.join()));
-    expect(targets.size).toBe(3);
+    expect(arcs).toHaveLength(0);
   });
 });
 
@@ -367,12 +358,11 @@ describe("buildDots", () => {
     const arcs = buildArcs(rows, facility, "out");
     const dots = buildDots(arcs, 16_000, QUANTUM);
 
-    expect(dots).toHaveLength(Math.round(500 / QUANTUM) + 1);
+    expect(dots).toHaveLength(Math.round(500 / QUANTUM));
     expect(dots.every((dot) => dot.start >= 0 && dot.start < 16_000)).toBe(
       true,
     );
-    expect(dots.filter((dot) => dot.hollow)).toHaveLength(1);
-    expect(dots.filter((dot) => dot.gate)).toHaveLength(1);
+    expect(dots.every((dot) => !dot.hollow)).toBe(true);
   });
 
   it("puts every dot on the path of the route it belongs to", () => {
@@ -389,7 +379,7 @@ describe("buildDots", () => {
 describe("travelFor", () => {
   it("takes longer to cross a longer route, within bounds", () => {
     const short = travelFor(greatCircle([-92, 31], [-91, 31], 8));
-    const medium = travelFor(greatCircle([-92, 31], [-72, 31], 8));
+    const medium = travelFor(greatCircle([-92, 31], [-82, 31], 8));
     const long = travelFor(greatCircle([-92, 31], [80, 20], 8));
 
     expect(short).toBe(TRAVEL_MIN_MS);
@@ -411,7 +401,6 @@ describe("placeDots", () => {
     start: 1000,
     travel: 2000,
     hollow: false,
-    gate: false,
   };
   const loop = 10_000;
 
@@ -432,21 +421,6 @@ describe("placeDots", () => {
   it("sets off again every loop, so the stream never drains", () => {
     expect(placeDots([dot], 11_500, loop)[0].position[0]).toBeCloseTo(5, 6);
     expect(placeDots([dot], 21_000, loop)[0].position[0]).toBeCloseTo(0, 6);
-  });
-
-  it("keeps a routed dot at full strength the whole way", () => {
-    for (const time of [1000, 2000, 2900, 3000]) {
-      expect(placeDots([dot], time, loop)[0].opacity).toBe(1);
-    }
-  });
-
-  it("fades a gate dot out, since nothing records where it went", () => {
-    const gate = { ...dot, gate: true };
-
-    expect(placeDots([gate], 1000, loop)[0].opacity).toBe(1);
-    expect(placeDots([gate], 1800, loop)[0].opacity).toBe(1);
-    expect(placeDots([gate], 3000, loop)[0].opacity).toBeCloseTo(0, 6);
-    expect(placeDots([gate], 2500, loop)[0].opacity).toBeLessThan(1);
   });
 });
 
@@ -505,9 +479,7 @@ describe("assignLanes", () => {
       source: facility,
       target,
       path: [facility, target],
-      gate: false,
       exit: null,
-      tail: null,
       lane: 0,
       travel: 0,
     }));
@@ -536,11 +508,10 @@ describe("assignLanes", () => {
     expect(lanes.get("dallas")).toBe(0);
   });
 
-  it("ignores gate stubs", () => {
-    const [stub] = arcsTo({ stub: [-92, 32] });
-    stub.gate = true;
-
-    expect(assignLanes([stub], facility).size).toBe(0);
+  it("gives a lone route the centre lane", () => {
+    expect(assignLanes(arcsTo({ only: [-92, 32] }), facility).get("only")).toBe(
+      0,
+    );
   });
 });
 
@@ -571,8 +542,8 @@ describe("alphaFor", () => {
     expect(alphaFor("a", null, 145)).toBe(145);
   });
 
-  it("keeps a highlighted gate stub fading to nothing", () => {
-    expect(alphaFor("released:paroled", "released:paroled", 0)).toBe(0);
+  it("keeps a faint tail faint when highlighted", () => {
+    expect(alphaFor("removed:MEXICO", "removed:MEXICO", 0)).toBe(0);
   });
 
   it("lifts the highlighted row and dims the rest, never past opaque", () => {
@@ -598,45 +569,31 @@ describe("routes and channels", () => {
     });
   }
 
-  it("samples a curve for a recorded destination and a stub for a gate", () => {
+  it("samples a curve for a recorded destination", () => {
     const flows = flowsFor([
       edge("removed:GUATEMALA", 100, [["2023-01", 100]]),
-      edge("released:paroled", 100, [["2023-01", 100]]),
     ]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
-    const [geographic, gate] = buildArcs(rows, facility, "out");
+    const [geographic] = buildArcs(rows, facility, "out");
 
     expect(geographic.path.length).toBeGreaterThan(2);
     expect(geographic.path[0]).toEqual(facility);
-    expect(gate.path).toHaveLength(2);
-    expect(gate.path[0]).toEqual(facility);
   });
 
-  it("gives a channel only to routes that lead somewhere recorded", () => {
+  it("routes only the rows that lead somewhere recorded", () => {
     const scene = sceneFor([
       edge("removed:GUATEMALA", 100, [["2023-01", 100]]),
       edge("released:paroled", 100, [["2023-01", 100]]),
       edge("not-reported", 100, [["2023-01", 100]]),
     ]);
 
-    expect(scene.arcs).toHaveLength(3);
-    expect(scene.channels.map((arc) => arc.key)).toEqual(["removed:GUATEMALA"]);
-    expect(scene.channels.every((arc) => !arc.gate)).toBe(true);
-  });
-
-  it("marks destination-less dots so the renderer fades them out", () => {
-    const scene = sceneFor([
-      edge("removed:GUATEMALA", 100, [["2023-01", 100]]),
-      edge("released:paroled", 100, [["2023-01", 100]]),
-    ]);
-    const gated = new Set(
-      scene.dots.filter((dot) => dot.gate).map((dot) => dot.key),
+    expect(scene.arcs.map((arc) => arc.key)).toEqual(["removed:GUATEMALA"]);
+    expect(new Set(scene.dots.map((dot) => dot.key))).toEqual(
+      new Set(["removed:GUATEMALA"]),
     );
-
-    expect(gated).toEqual(new Set(["released:paroled"]));
   });
 
-  it("splits a foreign route at the border and labels the exit", () => {
+  it("labels a foreign route at the border but runs it to the country", () => {
     const flows = flowsFor([edge("removed:GUATEMALA", 100)]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
     const scene = buildFlowScene({
@@ -651,8 +608,7 @@ describe("routes and channels", () => {
     const [arc] = scene.arcs;
 
     expect(arc.exit).not.toBeNull();
-    expect(scene.tails).toHaveLength(1);
-    expect(arc.path[arc.path.length - 1]).toEqual(arc.exit);
+    expect(arc.path[arc.path.length - 1][1]).toBeCloseTo(15.78, 3);
     expect(scene.dots.every((dot) => dot.path === arc.path)).toBe(true);
     expect(scene.markers).toEqual([
       expect.objectContaining({ kind: "exit", label: "→ Guatemala · 100" }),
@@ -670,7 +626,7 @@ describe("routes and channels", () => {
     const scene = sceneFor([
       edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
     ]);
-    const channel = scene.channels[0];
+    const channel = scene.arcs[0];
 
     expect(scene.dots.length).toBeGreaterThan(1);
     expect(scene.dots.every((dot) => dot.path === channel.path)).toBe(true);

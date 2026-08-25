@@ -236,13 +236,6 @@ export function familyOf(key: string): FlowFamily {
   return FAMILIES[separator === -1 ? key : key.slice(0, separator)] ?? "other";
 }
 
-/**
- * How far a gate stub reaches from the facility, in degrees. Releases have no
- * recorded destination, so their dots leave the gate and stop — drawing them
- * travelling anywhere would be fabricated geography.
- */
-export const GATE_RADIUS = 1.4;
-
 /** Routes closer in bearing than this share a trunk and fan apart at the end. */
 export const LANE_ANGLE = 12;
 
@@ -258,12 +251,12 @@ export interface FlowArc {
    * the leg inside it; the rest is `tail`.
    */
   path: [number, number][];
-  /** True when the far end is a gate stub rather than a recorded location. */
-  gate: boolean;
-  /** Where the route crosses the border, when it does. Labelled, never marked. */
+  /**
+   * Where the route crosses the border, when it does. The destination label
+   * sits here so it can be read without zooming out; the route itself runs
+   * on to the country. Never drawn as a marker.
+   */
   exit: [number, number] | null;
-  /** The part of the route beyond the exit, drawn faint so it stays traceable. */
-  tail: [number, number][] | null;
   /** Lateral lane within a bearing cluster; 0 when the route has the corridor to itself. */
   lane: number;
   /** How long a dot takes to cross `path`, in ms. */
@@ -277,8 +270,6 @@ export interface FlowDot {
   start: number;
   travel: number;
   hollow: boolean;
-  /** Gate dots have nowhere to arrive, so they fade out instead. */
-  gate: boolean;
 }
 
 /** A dot resolved to a map position for one animation frame. */
@@ -286,25 +277,24 @@ export interface PlacedDot {
   key: string;
   position: [number, number];
   hollow: boolean;
-  /** 1 while travelling; falls to 0 as a gate dot dies out. */
-  opacity: number;
 }
 
 /** Great-circle samples per route; enough for the lane fan to read as a curve. */
 const PATH_STEPS = 48;
 
 export interface RouteOptions {
-  /** Border rings; a route crossing out of them is split at the crossing. */
+  /** Border rings; a route crossing out of them gets its label at the crossing. */
   rings?: [number, number][][];
   /** Lane spacing in degrees at the current zoom; 0 disables the fan. */
   laneWidthDeg?: number;
 }
 
 /**
- * Routes for the visible rows. Rows without a recorded destination get a short
- * stub fanned around the facility instead of a location they never had. Routes
- * that leave the country are split at the border, and routes sharing a bearing
- * are fanned into lanes so neighbours stay distinguishable.
+ * Routes for the rows with a recorded place at the far end. A release has no
+ * destination in ICE's data, so it gets no route at all: it stays on the board
+ * and off the map, rather than being drawn to a place it never went. Routes
+ * that leave the country are labelled at the border, and routes sharing a
+ * bearing are fanned into lanes so neighbours stay distinguishable.
  */
 export function buildArcs(
   rows: BoardRow[],
@@ -314,27 +304,15 @@ export function buildArcs(
 ): FlowArc[] {
   const rings = options.rings ?? [];
   const laneWidth = options.laneWidthDeg ?? 0;
-  const gateCount = rows.filter((row) => !row.lonLat).length;
-  let gateIndex = 0;
-  const arcs = rows.map((row): FlowArc => {
-    let far = row.lonLat;
-    const gate = far === null;
-    if (far === null) {
-      const angle = (gateIndex / Math.max(gateCount, 1)) * Math.PI * 2;
-      gateIndex += 1;
-      far = [
-        facility[0] + Math.cos(angle) * GATE_RADIUS,
-        facility[1] + Math.sin(angle) * GATE_RADIUS * 0.6,
-      ];
-    }
+  const arcs: FlowArc[] = [];
+  for (const row of rows) {
+    const far = row.lonLat;
+    if (!far) continue;
     const source = direction === "out" ? facility : far;
     const target = direction === "out" ? far : facility;
-    const full = gate
-      ? [source, target]
-      : greatCircle(source, target, PATH_STEPS);
-    const split = gate || rings.length === 0 ? null : splitAtExit(full, rings);
-    const path = split ? split.leg : full;
-    return {
+    const path = greatCircle(source, target, PATH_STEPS);
+    const split = rings.length === 0 ? null : splitAtExit(path, rings);
+    arcs.push({
       key: row.key,
       label: row.label,
       count: row.count,
@@ -342,13 +320,11 @@ export function buildArcs(
       source,
       target,
       path,
-      gate,
       exit: split?.exit ?? null,
-      tail: split?.tail ?? null,
       lane: 0,
       travel: travelFor(path),
-    };
-  });
+    });
+  }
   const lanes = assignLanes(arcs, facility);
   for (const arc of arcs) {
     const lane = lanes.get(arc.key) ?? 0;
@@ -484,7 +460,6 @@ export function assignLanes(
   facility: [number, number],
 ): Map<string, number> {
   const routed = arcs
-    .filter((arc) => !arc.gate)
     .map((arc) => ({
       key: arc.key,
       bearing: bearingFrom(
@@ -550,9 +525,9 @@ export function fanPath(
 }
 
 /** Milliseconds per degree of route; longer roads take longer to cross. */
-export const MS_PER_DEGREE = 400;
-export const TRAVEL_MIN_MS = 4_000;
-export const TRAVEL_MAX_MS = 14_000;
+export const MS_PER_DEGREE = 1_100;
+export const TRAVEL_MIN_MS = 9_000;
+export const TRAVEL_MAX_MS = 16_000;
 
 /** Crossing time proportional to the route's length, within sane bounds. */
 export function travelFor(path: [number, number][]): number {
@@ -589,15 +564,11 @@ export function buildDots(
         start,
         travel: arc.travel,
         hollow: schedule.hollow,
-        gate: arc.gate,
       });
     }
   });
   return dots;
 }
-
-/** A gate dot holds full strength for this share of its journey, then fades. */
-const GATE_SOLID = 0.45;
 
 /**
  * Where every in-flight dot sits at `currentTime`. The clock wraps every
@@ -628,9 +599,6 @@ export function placeDots(
         from[1] + (to[1] - from[1]) * within,
       ],
       hollow: dot.hollow,
-      opacity: dot.gate
-        ? Math.max(0, 1 - Math.max(0, progress - GATE_SOLID) / (1 - GATE_SOLID))
-        : 1,
     });
   }
   return placed;

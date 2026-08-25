@@ -12,12 +12,7 @@ export const LOOP_MS = 16_000;
 const DIMMED = 0.16;
 const HIGHLIGHTED = 1.7;
 
-/**
- * Highlight and dim scale the base alpha rather than replacing it: a gate stub
- * fades to nothing at its far end, and must keep doing so when highlighted —
- * a solid line to a synthetic point would be exactly the fabricated geography
- * the rest of the design refuses.
- */
+/** Highlight and dim scale the base alpha rather than replacing it. */
 export function alphaFor(
   key: string,
   highlighted: string | null,
@@ -77,14 +72,12 @@ export interface Marker {
  * timestamp, never rebuild attributes.
  */
 export interface FlowScene {
-  arcs: FlowArc[];
   /**
-   * Routes to a recorded place, drawn as a permanent channel. A release has no
-   * recorded destination, so it gets no channel: the absence is the point.
+   * One route per row with a recorded place, drawn as a permanent channel. A
+   * release has no recorded destination, so it has no route: the absence is
+   * the point.
    */
-  channels: FlowArc[];
-  /** Routes that leave the country; their `tail` is drawn faint beyond the exit. */
-  tails: FlowArc[];
+  arcs: FlowArc[];
   /** Every dot, with its departure time; the renderer places them per frame. */
   dots: FlowDot[];
   markers: Marker[];
@@ -139,8 +132,6 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
 
   return {
     arcs,
-    channels: arcs.filter((arc) => !arc.gate),
-    tails: arcs.filter((arc) => arc.tail),
     dots,
     markers,
     quantum,

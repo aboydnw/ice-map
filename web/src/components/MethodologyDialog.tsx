@@ -221,9 +221,9 @@ export function MethodologyDialog({ report, onClose }: Props) {
             book-outs. Departures come from ICE's own release reason — a
             transfer to the next facility, a deportation to a named country, or
             a release into the community. Releases have{" "}
-            <b>no destination in ICE's data</b>, so the map draws them leaving
-            the gate and stopping rather than inventing a place they went. Where
-            ICE redacted the reason, the row reads "Not reported by ICE".
+            <b>no destination in ICE's data</b>, so they appear on the board but
+            not on the map, rather than being drawn to a place they never went.
+            Where ICE redacted the reason, the row reads "Not reported by ICE".
             Arrivals are transfers from another facility, or an ICE arrest
             matched to the person within 10 days before or 5 days after book-in.
             That match only works for <b>interior arrests by ICE's ERO</b> —

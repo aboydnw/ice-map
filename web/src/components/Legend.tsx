@@ -13,7 +13,6 @@ const FLOW_KEYS: { family: string; label: string }[] = [
   { family: "transfer", label: "Transfer" },
   { family: "removed", label: "Deportation" },
   { family: "arrested", label: "Arrest" },
-  { family: "released", label: "Release — no destination recorded" },
 ];
 
 const SIZE_STEPS = [10, 100, 1000];

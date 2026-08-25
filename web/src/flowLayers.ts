@@ -68,33 +68,13 @@ export function flowLayers(frame: FlowFrame): Layer[] {
   if (!scene) return layers;
 
   const family = new Map(scene.arcs.map((arc) => [arc.key, arc.family]));
-  if (scene.tails.length > 0) {
-    layers.push(
-      // Beyond the border the route is drawn faint: still traceable when the
-      // reader zooms out, but nothing on screen depends on following it.
-      new PathLayer<FlowArc>({
-        id: "flow-tails",
-        data: scene.tails,
-        getPath: (arc) => arc.tail ?? [],
-        getColor: (arc) => [
-          ...hexRgb(FLOW_CHANNEL),
-          alphaFor(arc.key, highlighted, 55),
-        ],
-        getWidth: 3,
-        widthUnits: "pixels",
-        capRounded: true,
-        jointRounded: true,
-        updateTriggers: { getColor: highlighted },
-      }),
-    );
-  }
   layers.push(
     // The channel is permanent: it says a route exists whether or not a dot
     // happens to be passing. Small facilities move a handful of people a year,
     // so without it their connections would be invisible most of the time.
     new PathLayer<FlowArc>({
       id: "flow-channels",
-      data: scene.channels,
+      data: scene.arcs,
       getPath: (arc) => arc.path,
       getColor: (arc) =>
         arc.key === highlighted
@@ -128,11 +108,11 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         // a full unit.
         getFillColor: (dot) => [
           ...flowRgb(family.get(dot.key) ?? "other"),
-          dot.hollow ? 0 : alphaFor(dot.key, highlighted, 255) * dot.opacity,
+          dot.hollow ? 0 : alphaFor(dot.key, highlighted, 255),
         ],
         getLineColor: (dot) => [
           ...flowRgb(family.get(dot.key) ?? "other"),
-          alphaFor(dot.key, highlighted, dot.hollow ? 220 : 255) * dot.opacity,
+          alphaFor(dot.key, highlighted, dot.hollow ? 220 : 255),
         ],
         updateTriggers: {
           getFillColor: highlighted,

@@ -337,7 +337,7 @@ export function FacilityMap({
         (
           window as unknown as { __iceFlows?: Record<string, number> }
         ).__iceFlows = {
-          channels: scene?.channels.length ?? 0,
+          channels: scene?.arcs.length ?? 0,
           dots: scene?.dots.length ?? 0,
           markers: scene?.markers.length ?? 0,
           processing: processing.length,
