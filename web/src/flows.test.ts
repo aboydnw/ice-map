@@ -6,8 +6,9 @@ import {
   boardCsv,
   buildArcs,
   buildBoardRows,
-  buildTrips,
+  buildDots,
   familyOf,
+  placeDots,
   greatCircle,
   monthAxis,
   quantize,
@@ -343,52 +344,74 @@ describe("greatCircle", () => {
   });
 });
 
-describe("buildTrips", () => {
+describe("buildDots", () => {
   const axis = monthAxis(["2022-10-01", "2026-03-10"]);
   const facility: [number, number] = [-92.13, 31.68];
 
-  it("emits one trip per dot, each finishing within the cycle", () => {
+  it("emits one dot per quantum, each departing inside the loop", () => {
     const flows = flowsFor([
       edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
       edge("released:paroled", 4, [["2023-02", 4]]),
     ]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
     const arcs = buildArcs(rows, facility, "out");
-    const trips = buildTrips(arcs, flows.out, axis, 16_000, 3_200);
+    const dots = buildDots(arcs, flows.out, axis, 16_000);
 
-    expect(trips).toHaveLength(Math.round(500 / QUANTUM) + 1);
-    expect(
-      trips.every((trip) => trip.timestamps.length === trip.path.length),
-    ).toBe(true);
-    expect(
-      trips.every((trip) =>
-        trip.timestamps.every(
-          (time, index) => index === 0 || time > trip.timestamps[index - 1],
-        ),
-      ),
-    ).toBe(true);
-    expect(
-      trips.every(
-        (trip) => trip.timestamps[trip.timestamps.length - 1] <= 16_000 + 3_200,
-      ),
-    ).toBe(true);
-    expect(trips.filter((trip) => trip.hollow)).toHaveLength(1);
+    expect(dots).toHaveLength(Math.round(500 / QUANTUM) + 1);
+    expect(dots.every((dot) => dot.start >= 0 && dot.start < 16_000)).toBe(
+      true,
+    );
+    expect(dots.filter((dot) => dot.hollow)).toHaveLength(1);
+    expect(dots.filter((dot) => dot.gate)).toHaveLength(1);
   });
 
-  it("reuses one path per edge so deck.gl sees stable geometry", () => {
+  it("puts every dot on the path of the route it belongs to", () => {
     const flows = flowsFor([
       edge("removed:GUATEMALA", 500, [["2023-01", 500]]),
     ]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
-    const trips = buildTrips(
-      buildArcs(rows, facility, "out"),
-      flows.out,
-      axis,
-      16_000,
-      3_200,
-    );
+    const arcs = buildArcs(rows, facility, "out");
+    const dots = buildDots(arcs, flows.out, axis, 16_000);
 
-    expect(trips.every((trip) => trip.path === trips[0].path)).toBe(true);
+    expect(dots.every((dot) => dot.path === arcs[0].path)).toBe(true);
+  });
+});
+
+describe("placeDots", () => {
+  const path: [number, number][] = [
+    [0, 0],
+    [10, 0],
+    [20, 0],
+  ];
+  const dot = { key: "a", path, start: 1000, hollow: false, gate: false };
+
+  it("shows a dot only while it is travelling", () => {
+    expect(placeDots([dot], 900, 2000)).toHaveLength(0);
+    expect(placeDots([dot], 1000, 2000)).toHaveLength(1);
+    expect(placeDots([dot], 3000, 2000)).toHaveLength(1);
+    expect(placeDots([dot], 3100, 2000)).toHaveLength(0);
+  });
+
+  it("walks the dot along its path in step with the clock", () => {
+    expect(placeDots([dot], 1000, 2000)[0].position).toEqual([0, 0]);
+    expect(placeDots([dot], 2000, 2000)[0].position[0]).toBeCloseTo(10, 6);
+    expect(placeDots([dot], 3000, 2000)[0].position[0]).toBeCloseTo(20, 6);
+    expect(placeDots([dot], 1500, 2000)[0].position[0]).toBeCloseTo(5, 6);
+  });
+
+  it("keeps a routed dot at full strength the whole way", () => {
+    for (const time of [1000, 2000, 2900, 3000]) {
+      expect(placeDots([dot], time, 2000)[0].opacity).toBe(1);
+    }
+  });
+
+  it("fades a gate dot out, since nothing records where it went", () => {
+    const gate = { ...dot, gate: true };
+
+    expect(placeDots([gate], 1000, 2000)[0].opacity).toBe(1);
+    expect(placeDots([gate], 1800, 2000)[0].opacity).toBe(1);
+    expect(placeDots([gate], 3000, 2000)[0].opacity).toBeCloseTo(0, 6);
+    expect(placeDots([gate], 2500, 2000)[0].opacity).toBeLessThan(1);
   });
 });
 
@@ -450,18 +473,16 @@ describe("routes and channels", () => {
     expect(scene.channels.every((arc) => !arc.gate)).toBe(true);
   });
 
-  it("routes destination-less dots to the fading gate layer", () => {
+  it("marks destination-less dots so the renderer fades them out", () => {
     const scene = sceneFor([
       edge("removed:GUATEMALA", 100, [["2023-01", 100]]),
       edge("released:paroled", 100, [["2023-01", 100]]),
     ]);
+    const gated = new Set(
+      scene.dots.filter((dot) => dot.gate).map((dot) => dot.key),
+    );
 
-    expect(new Set(scene.trips.map((trip) => trip.key))).toEqual(
-      new Set(["removed:GUATEMALA"]),
-    );
-    expect(new Set(scene.gateTrips.map((trip) => trip.key))).toEqual(
-      new Set(["released:paroled"]),
-    );
+    expect(gated).toEqual(new Set(["released:paroled"]));
   });
 
   it("makes every dot ride the exact path its channel draws", () => {
@@ -470,7 +491,7 @@ describe("routes and channels", () => {
     ]);
     const channel = scene.channels[0];
 
-    expect(scene.trips.length).toBeGreaterThan(1);
-    expect(scene.trips.every((trip) => trip.path === channel.path)).toBe(true);
+    expect(scene.dots.length).toBeGreaterThan(1);
+    expect(scene.dots.every((dot) => dot.path === channel.path)).toBe(true);
   });
 });

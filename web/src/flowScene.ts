@@ -1,13 +1,11 @@
-import { buildArcs, buildTrips, monthAxis } from "./flows";
-import type { BoardRow, FlowArc, FlowTrip } from "./flows";
+import { buildArcs, buildDots, monthAxis } from "./flows";
+import type { BoardRow, FlowArc, FlowDot } from "./flows";
 import type { FacilityFlows, FlowDirection } from "./types";
 
 /** One pass of the animation covers the whole data window. */
 export const LOOP_MS = 16_000;
 export const TRAVEL_MS = 3_200;
 export const CYCLE_MS = LOOP_MS + TRAVEL_MS;
-/** Length of a travelling dash, as a slice of its journey time. */
-export const DASH_MS = TRAVEL_MS * 0.08;
 
 const DIMMED = 0.16;
 const HIGHLIGHTED = 1.7;
@@ -44,10 +42,8 @@ export interface FlowScene {
    * recorded destination, so it gets no channel: the absence is the point.
    */
   channels: FlowArc[];
-  /** Dots travelling a channel. */
-  trips: FlowTrip[];
-  /** Dots leaving the gate for nowhere, drawn with a trail that fades out. */
-  gateTrips: FlowTrip[];
+  /** Every dot, with its departure time; the renderer places them per frame. */
+  dots: FlowDot[];
   markers: Marker[];
 }
 
@@ -64,19 +60,9 @@ export interface SceneOptions {
 export function buildFlowScene(options: SceneOptions): FlowScene {
   const { flows, direction, rows, facility } = options;
   const arcs = buildArcs(rows, facility, direction);
-  const trips = options.animate
-    ? buildTrips(
-        arcs,
-        flows[direction],
-        monthAxis(flows.window),
-        LOOP_MS,
-        TRAVEL_MS,
-      )
+  const dots = options.animate
+    ? buildDots(arcs, flows[direction], monthAxis(flows.window), LOOP_MS)
     : [];
-
-  const gateKeys = new Set(
-    arcs.filter((arc) => arc.gate).map((arc) => arc.key),
-  );
 
   const seen = new Set<string>();
   const markers: Marker[] = [];
@@ -88,11 +74,5 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
     markers.push({ position: row.lonLat, label: row.label });
   });
 
-  return {
-    arcs,
-    channels: arcs.filter((arc) => !arc.gate),
-    trips: trips.filter((trip) => !gateKeys.has(trip.key)),
-    gateTrips: trips.filter((trip) => gateKeys.has(trip.key)),
-    markers,
-  };
+  return { arcs, channels: arcs.filter((arc) => !arc.gate), dots, markers };
 }

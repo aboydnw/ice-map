@@ -288,11 +288,11 @@ export function FacilityMap({
         (
           window as unknown as { __iceFlows?: Record<string, number> }
         ).__iceFlows = {
-          arcs: scene.arcs.length,
-          trips: scene.trips.length,
+          channels: scene.channels.length,
+          dots: scene.dots.length,
           markers: scene.markers.length,
         };
-        if (scene.trips.length === 0) {
+        if (scene.dots.length === 0) {
           overlay.setProps({ layers: flowLayers(scene, highlightedKey, 0) });
           return;
         }

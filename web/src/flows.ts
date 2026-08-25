@@ -259,12 +259,23 @@ export interface FlowArc {
   gate: boolean;
 }
 
-export interface FlowTrip {
+export interface FlowDot {
   key: string;
   path: [number, number][];
-  /** One timestamp per path vertex, as TripsLayer requires. */
-  timestamps: number[];
+  /** Offset within the loop at which this dot sets off, in ms. */
+  start: number;
   hollow: boolean;
+  /** Gate dots have nowhere to arrive, so they fade out instead. */
+  gate: boolean;
+}
+
+/** A dot resolved to a map position for one animation frame. */
+export interface PlacedDot {
+  key: string;
+  position: [number, number];
+  hollow: boolean;
+  /** 1 while travelling; falls to 0 as a gate dot dies out. */
+  opacity: number;
 }
 
 /** Great-circle samples per route; enough to read as a curve at any zoom. */
@@ -346,15 +357,14 @@ export function greatCircle(
   return points;
 }
 
-/** One trip per dot, sharing the path of the arc it travels along. */
-export function buildTrips(
+/** One dot per quantum, released onto the path of the route it travels. */
+export function buildDots(
   arcs: FlowArc[],
   edges: FlowEdge[],
   axis: string[],
   loop: number,
-  travel: number,
   quantum = QUANTUM,
-): FlowTrip[] {
+): FlowDot[] {
   const byKey = new Map(edges.map((edge) => [edge.key, edge]));
   const schedules = quantize(
     arcs.map(
@@ -364,22 +374,58 @@ export function buildTrips(
     axis,
     quantum,
   );
-  const trips: FlowTrip[] = [];
+  const dots: FlowDot[] = [];
   arcs.forEach((arc, index) => {
     const schedule = schedules[index];
-    const path = arc.path;
-    const offsets = path.map((_, step) => (step / (path.length - 1)) * travel);
     for (const departure of schedule.departures) {
-      const start = departure * loop;
-      trips.push({
+      dots.push({
         key: arc.key,
-        path,
-        timestamps: offsets.map((offset) => start + offset),
+        path: arc.path,
+        start: departure * loop,
         hollow: schedule.hollow,
+        gate: arc.gate,
       });
     }
   });
-  return trips;
+  return dots;
+}
+
+/** A gate dot holds full strength for this share of its journey, then fades. */
+const GATE_SOLID = 0.45;
+
+/**
+ * Where every in-flight dot sits at `currentTime`. Pure, so the animation's
+ * arithmetic is testable without a GL context — the renderer only paints what
+ * this returns.
+ */
+export function placeDots(
+  dots: FlowDot[],
+  currentTime: number,
+  travel: number,
+): PlacedDot[] {
+  const placed: PlacedDot[] = [];
+  for (const dot of dots) {
+    const progress = (currentTime - dot.start) / travel;
+    if (progress < 0 || progress > 1) continue;
+    const steps = dot.path.length - 1;
+    const exact = progress * steps;
+    const index = Math.min(Math.floor(exact), steps - 1);
+    const within = exact - index;
+    const from = dot.path[index];
+    const to = dot.path[index + 1];
+    placed.push({
+      key: dot.key,
+      position: [
+        from[0] + (to[0] - from[0]) * within,
+        from[1] + (to[1] - from[1]) * within,
+      ],
+      hollow: dot.hollow,
+      opacity: dot.gate
+        ? Math.max(0, 1 - Math.max(0, progress - GATE_SOLID) / (1 - GATE_SOLID))
+        : 1,
+    });
+  }
+  return placed;
 }
 
 /** The board is the citable record, so the copied table carries its own stamp. */

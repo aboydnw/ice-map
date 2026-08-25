@@ -1,10 +1,10 @@
 import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import { TripsLayer } from "@deck.gl/geo-layers";
 import type { Layer } from "@deck.gl/core";
 import { FLOW_CHANNEL, flowRgb, hexRgb } from "./config";
-import { DASH_MS, TRAVEL_MS, alphaFor } from "./flowScene";
+import { TRAVEL_MS, alphaFor } from "./flowScene";
 import type { FlowScene, Marker } from "./flowScene";
-import type { FlowArc, FlowTrip } from "./flows";
+import { placeDots } from "./flows";
+import type { FlowArc, PlacedDot } from "./flows";
 
 /**
  * Fresh layer instances for one frame. They share the scene's data arrays, so
@@ -36,52 +36,36 @@ export function flowLayers(
     }),
   ];
 
-  if (scene.trips.length > 0) {
+  if (scene.dots.length > 0) {
+    // Round dots at a fixed pixel radius. TripsLayer was drawing trails whose
+    // on-screen length scaled with the route, so a long route smeared into a
+    // streak; a dot is the same countable mark everywhere.
+    const placed = placeDots(scene.dots, currentTime, TRAVEL_MS);
     layers.push(
-      new TripsLayer<FlowTrip>({
-        id: "flow-trips",
-        data: scene.trips,
-        getPath: (trip) => trip.path,
-        getTimestamps: (trip) => trip.timestamps,
-        getColor: (trip) => [
-          ...flowRgb(family.get(trip.key) ?? "other"),
-          alphaFor(trip.key, highlighted, trip.hollow ? 130 : 255),
+      new ScatterplotLayer<PlacedDot>({
+        id: "flow-dots",
+        data: placed,
+        getPosition: (dot) => dot.position,
+        getRadius: (dot) => (dot.hollow ? 2.4 : 3.2),
+        radiusUnits: "pixels",
+        filled: true,
+        stroked: true,
+        lineWidthUnits: "pixels",
+        getLineWidth: 1.2,
+        // A sub-quantum dot is drawn as an outline so it is never mistaken for
+        // a full unit of 25 stints.
+        getFillColor: (dot) => [
+          ...flowRgb(family.get(dot.key) ?? "other"),
+          dot.hollow ? 0 : alphaFor(dot.key, highlighted, 255) * dot.opacity,
         ],
-        getWidth: (trip) => (trip.hollow ? 2 : 3.4),
-        widthUnits: "pixels",
-        capRounded: true,
-        jointRounded: true,
-        // A crisp dash rather than a comet tail: these are countable units,
-        // and a fading smear reads as continuous flow.
-        fadeTrail: false,
-        trailLength: DASH_MS,
-        currentTime,
-        updateTriggers: { getColor: highlighted },
-      }),
-    );
-  }
-
-  if (scene.gateTrips.length > 0) {
-    layers.push(
-      new TripsLayer<FlowTrip>({
-        id: "flow-gate-trips",
-        data: scene.gateTrips,
-        getPath: (trip) => trip.path,
-        getTimestamps: (trip) => trip.timestamps,
-        getColor: (trip) => [
-          ...flowRgb(family.get(trip.key) ?? "other"),
-          alphaFor(trip.key, highlighted, trip.hollow ? 130 : 235),
+        getLineColor: (dot) => [
+          ...flowRgb(family.get(dot.key) ?? "other"),
+          alphaFor(dot.key, highlighted, dot.hollow ? 220 : 255) * dot.opacity,
         ],
-        getWidth: (trip) => (trip.hollow ? 2 : 3.4),
-        widthUnits: "pixels",
-        capRounded: true,
-        jointRounded: true,
-        // These leave the gate and fade: ICE records no destination, and the
-        // trail dying out is the honest way to draw not knowing.
-        fadeTrail: true,
-        trailLength: TRAVEL_MS * 0.45,
-        currentTime,
-        updateTriggers: { getColor: highlighted },
+        updateTriggers: {
+          getFillColor: highlighted,
+          getLineColor: highlighted,
+        },
       }),
     );
   }
@@ -92,13 +76,16 @@ export function flowLayers(
         id: "flow-endpoint-dots",
         data: scene.markers,
         getPosition: (marker) => marker.position,
-        getRadius: 3.5,
+        getRadius: 6,
         radiusUnits: "pixels",
-        getFillColor: [26, 24, 23, 190],
+        // A ring, not a disc: these places have no reported population, so
+        // they must not read as a sized facility circle.
+        filled: true,
+        getFillColor: [253, 252, 250, 210],
         stroked: true,
-        getLineColor: [253, 252, 250, 230],
+        getLineColor: [90, 86, 80, 230],
         lineWidthUnits: "pixels",
-        getLineWidth: 1,
+        getLineWidth: 1.6,
       }),
       new TextLayer<Marker>({
         id: "flow-endpoint-labels",

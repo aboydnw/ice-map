@@ -98,6 +98,22 @@ export function Legend({ data, flows }: Props) {
               A route people are moved along
             </Text>
           </Box>
+          <Box display="flex" alignItems="center" gap="2" py="1px" mb="1px">
+            <Box
+              width="9px"
+              height="9px"
+              borderRadius="full"
+              borderWidth="1.5px"
+              borderColor="#5a5650"
+              bg="panel"
+              flexShrink={0}
+              ml="2px"
+              mr="3px"
+            />
+            <Text fontSize="11px" color="inkSecondary" lineHeight="1.25">
+              Hold room or office · no population reported
+            </Text>
+          </Box>
           {FLOW_KEYS.map((entry) => (
             <Box
               key={entry.family}
