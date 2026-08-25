@@ -32,6 +32,12 @@ const US_BOUNDS: [[number, number], [number, number]] = [
   [-126, 23.5],
   [-65.5, 50],
 ];
+/** Overlay layers whose clicks select something, so an empty-map click must not undo them. */
+const PICKABLE_FLOW_LAYERS = [
+  "flow-processing",
+  "flow-endpoint-dots",
+  "flow-endpoint-labels",
+];
 /** Spacing between fanned lanes on screen. */
 const LANE_PX = 7;
 /** Web Mercator, 512px tiles: degrees of longitude per pixel at a zoom. */
@@ -241,7 +247,15 @@ export function FacilityMap({
             const hits = m.queryRenderedFeatures(event.point, {
               layers: ["facility-circles"],
             });
-            if (hits.length === 0) onSelectRef.current(null);
+            // deck.gl handles its own clicks, but maplibre still sees the same
+            // click as empty map and would deselect the site or country the
+            // overlay just selected.
+            const picked = overlayRef.current?.pickObject({
+              x: event.point.x,
+              y: event.point.y,
+              layerIds: PICKABLE_FLOW_LAYERS,
+            });
+            if (hits.length === 0 && !picked) onSelectRef.current(null);
           });
         });
       })
