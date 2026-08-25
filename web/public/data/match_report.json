@@ -30,7 +30,7 @@
   "flows": {
     "as_of": "2026-08-05",
     "window_start": "2022-10-01",
-    "facilities_written": 205,
+    "facilities_written": 284,
     "stints_at_mapped_facilities": 2160218,
     "book_ins_in_window": 2137366,
     "book_outs_in_window": 2096926,
@@ -48,12 +48,13 @@
       "not_reported": 0.0
     },
     "endpoints": {
-      "referenced": 651,
-      "with_coordinates": 490,
-      "coordinate_share": 0.7527,
+      "referenced": 691,
+      "with_coordinates": 511,
+      "coordinate_share": 0.7395,
+      "processing_boards_written": 82,
       "processing_sites": 80,
-      "stints_via_processing_sites": 761361,
-      "off_map_endpoints": 285
+      "stints_via_processing_sites": 874915,
+      "off_map_endpoints": 306
     },
     "arrest_link_rate": {
       "national": 0.3212,

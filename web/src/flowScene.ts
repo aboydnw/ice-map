@@ -4,7 +4,12 @@ import type { FacilityFlows, FlowDirection, FlowEndpoints } from "./types";
 
 /** One pass of the animation covers the whole data window. */
 export const LOOP_MS = 16_000;
-export const TRAVEL_MS = 3_200;
+/**
+ * How long a dot takes to cross its route. Longer means slower; because
+ * departures are fixed to the month they happened, it also means more dots in
+ * flight at once.
+ */
+export const TRAVEL_MS = 6_400;
 export const CYCLE_MS = LOOP_MS + TRAVEL_MS;
 
 const DIMMED = 0.16;

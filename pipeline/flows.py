@@ -323,6 +323,19 @@ def aggregate(frame: pd.DataFrame, key_column: str, month_column: str) -> list[d
     return sorted(rows.values(), key=lambda entry: (-entry["count"], entry["key"]))
 
 
+def processing_codes(master: pd.DataFrame) -> set:
+    """Hold rooms and staging sites we can plot, which never reach the ADP snapshot."""
+    codes = set()
+    for row in master.itertuples():
+        if str(row.type_detailed).strip().upper() not in PROCESSING_TYPES:
+            continue
+        if pd.isna(row.longitude) or pd.isna(row.latitude):
+            continue
+        if in_bounds(float(row.longitude), float(row.latitude)):
+            codes.add(row.detention_facility_code)
+    return codes
+
+
 def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, out_dir) -> dict:
     """Write per-facility flow files and return the match-report block."""
     countries = load_reference("countries.json")
@@ -338,11 +351,16 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
     window_end = data_through(activity) + pd.Timedelta(days=1)
     as_of = str((window_end - pd.Timedelta(days=1)).date())
 
+    # Processing sites get their own board too: they are not on the population
+    # map, but people are moved through them and that movement is countable.
+    sites = processing_codes(master)
+    written_codes = set(mapped_codes) | sites
     at_mapped = edges["detention_facility_code"].isin(mapped_codes)
+    at_written = edges["detention_facility_code"].isin(written_codes)
     in_window = edges["book_in_date_time"].between(window_start, window_end, inclusive="left")
     out_window = edges["book_out_date_time"].between(window_start, window_end, inclusive="left")
-    arrivals = edges[at_mapped & in_window]
-    departures = edges[at_mapped & edges["out_key"].notna() & out_window]
+    arrivals = edges[at_written & in_window]
+    departures = edges[at_written & edges["out_key"].notna() & out_window]
 
     referenced, volume = set(), {}
     for keys in (arrivals["in_key"], departures["out_key"]):
@@ -371,8 +389,8 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
     arrivals_by_facility = dict(tuple(arrivals.groupby("detention_facility_code", observed=True)))
     departures_by_facility = dict(tuple(departures.groupby("detention_facility_code", observed=True)))
 
-    written, coverage_rates = 0, []
-    for detloc in sorted(mapped_codes):
+    written_facilities, coverage_rates = [], []
+    for detloc in sorted(written_codes):
         facility_in = arrivals_by_facility.get(detloc)
         facility_out = departures_by_facility.get(detloc)
         if facility_in is None and facility_out is None:
@@ -385,7 +403,7 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
             if facility_in is not None
             else 0
         )
-        if first_arrivals:
+        if first_arrivals and detloc in mapped_codes:
             coverage_rates.append(linked / first_arrivals)
         payload = {
             "detloc": detloc,
@@ -403,34 +421,37 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
             "out": out_rows,
         }
         (flows_dir / f"{detloc}.json").write_text(json.dumps(payload, separators=(",", ":")))
-        written += 1
+        written_facilities.append(detloc)
 
-    out_families = departures["out_key"].str.split(":").str[0]
-    total_out = len(departures)
-    total_first = int(arrivals["is_first"].sum())
-    unmapped = departures["unmapped_country"].dropna()
+    mapped_arrivals = arrivals[arrivals["detention_facility_code"].isin(mapped_codes)]
+    mapped_departures = departures[departures["detention_facility_code"].isin(mapped_codes)]
+    out_families = mapped_departures["out_key"].str.split(":").str[0]
+    total_out = len(mapped_departures)
+    total_first = int(mapped_arrivals["is_first"].sum())
+    unmapped = mapped_departures["unmapped_country"].dropna()
     return {
         "as_of": as_of,
         "window_start": WINDOW_START,
-        "facilities_written": written,
+        "facilities_written": len(written_facilities),
         "stints_at_mapped_facilities": int(at_mapped.sum()),
-        "book_ins_in_window": len(arrivals),
+        "book_ins_in_window": len(mapped_arrivals),
         "book_outs_in_window": total_out,
         "out_families": {
             str(family): int(count) for family, count in out_families.value_counts().items()
         },
         "unknown_shares": {
-            "transfer_unknown": _share(departures["out_key"].eq(UNKNOWN_TRANSFER).sum(), total_out),
+            "transfer_unknown": _share(mapped_departures["out_key"].eq(UNKNOWN_TRANSFER).sum(), total_out),
             "transfer_no_location": _share(
-                departures["out_key"].eq(NO_LOCATION_TRANSFER).sum(), total_out
+                mapped_departures["out_key"].eq(NO_LOCATION_TRANSFER).sum(), total_out
             ),
-            "removed_unknown": _share(departures["out_key"].eq("removed:unknown").sum(), total_out),
-            "not_reported": _share(departures["out_key"].eq(NOT_REPORTED).sum(), total_out),
+            "removed_unknown": _share(mapped_departures["out_key"].eq("removed:unknown").sum(), total_out),
+            "not_reported": _share(mapped_departures["out_key"].eq(NOT_REPORTED).sum(), total_out),
         },
         "endpoints": {
             "referenced": len(referenced),
             "with_coordinates": len(endpoints),
             "coordinate_share": _share(len(endpoints), len(referenced)),
+            "processing_boards_written": len(sites & set(written_facilities)),
             "processing_sites": sum(
                 1 for entry in endpoints.values() if entry["kind"] == "processing"
             ),
@@ -441,7 +462,7 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         },
         "arrest_link_rate": {
             "national": _share(
-                arrivals["in_key"].str.startswith("arrested:").sum(), total_first
+                mapped_arrivals["in_key"].str.startswith("arrested:").sum(), total_first
             ),
             "median_facility": round(pd.Series(coverage_rates).median(), 3) if coverage_rates else None,
             "facilities_measured": len(coverage_rates),

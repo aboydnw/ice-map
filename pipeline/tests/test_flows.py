@@ -305,3 +305,37 @@ def test_hold_rooms_and_staging_sites_are_marked_as_processing(tmp_path):
     assert endpoints["HOLDRM"]["stints"] == 1
     assert report["endpoints"]["processing_sites"] == 1
     assert report["endpoints"]["off_map_endpoints"] == 2
+
+
+def test_processing_sites_get_their_own_board(tmp_path):
+    stints = [
+        stint("S1", "AAA", "2024-01-02", "2024-01-05", "Transferred", person="P1"),
+        stint("S1", "HOLDRM", "2024-01-05", "2024-01-09", "Removed", "MEXICO", person="P1"),
+    ]
+    master = [
+        facility("AAA", -97.0, 31.0),
+        facility("HOLDRM", -96.0, 32.0, type_detailed="HOLD"),
+    ]
+    report, written = run(tmp_path, stints, [], master, ["AAA"])
+
+    assert set(written) >= {"AAA", "HOLDRM"}
+    assert keys(written["HOLDRM"], "in") == {"transfer:AAA": 1}
+    assert keys(written["HOLDRM"], "out") == {"removed:MEXICO": 1}
+    assert written["HOLDRM"]["totals"] == {"in": 1, "out": 1}
+    assert report["endpoints"]["processing_boards_written"] == 1
+
+
+def test_report_metrics_cover_only_facilities_on_the_map(tmp_path):
+    stints = [
+        stint("S1", "AAA", "2024-01-02", "2024-01-05", "Removed", "MEXICO", person="P1"),
+        stint("S2", "HOLDRM", "2024-01-02", "2024-01-05", "Removed", "MEXICO", person="P2"),
+    ]
+    master = [
+        facility("AAA", -97.0, 31.0),
+        facility("HOLDRM", -96.0, 32.0, type_detailed="HOLD"),
+    ]
+    report, written = run(tmp_path, stints, [], master, ["AAA"])
+
+    assert "HOLDRM" in written
+    assert report["book_outs_in_window"] == 1
+    assert report["book_ins_in_window"] == 1

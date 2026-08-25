@@ -12,7 +12,9 @@ export interface FlowFrame {
   processing: ProcessingSite[];
   highlighted: string | null;
   currentTime: number;
+  selectedSite: string | null;
   onHoverSite: (site: ProcessingSite | null, x: number, y: number) => void;
+  onSelectSite: (code: string) => void;
 }
 
 /**
@@ -31,14 +33,17 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         getPosition: (site) => site.position,
         // A fixed radius, deliberately: these places report no population, so
         // sizing them would invent a number the data does not have.
-        getRadius: 5,
+        getRadius: (site) => (site.code === frame.selectedSite ? 7 : 5),
         radiusUnits: "pixels",
         filled: true,
         getFillColor: [253, 252, 250, 225],
         stroked: true,
-        getLineColor: [90, 86, 80, 220],
+        getLineColor: (site) =>
+          site.code === frame.selectedSite
+            ? [26, 24, 23, 255]
+            : [90, 86, 80, 220],
         lineWidthUnits: "pixels",
-        getLineWidth: 1.5,
+        getLineWidth: (site) => (site.code === frame.selectedSite ? 2.4 : 1.5),
         pickable: true,
         onHover: (info) =>
           frame.onHoverSite(
@@ -46,6 +51,16 @@ export function flowLayers(frame: FlowFrame): Layer[] {
             info.x,
             info.y,
           ),
+        onClick: (info) => {
+          const site = info.object as ProcessingSite | undefined;
+          if (site) frame.onSelectSite(site.code);
+          return Boolean(site);
+        },
+        updateTriggers: {
+          getRadius: frame.selectedSite,
+          getLineColor: frame.selectedSite,
+          getLineWidth: frame.selectedSite,
+        },
       }),
     );
   }

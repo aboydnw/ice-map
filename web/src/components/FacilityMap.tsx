@@ -87,8 +87,10 @@ export function FacilityMap({
     const feature = data.features.find(
       (candidate) => candidate.properties.detloc === selected,
     );
-    return feature ? feature.geometry.coordinates : null;
-  }, [data, selected]);
+    if (feature) return feature.geometry.coordinates;
+    const site = selected ? endpoints?.facilities[selected] : undefined;
+    return site ? ([site.lon, site.lat] as [number, number]) : null;
+  }, [data, selected, endpoints]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -335,7 +337,9 @@ export function FacilityMap({
               processing,
               highlighted: highlightedKey,
               currentTime,
+              selectedSite: selected,
               onHoverSite: handleSiteHover,
+              onSelectSite: (code: string) => onSelectRef.current(code),
             }),
           });
         if (!scene || scene.dots.length === 0) {
@@ -364,7 +368,7 @@ export function FacilityMap({
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [scene, highlightedKey, processing, handleSiteHover]);
+  }, [scene, highlightedKey, processing, handleSiteHover, selected]);
 
   if (mapFailed) {
     return (

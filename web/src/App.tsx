@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Heading, Spinner, Text } from "@chakra-ui/react";
 import { DetailPanel } from "./components/DetailPanel";
+import { SitePanel } from "./components/SitePanel";
 import { FacilityMap } from "./components/FacilityMap";
 import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
@@ -32,7 +33,7 @@ export default function App() {
   );
   const [showProcessing, setShowProcessing] = useState(false);
   const flowData = useFacilityFlows(selected);
-  const flowEndpoints = useFlowEndpoints(showProcessing);
+  const flowEndpoints = useFlowEndpoints(showProcessing || Boolean(selected));
 
   const flowRows = useMemo(
     () =>
@@ -118,6 +119,11 @@ export default function App() {
   const selectedFeature = selected
     ? data.facilities.features.find((f) => f.properties.detloc === selected)
     : null;
+  // A selection the circle map does not know about is a processing site.
+  const selectedSite =
+    selected && !selectedFeature
+      ? (flowEndpoints?.facilities[selected] ?? null)
+      : null;
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
@@ -204,6 +210,21 @@ export default function App() {
           showProcessing={showProcessing}
           onShowProcessingChange={setShowProcessing}
         />
+        {selectedSite && (
+          <SitePanel
+            name={selectedSite.name}
+            stints={selectedSite.stints ?? 0}
+            onClose={() => selectFacility(null)}
+            flows={flowData?.flows ?? null}
+            flowRows={flowRows}
+            flowDirection={flowDirection}
+            onFlowDirectionChange={changeFlowDirection}
+            showAllFlows={showAllFlows}
+            onShowAllFlowsChange={setShowAllFlows}
+            highlightedFlowKey={highlightedFlowKey}
+            onHighlightFlow={setHighlightedFlowKey}
+          />
+        )}
         {selectedFeature && (
           <DetailPanel
             facility={selectedFeature}
