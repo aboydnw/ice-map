@@ -156,6 +156,7 @@ export function FacilityMap({
 
         m.on("load", () => {
           setMapReady(true);
+          setMapReady(true);
           // Test hook: lets Playwright drive the map in dev and preview builds.
           (window as unknown as { __iceMap?: maplibregl.Map }).__iceMap = m;
           m.addSource("facilities", { type: "geojson", data: data as never });
