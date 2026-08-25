@@ -1,6 +1,6 @@
 import { buildArcs, buildDots, monthAxis } from "./flows";
 import type { BoardRow, FlowArc, FlowDot } from "./flows";
-import type { FacilityFlows, FlowDirection } from "./types";
+import type { FacilityFlows, FlowDirection, FlowEndpoints } from "./types";
 
 /** One pass of the animation covers the whole data window. */
 export const LOOP_MS = 16_000;
@@ -24,6 +24,36 @@ export function alphaFor(
   if (!highlighted) return base;
   const scale = key === highlighted ? HIGHLIGHTED : DIMMED;
   return Math.min(255, Math.round(base * scale));
+}
+
+/** A hold room, field office, or staging site the map has no circle for. */
+export interface ProcessingSite {
+  code: string;
+  name: string;
+  position: [number, number];
+  stints: number;
+}
+
+/**
+ * Processing sites worth drawing: those the map does not already show as a
+ * facility circle. Alexandria and Florence Staging are both, so without the
+ * mapped-code check they would get a ring on top of their own circle.
+ */
+export function processingSites(
+  endpoints: FlowEndpoints,
+  mappedCodes: Set<string>,
+): ProcessingSite[] {
+  return Object.entries(endpoints.facilities)
+    .filter(
+      ([code, entry]) => entry.kind === "processing" && !mappedCodes.has(code),
+    )
+    .map(([code, entry]) => ({
+      code,
+      name: entry.name,
+      position: [entry.lon, entry.lat] as [number, number],
+      stints: entry.stints ?? 0,
+    }))
+    .sort((a, b) => b.stints - a.stints);
 }
 
 export interface Marker {

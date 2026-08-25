@@ -108,6 +108,13 @@ export interface Centroid {
   name: string;
   lon: number;
   lat: number;
+  /**
+   * Endpoints only. "processing" is a hold room, field office, or staging
+   * site: somewhere people pass through, with no reported population.
+   */
+  kind?: "processing" | "detention";
+  /** Endpoints only: stints that moved through here, in either direction. */
+  stints?: number;
 }
 
 export interface FlowEndpoints {

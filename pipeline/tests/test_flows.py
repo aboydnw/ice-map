@@ -33,12 +33,13 @@ def arrest(person, when, state):
     }
 
 
-def facility(code, lon, lat, name=None):
+def facility(code, lon, lat, name=None, type_detailed="IGSA"):
     return {
         "detention_facility_code": code,
         "name": name or code,
         "longitude": lon,
         "latitude": lat,
+        "type_detailed": type_detailed,
     }
 
 
@@ -236,7 +237,9 @@ def test_endpoint_outside_the_bounding_box_collapses_to_no_location(tmp_path):
     assert keys(written["AAA"], "out") == {"transfer:no-location": 2}
     assert "OFFMAP" not in written["endpoints"]["facilities"]
     assert "NOCOORD" not in written["endpoints"]["facilities"]
-    assert report["endpoints"] == {"referenced": 2, "with_coordinates": 0, "coordinate_share": 0.0}
+    assert report["endpoints"]["referenced"] == 2
+    assert report["endpoints"]["with_coordinates"] == 0
+    assert report["endpoints"]["coordinate_share"] == 0.0
 
 
 def test_departure_country_outside_the_centroid_table_is_reported_as_unknown(tmp_path):
@@ -280,3 +283,25 @@ def test_in_bounds_accepts_the_americas_and_the_pacific_territories():
     assert flows.in_bounds(144.79, 13.45)
     assert not flows.in_bounds(12.5, 48.1)
     assert not flows.in_bounds(-97.0, 80.0)
+
+
+def test_hold_rooms_and_staging_sites_are_marked_as_processing(tmp_path):
+    stints = [
+        stint("S1", "AAA", "2024-01-02", "2024-01-05", "Transferred", person="P1"),
+        stint("S1", "HOLDRM", "2024-01-05", "2024-01-09", "Removed", "MEXICO", person="P1"),
+        stint("S2", "AAA", "2024-01-03", "2024-01-06", "Transferred", person="P2"),
+        stint("S2", "BBB", "2024-01-06", "2024-01-10", "Removed", "MEXICO", person="P2"),
+    ]
+    master = [
+        facility("AAA", -97.0, 31.0),
+        facility("HOLDRM", -96.0, 32.0, type_detailed="HOLD"),
+        facility("BBB", -95.0, 33.0, type_detailed="IGSA"),
+    ]
+    report, written = run(tmp_path, stints, [], master, ["AAA"])
+    endpoints = written["endpoints"]["facilities"]
+
+    assert endpoints["HOLDRM"]["kind"] == "processing"
+    assert endpoints["BBB"]["kind"] == "detention"
+    assert endpoints["HOLDRM"]["stints"] == 1
+    assert report["endpoints"]["processing_sites"] == 1
+    assert report["endpoints"]["off_map_endpoints"] == 2

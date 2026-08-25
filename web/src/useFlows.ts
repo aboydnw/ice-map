@@ -75,3 +75,27 @@ export function useFacilityFlows(detloc: string | null): FlowData | null {
   // renders the previous facility's flows for a frame.
   return loaded?.flows.detloc === detloc ? loaded : null;
 }
+
+/**
+ * The endpoint table on its own, for the processing-site layer. Shares the
+ * cached reference fetch with the flow panel, so turning the toggle on after
+ * selecting a facility costs nothing.
+ */
+export function useFlowEndpoints(enabled: boolean): FlowEndpoints | null {
+  const [endpoints, setEndpoints] = useState<FlowEndpoints | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    loadReference()
+      .then((reference) => {
+        if (!cancelled) setEndpoints(reference.endpoints);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled]);
+
+  return endpoints;
+}

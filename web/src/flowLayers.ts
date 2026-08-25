@@ -2,21 +2,58 @@ import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { Layer } from "@deck.gl/core";
 import { FLOW_CHANNEL, flowRgb, hexRgb } from "./config";
 import { TRAVEL_MS, alphaFor } from "./flowScene";
-import type { FlowScene, Marker } from "./flowScene";
+import type { FlowScene, Marker, ProcessingSite } from "./flowScene";
 import { placeDots } from "./flows";
 import type { FlowArc, PlacedDot } from "./flows";
+
+export interface FlowFrame {
+  /** Null when no facility is selected; processing sites can still be shown. */
+  scene: FlowScene | null;
+  processing: ProcessingSite[];
+  highlighted: string | null;
+  currentTime: number;
+  onHoverSite: (site: ProcessingSite | null, x: number, y: number) => void;
+}
 
 /**
  * Fresh layer instances for one frame. They share the scene's data arrays, so
  * deck.gl re-uploads attributes only when the highlight or the scene changes.
  */
-export function flowLayers(
-  scene: FlowScene,
-  highlighted: string | null,
-  currentTime: number,
-): Layer[] {
+export function flowLayers(frame: FlowFrame): Layer[] {
+  const { scene, highlighted, currentTime } = frame;
+  const layers: Layer[] = [];
+
+  if (frame.processing.length > 0) {
+    layers.push(
+      new ScatterplotLayer<ProcessingSite>({
+        id: "flow-processing",
+        data: frame.processing,
+        getPosition: (site) => site.position,
+        // A fixed radius, deliberately: these places report no population, so
+        // sizing them would invent a number the data does not have.
+        getRadius: 5,
+        radiusUnits: "pixels",
+        filled: true,
+        getFillColor: [253, 252, 250, 225],
+        stroked: true,
+        getLineColor: [90, 86, 80, 220],
+        lineWidthUnits: "pixels",
+        getLineWidth: 1.5,
+        pickable: true,
+        onHover: (info) =>
+          frame.onHoverSite(
+            (info.object as ProcessingSite) ?? null,
+            info.x,
+            info.y,
+          ),
+      }),
+    );
+  }
+
+  if (!scene) return layers;
+
   const family = new Map(scene.arcs.map((arc) => [arc.key, arc.family]));
-  const layers: Layer[] = [
+  layers.push(
     // The channel is permanent: it says a route exists whether or not a dot
     // happens to be passing. Small facilities move a handful of people a year,
     // so without it their connections would be invisible most of the time.
@@ -34,7 +71,7 @@ export function flowLayers(
       jointRounded: true,
       updateTriggers: { getColor: highlighted, getWidth: highlighted },
     }),
-  ];
+  );
 
   if (scene.dots.length > 0) {
     // Round dots at a fixed pixel radius. TripsLayer was drawing trails whose

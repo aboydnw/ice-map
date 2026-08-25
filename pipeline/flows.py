@@ -65,6 +65,12 @@ FULL_DAY_SHARE = 0.2
 ARREST_WINDOW_BEFORE = pd.Timedelta(days=10)
 ARREST_WINDOW_AFTER = pd.Timedelta(days=5)
 
+# Hold rooms, field offices, and staging sites are processing points rather than
+# places people are detained. ICE's population reports exclude them by design, so
+# they never get a circle on the map even though a quarter of all movement runs
+# through them.
+PROCESSING_TYPES = {"HOLD", "STAGING"}
+
 # ICE detains people in the Americas and in the Pacific territories; a facility
 # plotted anywhere else is a bad coordinate, not a location we should draw.
 ENDPOINT_BOXES = [
@@ -265,8 +271,8 @@ def link_arrests(edges: pd.DataFrame, arrests: pd.DataFrame, states: dict) -> pd
     return edges
 
 
-def build_endpoints(master: pd.DataFrame, referenced_codes: set) -> dict:
-    """Name and coordinates for every facility code an edge points at."""
+def build_endpoints(master: pd.DataFrame, referenced_codes: set, volume: dict) -> dict:
+    """Name, coordinates, kind, and traffic for every facility code an edge points at."""
     endpoints = {}
     for row in master.itertuples():
         code = row.detention_facility_code
@@ -277,9 +283,20 @@ def build_endpoints(master: pd.DataFrame, referenced_codes: set) -> dict:
         lon, lat = float(row.longitude), float(row.latitude)
         if not in_bounds(lon, lat):
             continue
+        kind = (
+            "processing"
+            if str(row.type_detailed).strip().upper() in PROCESSING_TYPES
+            else "detention"
+        )
         endpoints.setdefault(
             code,
-            {"name": enrich.display_name(str(row.name)), "lon": round(lon, 5), "lat": round(lat, 5)},
+            {
+                "name": enrich.display_name(str(row.name)),
+                "lon": round(lon, 5),
+                "lat": round(lat, 5),
+                "kind": kind,
+                "stints": int(volume.get(code, 0)),
+            },
         )
     return endpoints
 
@@ -327,11 +344,13 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
     arrivals = edges[at_mapped & in_window]
     departures = edges[at_mapped & edges["out_key"].notna() & out_window]
 
-    referenced = set()
+    referenced, volume = set(), {}
     for keys in (arrivals["in_key"], departures["out_key"]):
         codes = keys[keys.str.startswith("transfer:", na=False)].str.slice(len("transfer:"))
         referenced |= set(codes.unique()) - {"unknown"}
-    endpoints = build_endpoints(master, referenced)
+        for code, count in codes.value_counts().items():
+            volume[code] = volume.get(code, 0) + int(count)
+    endpoints = build_endpoints(master, referenced, volume)
     located = set(endpoints)
 
     arrivals = arrivals.assign(in_key=collapse_unlocated(arrivals["in_key"], located))
@@ -412,6 +431,13 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
             "referenced": len(referenced),
             "with_coordinates": len(endpoints),
             "coordinate_share": _share(len(endpoints), len(referenced)),
+            "processing_sites": sum(
+                1 for entry in endpoints.values() if entry["kind"] == "processing"
+            ),
+            "stints_via_processing_sites": sum(
+                entry["stints"] for entry in endpoints.values() if entry["kind"] == "processing"
+            ),
+            "off_map_endpoints": sum(1 for code in endpoints if code not in mapped_codes),
         },
         "arrest_link_rate": {
             "national": _share(

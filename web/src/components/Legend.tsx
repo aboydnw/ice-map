@@ -22,9 +22,16 @@ const SIZE_STEPS = [10, 100, 1000];
 interface Props {
   data: FacilityCollection;
   flows: FacilityFlows | null;
+  showProcessing: boolean;
+  onShowProcessingChange: (show: boolean) => void;
 }
 
-export function Legend({ data, flows }: Props) {
+export function Legend({
+  data,
+  flows,
+  showProcessing,
+  onShowProcessingChange,
+}: Props) {
   const counts = new Map<string, number>();
   for (const feature of data.features) {
     counts.set(
@@ -98,22 +105,7 @@ export function Legend({ data, flows }: Props) {
               A route people are moved along
             </Text>
           </Box>
-          <Box display="flex" alignItems="center" gap="2" py="1px" mb="1px">
-            <Box
-              width="9px"
-              height="9px"
-              borderRadius="full"
-              borderWidth="1.5px"
-              borderColor="#5a5650"
-              bg="panel"
-              flexShrink={0}
-              ml="2px"
-              mr="3px"
-            />
-            <Text fontSize="11px" color="inkSecondary" lineHeight="1.25">
-              Hold room or office · no population reported
-            </Text>
-          </Box>
+
           {FLOW_KEYS.map((entry) => (
             <Box
               key={entry.family}
@@ -141,6 +133,43 @@ export function Legend({ data, flows }: Props) {
           </Text>
         </Box>
       )}
+
+      <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
+        <Box
+          as="label"
+          display="flex"
+          alignItems="flex-start"
+          gap="2"
+          cursor="pointer"
+        >
+          <input
+            type="checkbox"
+            checked={showProcessing}
+            onChange={(event) => onShowProcessingChange(event.target.checked)}
+            style={{ marginTop: "2px", flexShrink: 0, cursor: "pointer" }}
+          />
+          <Box>
+            <Box display="flex" alignItems="center" gap="6px">
+              <Box
+                width="9px"
+                height="9px"
+                borderRadius="full"
+                borderWidth="1.5px"
+                borderColor="#5a5650"
+                bg="panel"
+                flexShrink={0}
+              />
+              <Text fontSize="xs" color="ink" lineHeight="1.25">
+                Hold rooms &amp; staging sites
+              </Text>
+            </Box>
+            <Text fontSize="10px" color="inkMuted" lineHeight="1.3" mt="2px">
+              Where people are processed in transit. ICE reports no population
+              for these.
+            </Text>
+          </Box>
+        </Box>
+      </Box>
 
       <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
         <Text fontSize="xs" color="inkSecondary" mb="1">

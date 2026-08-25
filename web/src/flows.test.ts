@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { alphaFor, buildFlowScene } from "./flowScene";
+import { alphaFor, buildFlowScene, processingSites } from "./flowScene";
 import {
   GATE_RADIUS,
   QUANTUM,
@@ -493,5 +493,47 @@ describe("routes and channels", () => {
 
     expect(scene.dots.length).toBeGreaterThan(1);
     expect(scene.dots.every((dot) => dot.path === channel.path)).toBe(true);
+  });
+});
+
+describe("processingSites", () => {
+  const table: FlowEndpoints = {
+    as_of: "2026-08-05",
+    facilities: {
+      DALHOLD: {
+        name: "Dallas F.O. Hold",
+        lon: -96.8,
+        lat: 32.8,
+        kind: "processing",
+        stints: 38592,
+      },
+      AEXSTAGE: {
+        name: "Alexandria Staging Facility",
+        lon: -92.5,
+        lat: 31.3,
+        kind: "processing",
+        stints: 157470,
+      },
+      JAILXX: {
+        name: "Some County Jail",
+        lon: -90,
+        lat: 35,
+        kind: "detention",
+        stints: 400,
+      },
+    },
+  };
+
+  it("returns only processing sites, busiest first", () => {
+    const sites = processingSites(table, new Set());
+
+    expect(sites.map((site) => site.code)).toEqual(["AEXSTAGE", "DALHOLD"]);
+    expect(sites[0].position).toEqual([-92.5, 31.3]);
+  });
+
+  it("skips sites the map already draws as a facility circle", () => {
+    const sites = processingSites(table, new Set(["AEXSTAGE"]));
+
+    expect(sites.map((site) => site.code)).toEqual(["DALHOLD"]);
   });
 });

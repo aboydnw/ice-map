@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import * as maplibregl from "maplibre-gl";
 import type {
@@ -10,10 +10,15 @@ import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import type { MapboxOverlay } from "@deck.gl/mapbox";
 import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
 import { loadFlowOverlay } from "../flowOverlay";
-import { CYCLE_MS, buildFlowScene } from "../flowScene";
-import type { FlowScene } from "../flowScene";
+import { CYCLE_MS, buildFlowScene, processingSites } from "../flowScene";
+import type { FlowScene, ProcessingSite } from "../flowScene";
 import type { BoardRow } from "../flows";
-import type { Bucket, FacilityCollection, FlowDirection } from "../types";
+import type {
+  Bucket,
+  FacilityCollection,
+  FlowDirection,
+  FlowEndpoints,
+} from "../types";
 import type { FlowData } from "../useFlows";
 
 // Vite (rolldown) does not emit maplibre's default sibling worker module in
@@ -30,7 +35,7 @@ interface HoverInfo {
   x: number;
   y: number;
   name: string;
-  adp: number;
+  detail: string;
   color: string;
 }
 
@@ -42,6 +47,8 @@ interface Props {
   flowRows: BoardRow[];
   direction: FlowDirection;
   highlightedKey: string | null;
+  showProcessing: boolean;
+  endpoints: FlowEndpoints | null;
 }
 
 function prefersReducedMotion(): boolean {
@@ -59,6 +66,8 @@ export function FacilityMap({
   flowRows,
   direction,
   highlightedKey,
+  showProcessing,
+  endpoints,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -193,7 +202,7 @@ export function FacilityMap({
               x: event.point.x,
               y: event.point.y,
               name: props.name,
-              adp: props.adp,
+              detail: `${props.adp.toLocaleString()} avg. daily population`,
               color: BUCKET_COLOR[props.bucket] ?? BUCKET_COLOR.other,
             });
           });
@@ -244,6 +253,31 @@ export function FacilityMap({
     ]);
   }, [selected]);
 
+  const processing = useMemo(
+    () =>
+      showProcessing && endpoints
+        ? processingSites(endpoints, mappedCodes)
+        : [],
+    [showProcessing, endpoints, mappedCodes],
+  );
+
+  const handleSiteHover = useCallback(
+    (site: ProcessingSite | null, x: number, y: number) => {
+      setHover(
+        site
+          ? {
+              x,
+              y,
+              name: site.name,
+              detail: `${site.stints.toLocaleString()} stints passed through · no population reported`,
+              color: "#5a5650",
+            }
+          : null,
+      );
+    },
+    [],
+  );
+
   const scene = useMemo(() => {
     if (!flows || !facilityLonLat || flowRows.length === 0) return null;
     return buildFlowScene({
@@ -257,7 +291,8 @@ export function FacilityMap({
   }, [flows, facilityLonLat, flowRows, direction, mappedCodes]);
 
   useEffect(() => {
-    if (!scene) {
+    const wanted = Boolean(scene) || processing.length > 0;
+    if (!wanted) {
       overlayRef.current?.setProps({ layers: [] });
       return;
     }
@@ -288,12 +323,23 @@ export function FacilityMap({
         (
           window as unknown as { __iceFlows?: Record<string, number> }
         ).__iceFlows = {
-          channels: scene.channels.length,
-          dots: scene.dots.length,
-          markers: scene.markers.length,
+          channels: scene?.channels.length ?? 0,
+          dots: scene?.dots.length ?? 0,
+          markers: scene?.markers.length ?? 0,
+          processing: processing.length,
         };
-        if (scene.dots.length === 0) {
-          overlay.setProps({ layers: flowLayers(scene, highlightedKey, 0) });
+        const paint = (currentTime: number) =>
+          overlay.setProps({
+            layers: flowLayers({
+              scene,
+              processing,
+              highlighted: highlightedKey,
+              currentTime,
+              onHoverSite: handleSiteHover,
+            }),
+          });
+        if (!scene || scene.dots.length === 0) {
+          paint(0);
           return;
         }
         // Highlighting restarts this effect; keeping the clock outside it
@@ -305,13 +351,7 @@ export function FacilityMap({
         // Runs only while a facility is selected, and is torn down on
         // deselect, on unmount, and whenever the scene changes.
         const tick = () => {
-          overlay.setProps({
-            layers: flowLayers(
-              scene,
-              highlightedKey,
-              (performance.now() - clockStartRef.current) % CYCLE_MS,
-            ),
-          });
+          paint((performance.now() - clockStartRef.current) % CYCLE_MS);
           frame = requestAnimationFrame(tick);
         };
         frame = requestAnimationFrame(tick);
@@ -324,7 +364,7 @@ export function FacilityMap({
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [scene, highlightedKey]);
+  }, [scene, highlightedKey, processing, handleSiteHover]);
 
   if (mapFailed) {
     return (
@@ -378,7 +418,7 @@ export function FacilityMap({
             </Text>
           </Box>
           <Text fontSize="xs" color="inkSecondary" mt="1">
-            {hover.adp.toLocaleString()} avg. daily population
+            {hover.detail}
           </Text>
         </Box>
       )}

@@ -6,7 +6,7 @@ import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
 import { STALE_AFTER_DAYS, formatDate } from "./config";
 import { TOP_EDGES, buildBoardRows } from "./flows";
-import { useFacilityFlows } from "./useFlows";
+import { useFacilityFlows, useFlowEndpoints } from "./useFlows";
 import type {
   FacilityCollection,
   FlowDirection,
@@ -30,7 +30,9 @@ export default function App() {
   const [highlightedFlowKey, setHighlightedFlowKey] = useState<string | null>(
     null,
   );
+  const [showProcessing, setShowProcessing] = useState(false);
   const flowData = useFacilityFlows(selected);
+  const flowEndpoints = useFlowEndpoints(showProcessing);
 
   const flowRows = useMemo(
     () =>
@@ -193,8 +195,15 @@ export default function App() {
           flowRows={mapFlowRows}
           direction={flowDirection}
           highlightedKey={highlightedFlowKey}
+          showProcessing={showProcessing}
+          endpoints={flowEndpoints}
         />
-        <Legend data={data.facilities} flows={flowData?.flows ?? null} />
+        <Legend
+          data={data.facilities}
+          flows={flowData?.flows ?? null}
+          showProcessing={showProcessing}
+          onShowProcessingChange={setShowProcessing}
+        />
         {selectedFeature && (
           <DetailPanel
             facility={selectedFeature}
