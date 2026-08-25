@@ -7,6 +7,7 @@ import {
   TRAVEL_MIN_MS,
   assignLanes,
   boardCsv,
+  boardFile,
   buildArcs,
   buildBoardRows,
   buildDots,
@@ -20,6 +21,7 @@ import {
   quantumFor,
   remainderOf,
   resolveEndpoint,
+  selectionFor,
   splitAtExit,
   travelFor,
 } from "./flows";
@@ -605,9 +607,9 @@ describe("routes and channels", () => {
     expect(arc.exit).not.toBeNull();
     expect(arc.path[arc.path.length - 1][1]).toBeCloseTo(15.78, 3);
     expect(scene.dots.every((dot) => dot.path === arc.path)).toBe(true);
-    expect(scene.markers).toEqual([
+    expect(scene.markers).toContainEqual(
       expect.objectContaining({ kind: "exit", label: "→ Guatemala · 100" }),
-    ]);
+    );
   });
 
   it("reports the quantum the dots were counted in", () => {
@@ -625,6 +627,70 @@ describe("routes and channels", () => {
 
     expect(scene.dots.length).toBeGreaterThan(1);
     expect(scene.dots.every((dot) => dot.path === channel.path)).toBe(true);
+  });
+});
+
+describe("country selections", () => {
+  it("maps a country id to its board file the way the pipeline names it", () => {
+    expect(boardFile("country:EL SALVADOR")).toBe("country/EL_SALVADOR.json");
+    expect(boardFile("country:COTE D'IVOIRE")).toBe(
+      "country/COTE_D_IVOIRE.json",
+    );
+    expect(boardFile("JENATLA")).toBe("JENATLA.json");
+  });
+
+  it("selects countries and unmapped facilities, nothing else", () => {
+    const flows = flowsFor(
+      [edge("removed:GUATEMALA", 5), edge("transfer:JENATLA", 5)],
+      [edge("arrested:TEXAS", 5)],
+    );
+    const out = buildBoardRows(flows, "out", endpoints, states, countries);
+    const [arrest] = buildBoardRows(flows, "in", endpoints, states, countries);
+
+    expect(selectionFor(out[0], new Set())).toBe("country:GUATEMALA");
+    expect(selectionFor(out[1], new Set())).toBe("JENATLA");
+    expect(selectionFor(out[1], new Set(["JENATLA"]))).toBeNull();
+    expect(selectionFor(arrest, new Set())).toBeNull();
+  });
+
+  it("gives a country a clickable ring and labels its origin when selected", () => {
+    const facility: [number, number] = [-92.13, 31.68];
+    const flows = flowsFor([edge("removed:GUATEMALA", 100)]);
+    const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+    const fromFacility = buildFlowScene({
+      flows,
+      direction: "out",
+      rows,
+      facility,
+      mappedCodes: new Set(["JENATLA"]),
+      animate: false,
+      rings: US_RINGS,
+    });
+    const ring = fromFacility.markers.find((m) => m.kind === "endpoint");
+    const exit = fromFacility.markers.find((m) => m.kind === "exit");
+
+    expect(ring).toMatchObject({
+      label: "Guatemala",
+      select: "country:GUATEMALA",
+    });
+    expect(exit?.select).toBe("country:GUATEMALA");
+
+    const asCountry = flowsFor([], [edge("transfer:JENATLA", 100)]);
+    const fromCountry = buildFlowScene({
+      flows: asCountry,
+      direction: "in",
+      rows: buildBoardRows(asCountry, "in", endpoints, states, countries),
+      facility: [-90.23, 15.78],
+      mappedCodes: new Set(["JENATLA"]),
+      animate: false,
+      rings: US_RINGS,
+      originLabel: "Guatemala",
+    });
+
+    expect(fromCountry.markers).toEqual([
+      expect.objectContaining({ label: "Guatemala", select: null }),
+    ]);
+    expect(fromCountry.arcs[0].exit).toBeNull();
   });
 });
 

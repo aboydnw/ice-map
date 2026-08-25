@@ -14,7 +14,9 @@ export interface FlowFrame {
   currentTime: number;
   selectedSite: string | null;
   onHoverSite: (site: ProcessingSite | null, x: number, y: number) => void;
-  onSelectSite: (code: string) => void;
+  onHoverMarker: (marker: Marker | null, x: number, y: number) => void;
+  /** Selects a processing-site code or a `country:` id. */
+  onSelectSite: (id: string) => void;
 }
 
 /**
@@ -141,6 +143,14 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         getLineColor: [90, 86, 80, 230],
         lineWidthUnits: "pixels",
         getLineWidth: 1.6,
+        pickable: true,
+        onHover: (info) =>
+          frame.onHoverMarker((info.object as Marker) ?? null, info.x, info.y),
+        onClick: (info) => {
+          const marker = info.object as Marker | undefined;
+          if (marker?.select) frame.onSelectSite(marker.select);
+          return Boolean(marker?.select);
+        },
       }),
     );
   }
@@ -161,6 +171,14 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         fontSettings: { sdf: true },
         characterSet: "auto",
         maxWidth: 160,
+        pickable: true,
+        onHover: (info) =>
+          frame.onHoverMarker((info.object as Marker) ?? null, info.x, info.y),
+        onClick: (info) => {
+          const marker = info.object as Marker | undefined;
+          if (marker?.select) frame.onSelectSite(marker.select);
+          return Boolean(marker?.select);
+        },
       }),
     );
   }

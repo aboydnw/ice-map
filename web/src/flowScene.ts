@@ -1,4 +1,4 @@
-import { buildArcs, buildDots, quantumFor } from "./flows";
+import { buildArcs, buildDots, quantumFor, selectionFor } from "./flows";
 import type { BoardRow, FlowArc, FlowDot, RouteOptions } from "./flows";
 import type { FacilityFlows, FlowDirection, FlowEndpoints } from "./types";
 
@@ -64,6 +64,10 @@ export interface Marker {
   kind: "endpoint" | "exit";
   /** Stacks labels of routes leaving through the same stretch of border. */
   lane: number;
+  /** What clicking selects — a country id or a facility code — if anything. */
+  select: string | null;
+  /** Hover text. */
+  detail: string;
 }
 
 /**
@@ -93,6 +97,8 @@ export interface SceneOptions extends RouteOptions {
   /** Facility codes drawn as circles; other endpoints need their own marker. */
   mappedCodes: Set<string>;
   animate: boolean;
+  /** Names the origin when it has no circle of its own — a selected country. */
+  originLabel?: string;
 }
 
 export function buildFlowScene(options: SceneOptions): FlowScene {
@@ -106,19 +112,37 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
 
   const seen = new Set<string>();
   const markers: Marker[] = [];
+  if (options.originLabel) {
+    markers.push({
+      position: facility,
+      label: options.originLabel,
+      kind: "endpoint",
+      lane: 0,
+      select: null,
+      detail: `${rows.reduce((sum, row) => sum + row.count, 0).toLocaleString()} stints shown`,
+    });
+  }
+  const verb = direction === "out" ? "sent here" : "came from here";
   rows.forEach((row) => {
-    if (row.kind !== "facility" || !row.lonLat) return;
-    const code = row.key.slice("transfer:".length);
-    if (options.mappedCodes.has(code) || seen.has(code)) return;
-    seen.add(code);
+    if (!row.lonLat || (row.kind !== "facility" && row.kind !== "country")) {
+      return;
+    }
+    const select = selectionFor(row, options.mappedCodes);
+    if (select === null || seen.has(select)) return;
+    seen.add(select);
     markers.push({
       position: row.lonLat,
       label: row.label,
       kind: "endpoint",
       lane: 0,
+      select,
+      detail: `${row.count.toLocaleString()} stints ${verb} · click for its own flows`,
     });
   });
   const arrow = direction === "out" ? "→" : "←";
+  const selectFor = new Map(
+    rows.map((row) => [row.key, selectionFor(row, options.mappedCodes)]),
+  );
   arcs
     .filter((arc) => arc.exit)
     .forEach((arc, index) => {
@@ -127,6 +151,8 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
         label: `${arrow} ${arc.label} · ${arc.count.toLocaleString()}`,
         kind: "exit",
         lane: index,
+        select: selectFor.get(arc.key) ?? null,
+        detail: `${arc.count.toLocaleString()} stints · click to see where all of them came from`,
       });
     });
 

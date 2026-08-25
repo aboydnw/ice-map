@@ -15,6 +15,8 @@ interface Props {
   onShowAllChange: (showAll: boolean) => void;
   highlightedKey: string | null;
   onHighlight: (key: string | null) => void;
+  /** A country has arrivals only, so its board offers no direction toggle. */
+  lockDirection?: boolean;
 }
 
 const HEADINGS: Record<FlowDirection, string> = {
@@ -130,6 +132,7 @@ export function FlowBoard({
   onShowAllChange,
   highlightedKey,
   onHighlight,
+  lockDirection = false,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
@@ -170,7 +173,9 @@ export function FlowBoard({
         >
           Flows
         </Text>
-        <Toggle direction={direction} onChange={onDirectionChange} />
+        {!lockDirection && (
+          <Toggle direction={direction} onChange={onDirectionChange} />
+        )}
       </Box>
 
       <Text fontSize="11px" color="inkMuted" lineHeight="1.35" mb="2">

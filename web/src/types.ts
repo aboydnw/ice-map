@@ -95,7 +95,9 @@ export interface FlowEdge {
 }
 
 export interface FacilityFlows {
+  /** `country:<KEY>` for a destination-country board. */
   detloc: string;
+  kind?: "facility" | "country";
   as_of: string;
   window: [string, string];
   totals: Record<FlowDirection, number>;

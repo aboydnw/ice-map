@@ -11,7 +11,8 @@ import type { MapboxOverlay } from "@deck.gl/mapbox";
 import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
 import { loadFlowOverlay } from "../flowOverlay";
 import { LOOP_MS, buildFlowScene, processingSites } from "../flowScene";
-import type { ProcessingSite } from "../flowScene";
+import type { Marker, ProcessingSite } from "../flowScene";
+import { countryKey, isCountry } from "../flows";
 import type { BoardRow } from "../flows";
 import { US_RINGS } from "../usOutline";
 import type {
@@ -80,6 +81,7 @@ export function FacilityMap({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const overlayRef = useRef<MapboxOverlay | null>(null);
   const animatedKeyRef = useRef<string | null>(null);
+  const fittedRef = useRef<string | null>(null);
   const clockStartRef = useRef(0);
   const [zoom, setZoom] = useState(3);
   const onSelectRef = useRef(onSelect);
@@ -96,9 +98,17 @@ export function FacilityMap({
       (candidate) => candidate.properties.detloc === selected,
     );
     if (feature) return feature.geometry.coordinates;
+    if (selected && isCountry(selected)) {
+      const country = flows?.countries[countryKey(selected)];
+      return country ? ([country.lon, country.lat] as [number, number]) : null;
+    }
     const site = selected ? endpoints?.facilities[selected] : undefined;
     return site ? ([site.lon, site.lat] as [number, number]) : null;
-  }, [data, selected, endpoints]);
+  }, [data, selected, endpoints, flows]);
+  const originLabel =
+    selected && isCountry(selected)
+      ? flows?.countries[countryKey(selected)]?.name
+      : undefined;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -290,6 +300,23 @@ export function FacilityMap({
     [],
   );
 
+  const handleMarkerHover = useCallback(
+    (marker: Marker | null, x: number, y: number) => {
+      setHover(
+        marker
+          ? {
+              x,
+              y,
+              name: marker.label,
+              detail: marker.detail,
+              color: "#5a5650",
+            }
+          : null,
+      );
+    },
+    [],
+  );
+
   const scene = useMemo(() => {
     if (!flows || !facilityLonLat || flowRows.length === 0) return null;
     return buildFlowScene({
@@ -301,8 +328,36 @@ export function FacilityMap({
       animate: !prefersReducedMotion(),
       rings: US_RINGS,
       laneWidthDeg: LANE_PX * degreesPerPixel(zoom),
+      originLabel,
     });
-  }, [flows, facilityLonLat, flowRows, direction, mappedCodes, zoom]);
+  }, [
+    flows,
+    facilityLonLat,
+    flowRows,
+    direction,
+    mappedCodes,
+    zoom,
+    originLabel,
+  ]);
+
+  // A country's centroid is usually off-screen when it is clicked, so bring
+  // it and its origins into view once per selection.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !scene || !selected || !isCountry(selected)) return;
+    if (fittedRef.current === selected) return;
+    fittedRef.current = selected;
+    const points = scene.arcs.flatMap((arc) => [arc.source, arc.target]);
+    const lons = points.map((point) => point[0]);
+    const lats = points.map((point) => point[1]);
+    map.fitBounds(
+      [
+        [Math.min(...lons), Math.min(...lats)],
+        [Math.max(...lons), Math.max(...lats)],
+      ],
+      { padding: 80, maxZoom: 6, duration: 900 },
+    );
+  }, [scene, selected]);
 
   useEffect(() => {
     const wanted = Boolean(scene) || processing.length > 0;
@@ -351,6 +406,7 @@ export function FacilityMap({
               currentTime,
               selectedSite: selected,
               onHoverSite: handleSiteHover,
+              onHoverMarker: handleMarkerHover,
               onSelectSite: (code: string) => onSelectRef.current(code),
             }),
           });
@@ -381,7 +437,15 @@ export function FacilityMap({
       cancelled = true;
       cancelAnimationFrame(frame);
     };
-  }, [scene, highlightedKey, processing, handleSiteHover, selected, direction]);
+  }, [
+    scene,
+    highlightedKey,
+    processing,
+    handleSiteHover,
+    handleMarkerHover,
+    selected,
+    direction,
+  ]);
 
   if (mapFailed) {
     return (

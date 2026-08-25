@@ -6,7 +6,13 @@ import { FacilityMap } from "./components/FacilityMap";
 import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
 import { STALE_AFTER_DAYS, formatDate } from "./config";
-import { TOP_EDGES, buildBoardRows, quantumFor } from "./flows";
+import {
+  TOP_EDGES,
+  buildBoardRows,
+  countryKey,
+  isCountry,
+  quantumFor,
+} from "./flows";
 import { useFacilityFlows, useFlowEndpoints } from "./useFlows";
 import type {
   FacilityCollection,
@@ -55,7 +61,7 @@ export default function App() {
 
   function selectFacility(detloc: string | null) {
     setSelected(detloc);
-    setFlowDirection("out");
+    setFlowDirection(isCountry(detloc) ? "in" : "out");
     setShowAllFlows(false);
     setHighlightedFlowKey(null);
   }
@@ -119,9 +125,13 @@ export default function App() {
   const selectedFeature = selected
     ? data.facilities.features.find((f) => f.properties.detloc === selected)
     : null;
+  const selectedCountry =
+    selected && isCountry(selected)
+      ? (flowData?.countries[countryKey(selected)] ?? null)
+      : null;
   // A selection the circle map does not know about is a processing site.
   const selectedSite =
-    selected && !selectedFeature
+    selected && !selectedFeature && !isCountry(selected)
       ? (flowEndpoints?.facilities[selected] ?? null)
       : null;
 
@@ -211,8 +221,25 @@ export default function App() {
           showProcessing={showProcessing}
           onShowProcessingChange={setShowProcessing}
         />
+        {selectedCountry && (
+          <SitePanel
+            kind="country"
+            name={selectedCountry.name}
+            stints={flowData?.flows.totals.in ?? 0}
+            onClose={() => selectFacility(null)}
+            flows={flowData?.flows ?? null}
+            flowRows={flowRows}
+            flowDirection={flowDirection}
+            onFlowDirectionChange={changeFlowDirection}
+            showAllFlows={showAllFlows}
+            onShowAllFlowsChange={setShowAllFlows}
+            highlightedFlowKey={highlightedFlowKey}
+            onHighlightFlow={setHighlightedFlowKey}
+          />
+        )}
         {selectedSite && (
           <SitePanel
+            kind="processing"
             name={selectedSite.name}
             stints={selectedSite.stints ?? 0}
             onClose={() => selectFacility(null)}

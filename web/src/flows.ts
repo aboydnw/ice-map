@@ -11,6 +11,48 @@ export const QUANTUM = 25;
 /** Map rendering stops here by default; the board's "Show all" lifts it. */
 export const TOP_EDGES = 10;
 
+/** Selection ids for destination countries, as distinct from facility codes. */
+export const COUNTRY_PREFIX = "country:";
+
+export function isCountry(selection: string | null): boolean {
+  return selection !== null && selection.startsWith(COUNTRY_PREFIX);
+}
+
+/** The country key inside a `country:` selection id. */
+export function countryKey(selection: string): string {
+  return selection.slice(COUNTRY_PREFIX.length);
+}
+
+/** Mirrors the pipeline's `country_slug`, so both sides name the same file. */
+export function countrySlug(key: string): string {
+  return key
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+/** The board file for a selection id: a facility code or a `country:` id. */
+export function boardFile(selection: string): string {
+  return isCountry(selection)
+    ? `country/${countrySlug(countryKey(selection))}.json`
+    : `${selection}.json`;
+}
+
+/**
+ * What clicking a row's far end should select: the country's board, or a
+ * facility the circle map does not have (processing sites). Null when the
+ * far end is a mapped circle, a state, or nowhere.
+ */
+export function selectionFor(
+  row: BoardRow,
+  mappedCodes: Set<string>,
+): string | null {
+  const value = row.key.slice(row.key.indexOf(":") + 1);
+  if (row.kind === "country") return COUNTRY_PREFIX + value;
+  if (row.kind === "facility" && !mappedCodes.has(value)) return value;
+  return null;
+}
+
 export type EndpointKind = "facility" | "state" | "country" | "none";
 
 export interface ResolvedEndpoint {
@@ -302,7 +344,11 @@ export function buildArcs(
   direction: FlowDirection,
   options: RouteOptions = {},
 ): FlowArc[] {
-  const rings = options.rings ?? [];
+  // A border label helps when the far end is abroad. When the origin itself
+  // is abroad (a country is selected) the far ends are facilities already on
+  // the map, and ten "← Mexico" labels along the border would say nothing.
+  const rings =
+    options.rings && pointInRings(facility, options.rings) ? options.rings : [];
   const laneWidth = options.laneWidthDeg ?? 0;
   const arcs: FlowArc[] = [];
   for (const row of rows) {

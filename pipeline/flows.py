@@ -19,6 +19,7 @@ are opaque strings the frontend resolves against ``endpoints.json``,
 
 import json
 import pathlib
+import re
 
 import pandas as pd
 import pyarrow.parquet
@@ -323,6 +324,49 @@ def aggregate(frame: pd.DataFrame, key_column: str, month_column: str) -> list[d
     return sorted(rows.values(), key=lambda entry: (-entry["count"], entry["key"]))
 
 
+def country_slug(key: str) -> str:
+    """File-safe form of a country key; the frontend applies the same rule."""
+    return re.sub(r"[^A-Z0-9]+", "_", key.upper()).strip("_")
+
+
+def write_country_boards(departures: pd.DataFrame, as_of: str, flows_dir: pathlib.Path) -> int:
+    """
+    One board per removal destination: its arrivals are the facilities people
+    were removed from. Only removals from facilities that have their own board
+    count, so a country's total is the sum of its rows on those boards.
+    """
+    removed = departures[
+        departures["out_key"].str.startswith("removed:", na=False)
+        & (departures["out_key"] != "removed:unknown")
+    ]
+    if removed.empty:
+        return 0
+    country_dir = flows_dir / "country"
+    country_dir.mkdir(exist_ok=True)
+    frame = removed.assign(
+        country=removed["out_key"].str.slice(len("removed:")),
+        in_key="transfer:" + removed["detention_facility_code"].astype("object"),
+    )
+    written = 0
+    for country, group in frame.groupby("country", sort=True):
+        in_rows = aggregate(group, "in_key", "book_out_date_time")
+        payload = {
+            "detloc": f"country:{country}",
+            "kind": "country",
+            "as_of": as_of,
+            "window": [WINDOW_START, as_of],
+            "totals": {"in": sum(row["count"] for row in in_rows), "out": 0},
+            "coverage": {"origin_linked": None, "origin_linked_of": 0},
+            "in": in_rows,
+            "out": [],
+        }
+        (country_dir / f"{country_slug(str(country))}.json").write_text(
+            json.dumps(payload, separators=(",", ":"))
+        )
+        written += 1
+    return written
+
+
 def processing_codes(master: pd.DataFrame) -> set:
     """Hold rooms and staging sites we can plot, which never reach the ADP snapshot."""
     codes = set()
@@ -380,6 +424,8 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
     flows_dir.mkdir(parents=True, exist_ok=True)
     for stale in flows_dir.glob("*.json"):
         stale.unlink()
+    for stale in flows_dir.glob("country/*.json"):
+        stale.unlink()
     (flows_dir / "endpoints.json").write_text(
         json.dumps({"as_of": as_of, "facilities": endpoints}, separators=(",", ":"))
     )
@@ -423,6 +469,8 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         (flows_dir / f"{detloc}.json").write_text(json.dumps(payload, separators=(",", ":")))
         written_facilities.append(detloc)
 
+    country_boards = write_country_boards(departures, as_of, flows_dir)
+
     mapped_arrivals = arrivals[arrivals["detention_facility_code"].isin(mapped_codes)]
     mapped_departures = departures[departures["detention_facility_code"].isin(mapped_codes)]
     out_families = mapped_departures["out_key"].str.split(":").str[0]
@@ -433,6 +481,7 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         "as_of": as_of,
         "window_start": WINDOW_START,
         "facilities_written": len(written_facilities),
+        "country_boards_written": country_boards,
         "stints_at_mapped_facilities": int(at_mapped.sum()),
         "book_ins_in_window": len(mapped_arrivals),
         "book_outs_in_window": total_out,

@@ -325,6 +325,34 @@ def test_processing_sites_get_their_own_board(tmp_path):
     assert report["endpoints"]["processing_boards_written"] == 1
 
 
+def test_each_destination_country_gets_a_board_of_its_origins(tmp_path):
+    stints = [
+        stint("S1", "AAA", "2024-01-02", "2024-01-05", "Removed", "MEXICO", person="P1"),
+        stint("S2", "BBB", "2024-01-03", "2024-01-06", "Removed", "MEXICO", person="P2"),
+        stint("S3", "BBB", "2024-01-03", "2024-01-07", "Removed", "MEXICO", person="P3"),
+        stint("S4", "AAA", "2024-01-04", "2024-01-08", "Removed", "EL SALVADOR", person="P4"),
+        stint("S5", "ZZZ", "2024-01-04", "2024-01-08", "Removed", "MEXICO", person="P5"),
+    ]
+    master = [facility("AAA", -97.0, 31.0), facility("BBB", -96.0, 32.0), facility("ZZZ", -95.0, 33.0)]
+    report, _ = run(tmp_path, stints, [], master, ["AAA", "BBB"])
+    country_dir = tmp_path / "flows" / "country"
+    mexico = json.loads((country_dir / "MEXICO.json").read_text())
+    salvador = json.loads((country_dir / "EL_SALVADOR.json").read_text())
+
+    assert report["country_boards_written"] == 2
+    assert mexico["detloc"] == "country:MEXICO"
+    assert mexico["kind"] == "country"
+    assert keys(mexico, "in") == {"transfer:BBB": 2, "transfer:AAA": 1}
+    assert mexico["totals"] == {"in": 3, "out": 0}
+    assert mexico["out"] == []
+    assert keys(salvador, "in") == {"transfer:AAA": 1}
+
+
+def test_country_slug_is_file_safe():
+    assert flows.country_slug("EL SALVADOR") == "EL_SALVADOR"
+    assert flows.country_slug("COTE D'IVOIRE") == "COTE_D_IVOIRE"
+
+
 def test_report_metrics_cover_only_facilities_on_the_map(tmp_path):
     stints = [
         stint("S1", "AAA", "2024-01-02", "2024-01-05", "Removed", "MEXICO", person="P1"),

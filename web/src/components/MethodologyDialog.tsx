@@ -223,15 +223,17 @@ export function MethodologyDialog({ report, onClose }: Props) {
             a release into the community. Releases have{" "}
             <b>no destination in ICE's data</b>, so they appear on the board but
             not on the map, rather than being drawn to a place they never went.
-            Where ICE redacted the reason, the row reads "Not reported by ICE".
-            Arrivals are transfers from another facility, or an ICE arrest
-            matched to the person within 10 days before or 5 days after book-in.
-            That match only works for <b>interior arrests by ICE's ERO</b> —
-            people apprehended by CBP at the border are absent from the arrest
-            data, so border facilities link only a small share of their arrivals
-            and each board states its own coverage. These figures come from
-            DDP's individual-level records, which lag the population figures
-            above by several months
+            Clicking a destination country turns the question around: its board
+            lists the facilities people were removed from, counting only
+            facilities this map can place. Where ICE redacted the reason, the
+            row reads "Not reported by ICE". Arrivals are transfers from another
+            facility, or an ICE arrest matched to the person within 10 days
+            before or 5 days after book-in. That match only works for{" "}
+            <b>interior arrests by ICE's ERO</b> — people apprehended by CBP at
+            the border are absent from the arrest data, so border facilities
+            link only a small share of their arrivals and each board states its
+            own coverage. These figures come from DDP's individual-level
+            records, which lag the population figures above by several months
             {report.flows &&
               ` and run from ${formatMonthYear(report.flows.window_start)} through ${formatMonthYear(report.flows.as_of)}`}
             .

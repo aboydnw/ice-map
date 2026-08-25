@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { boardFile } from "./flows";
 import type { Centroids, FacilityFlows, FlowEndpoints } from "./types";
 
 export interface FlowData {
@@ -41,7 +42,7 @@ function loadReference(): Promise<Omit<FlowData, "flows">> {
 function loadFacility(detloc: string): Promise<FacilityFlows> {
   let pending = facilityCache.get(detloc);
   if (!pending) {
-    pending = load<FacilityFlows>(`${detloc}.json`).catch((error) => {
+    pending = load<FacilityFlows>(boardFile(detloc)).catch((error) => {
       facilityCache.delete(detloc);
       throw error;
     });

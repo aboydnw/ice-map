@@ -3,7 +3,28 @@ import { FlowBoard } from "./FlowBoard";
 import type { BoardRow } from "../flows";
 import type { FacilityFlows, FlowDirection } from "../types";
 
+export type SiteKind = "processing" | "country";
+
+const COPY: Record<
+  SiteKind,
+  { eyebrow: string; stints: string; note: string; close: string }
+> = {
+  processing: {
+    eyebrow: "Hold room or staging site",
+    stints: "stints moved through, in either direction",
+    note: "ICE publishes no detained population for hold rooms, field offices, or staging sites — they are excluded from the Detention Management reports the rest of this map is built from. What the individual-level records do show is who was moved through, and where they went next.",
+    close: "Close site details",
+  },
+  country: {
+    eyebrow: "Deportation destination",
+    stints: "stints removed here from facilities on this map",
+    note: "Each row is the facility a person was in when ICE recorded their removal to this country. Removals from facilities the map cannot place are not counted, so this is a floor, not a total.",
+    close: "Close country details",
+  },
+};
+
 interface Props {
+  kind: SiteKind;
   name: string;
   stints: number;
   onClose: () => void;
@@ -24,6 +45,7 @@ interface Props {
  * went next, which the stint data does record.
  */
 export function SitePanel({
+  kind,
   name,
   stints,
   onClose,
@@ -36,6 +58,7 @@ export function SitePanel({
   highlightedFlowKey,
   onHighlightFlow,
 }: Props) {
+  const copy = COPY[kind];
   return (
     <Box
       position="absolute"
@@ -68,7 +91,7 @@ export function SitePanel({
             color="inkSecondary"
             fontWeight="600"
           >
-            Hold room or staging site
+            {copy.eyebrow}
           </Text>
           <Heading
             as="h2"
@@ -84,7 +107,7 @@ export function SitePanel({
         <Box
           as="button"
           onClick={onClose}
-          aria-label="Close site details"
+          aria-label={copy.close}
           fontSize="lg"
           lineHeight="1"
           color="inkMuted"
@@ -106,15 +129,12 @@ export function SitePanel({
           {stints.toLocaleString()}
         </Text>
         <Text fontSize="xs" color="inkSecondary" maxW="150px" lineHeight="1.3">
-          stints moved through, in either direction
+          {copy.stints}
         </Text>
       </Box>
 
       <Text fontSize="13px" color="inkSecondary" mt="4" lineHeight="1.45">
-        ICE publishes no detained population for hold rooms, field offices, or
-        staging sites — they are excluded from the Detention Management reports
-        the rest of this map is built from. What the individual-level records do
-        show is who was moved through, and where they went next.
+        {copy.note}
       </Text>
 
       {flows && flowRows.length > 0 ? (
@@ -128,6 +148,7 @@ export function SitePanel({
           onShowAllChange={onShowAllFlowsChange}
           highlightedKey={highlightedFlowKey}
           onHighlight={onHighlightFlow}
+          lockDirection={kind === "country"}
         />
       ) : (
         <Text fontSize="xs" color="inkMuted" mt="5">
