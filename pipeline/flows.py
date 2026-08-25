@@ -66,7 +66,7 @@ FULL_DAY_SHARE = 0.2
 ARREST_WINDOW_BEFORE = pd.Timedelta(days=10)
 ARREST_WINDOW_AFTER = pd.Timedelta(days=5)
 
-# Hold rooms, field offices, and staging sites are processing points rather than
+# Hold rooms and staging sites are processing points rather than
 # places people are detained. ICE's population reports exclude them by design, so
 # they never get a circle on the map even though a quarter of all movement runs
 # through them.
