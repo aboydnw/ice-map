@@ -137,9 +137,9 @@ export function MethodologyDialog({ report, onClose }: Props) {
             facilities. Facilities that stopped holding ICE detainees don't
             appear, even though many held people in the recent past. Hold rooms,
             field offices, and staging sites move a large share of everyone in
-            the system but have no reported population, so they carry no circle;
-            the legend has a toggle that draws them as fixed-size rings, and
-            selecting one shows its arrivals and departures like any facility.
+            the system but have no reported population, so they are drawn as
+            fixed-size rings rather than sized circles; selecting one shows its
+            arrivals and departures like any facility.
           </Text>
         </Section>
 

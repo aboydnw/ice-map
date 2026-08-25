@@ -55,7 +55,6 @@ interface Props {
   flowRows: BoardRow[];
   direction: FlowDirection;
   highlightedKey: string | null;
-  showProcessing: boolean;
   endpoints: FlowEndpoints | null;
 }
 
@@ -74,7 +73,6 @@ export function FacilityMap({
   flowRows,
   direction,
   highlightedKey,
-  showProcessing,
   endpoints,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -276,11 +274,8 @@ export function FacilityMap({
   }, [selected]);
 
   const processing = useMemo(
-    () =>
-      showProcessing && endpoints
-        ? processingSites(endpoints, mappedCodes)
-        : [],
-    [showProcessing, endpoints, mappedCodes],
+    () => (endpoints ? processingSites(endpoints, mappedCodes) : []),
+    [endpoints, mappedCodes],
   );
 
   const handleSiteHover = useCallback(

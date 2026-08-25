@@ -37,9 +37,8 @@ export default function App() {
   const [highlightedFlowKey, setHighlightedFlowKey] = useState<string | null>(
     null,
   );
-  const [showProcessing, setShowProcessing] = useState(false);
   const flowData = useFacilityFlows(selected);
-  const flowEndpoints = useFlowEndpoints(showProcessing || Boolean(selected));
+  const flowEndpoints = useFlowEndpoints(true);
 
   const flowRows = useMemo(
     () =>
@@ -211,15 +210,12 @@ export default function App() {
           flowRows={mapFlowRows}
           direction={flowDirection}
           highlightedKey={highlightedFlowKey}
-          showProcessing={showProcessing}
           endpoints={flowEndpoints}
         />
         <Legend
           data={data.facilities}
           flows={flowData?.flows ?? null}
           quantum={quantumFor(mapFlowRows.map((row) => row.count))}
-          showProcessing={showProcessing}
-          onShowProcessingChange={setShowProcessing}
         />
         {selectedCountry && (
           <SitePanel

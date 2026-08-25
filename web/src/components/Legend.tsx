@@ -22,17 +22,9 @@ interface Props {
   flows: FacilityFlows | null;
   /** Stints per dot for the current selection. */
   quantum: number;
-  showProcessing: boolean;
-  onShowProcessingChange: (show: boolean) => void;
 }
 
-export function Legend({
-  data,
-  flows,
-  quantum,
-  showProcessing,
-  onShowProcessingChange,
-}: Props) {
+export function Legend({ data, flows, quantum }: Props) {
   const counts = new Map<string, number>();
   for (const feature of data.features) {
     counts.set(
@@ -136,40 +128,25 @@ export function Legend({
       )}
 
       <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
-        <Box
-          as="label"
-          display="flex"
-          alignItems="flex-start"
-          gap="2"
-          cursor="pointer"
-        >
-          <input
-            type="checkbox"
-            checked={showProcessing}
-            onChange={(event) => onShowProcessingChange(event.target.checked)}
-            style={{ marginTop: "2px", flexShrink: 0, cursor: "pointer" }}
+        <Box display="flex" alignItems="center" gap="2" py="2px">
+          <Box
+            width="9px"
+            height="9px"
+            borderRadius="full"
+            borderWidth="1.5px"
+            borderColor="#5a5650"
+            bg="panel"
+            flexShrink={0}
+            ml="1px"
           />
-          <Box>
-            <Box display="flex" alignItems="center" gap="6px">
-              <Box
-                width="9px"
-                height="9px"
-                borderRadius="full"
-                borderWidth="1.5px"
-                borderColor="#5a5650"
-                bg="panel"
-                flexShrink={0}
-              />
-              <Text fontSize="xs" color="ink" lineHeight="1.25">
-                Hold rooms &amp; staging sites
-              </Text>
-            </Box>
-            <Text fontSize="10px" color="inkMuted" lineHeight="1.3" mt="2px">
-              Where people are processed in transit. ICE reports no population
-              for these.
-            </Text>
-          </Box>
+          <Text fontSize="xs" color="ink" lineHeight="1.25">
+            Hold room or staging site
+          </Text>
         </Box>
+        <Text fontSize="10px" color="inkMuted" lineHeight="1.3" mt="2px">
+          Where people are processed in transit. ICE reports no population for
+          these; click one to see its flows.
+        </Text>
       </Box>
 
       <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
