@@ -10,7 +10,12 @@ import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&ur
 import type { MapboxOverlay } from "@deck.gl/mapbox";
 import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
 import { loadFlowOverlay } from "../flowOverlay";
-import { LOOP_MS, buildFlowScene, processingSites } from "../flowScene";
+import {
+  LOOP_MS,
+  buildFlowScene,
+  countrySites,
+  processingSites,
+} from "../flowScene";
 import type { Marker, ProcessingSite } from "../flowScene";
 import { countryKey, isCountry } from "../flows";
 import type { BoardRow } from "../flows";
@@ -292,7 +297,13 @@ export function FacilityMap({
   }, [selected]);
 
   const processing = useMemo(
-    () => (endpoints ? processingSites(endpoints, mappedCodes) : []),
+    () =>
+      endpoints
+        ? [
+            ...processingSites(endpoints, mappedCodes),
+            ...countrySites(endpoints),
+          ]
+        : [],
     [endpoints, mappedCodes],
   );
 
@@ -304,8 +315,11 @@ export function FacilityMap({
               x,
               y,
               name: site.name,
-              detail: `${site.stints.toLocaleString()} stints passed through · no population reported`,
-              color: "#5a5650",
+              detail:
+                site.kind === "country"
+                  ? `${site.stints.toLocaleString()} stints ended in a removal here · click to see where from`
+                  : `${site.stints.toLocaleString()} stints passed through · no population reported`,
+              color: site.kind === "country" ? "#8a857d" : "#5a5650",
             }
           : null,
       );

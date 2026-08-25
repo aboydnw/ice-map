@@ -340,6 +340,10 @@ def test_each_destination_country_gets_a_board_of_its_origins(tmp_path):
     salvador = json.loads((country_dir / "EL_SALVADOR.json").read_text())
 
     assert report["country_boards_written"] == 2
+    countries = json.loads((tmp_path / "flows" / "endpoints.json").read_text())["countries"]
+    assert set(countries) == {"MEXICO", "EL SALVADOR"}
+    assert countries["MEXICO"]["stints"] == 3
+    assert countries["MEXICO"]["name"] == "Mexico"
     assert mexico["detloc"] == "country:MEXICO"
     assert mexico["kind"] == "country"
     assert keys(mexico, "in") == {"transfer:BBB": 2, "transfer:AAA": 1}

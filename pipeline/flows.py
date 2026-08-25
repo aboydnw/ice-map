@@ -329,25 +329,26 @@ def country_slug(key: str) -> str:
     return re.sub(r"[^A-Z0-9]+", "_", key.upper()).strip("_")
 
 
-def write_country_boards(departures: pd.DataFrame, as_of: str, flows_dir: pathlib.Path) -> int:
+def write_country_boards(departures: pd.DataFrame, as_of: str, flows_dir: pathlib.Path) -> dict:
     """
     One board per removal destination: its arrivals are the facilities people
     were removed from. Only removals from facilities that have their own board
     count, so a country's total is the sum of its rows on those boards.
+    Returns the total written per country.
     """
     removed = departures[
         departures["out_key"].str.startswith("removed:", na=False)
         & (departures["out_key"] != "removed:unknown")
     ]
     if removed.empty:
-        return 0
+        return {}
     country_dir = flows_dir / "country"
     country_dir.mkdir(exist_ok=True)
     frame = removed.assign(
         country=removed["out_key"].str.slice(len("removed:")),
         in_key="transfer:" + removed["detention_facility_code"].astype("object"),
     )
-    written = 0
+    totals = {}
     for country, group in frame.groupby("country", sort=True):
         in_rows = aggregate(group, "in_key", "book_out_date_time")
         payload = {
@@ -363,8 +364,8 @@ def write_country_boards(departures: pd.DataFrame, as_of: str, flows_dir: pathli
         (country_dir / f"{country_slug(str(country))}.json").write_text(
             json.dumps(payload, separators=(",", ":"))
         )
-        written += 1
-    return written
+        totals[str(country)] = payload["totals"]["in"]
+    return totals
 
 
 def processing_codes(master: pd.DataFrame) -> set:
@@ -426,8 +427,15 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         stale.unlink()
     for stale in flows_dir.glob("country/*.json"):
         stale.unlink()
+    country_totals = write_country_boards(departures, as_of, flows_dir)
+    country_endpoints = {
+        key: {**countries[key], "stints": total} for key, total in country_totals.items()
+    }
     (flows_dir / "endpoints.json").write_text(
-        json.dumps({"as_of": as_of, "facilities": endpoints}, separators=(",", ":"))
+        json.dumps(
+            {"as_of": as_of, "facilities": endpoints, "countries": country_endpoints},
+            separators=(",", ":"),
+        )
     )
     for name in ("states.json", "countries.json"):
         (flows_dir / name).write_text(json.dumps(load_reference(name), separators=(",", ":")))
@@ -469,8 +477,6 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         (flows_dir / f"{detloc}.json").write_text(json.dumps(payload, separators=(",", ":")))
         written_facilities.append(detloc)
 
-    country_boards = write_country_boards(departures, as_of, flows_dir)
-
     mapped_arrivals = arrivals[arrivals["detention_facility_code"].isin(mapped_codes)]
     mapped_departures = departures[departures["detention_facility_code"].isin(mapped_codes)]
     out_families = mapped_departures["out_key"].str.split(":").str[0]
@@ -481,7 +487,7 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         "as_of": as_of,
         "window_start": WINDOW_START,
         "facilities_written": len(written_facilities),
-        "country_boards_written": country_boards,
+        "country_boards_written": len(country_totals),
         "stints_at_mapped_facilities": int(at_mapped.sum()),
         "book_ins_in_window": len(mapped_arrivals),
         "book_outs_in_window": total_out,

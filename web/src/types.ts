@@ -122,6 +122,8 @@ export interface Centroid {
 export interface FlowEndpoints {
   as_of: string;
   facilities: Record<string, Centroid>;
+  /** Removal destinations that have a board, with the stints sent there. */
+  countries?: Record<string, Centroid>;
 }
 
 /** Centroid tables keyed by ICE's own spellings, as written by the pipeline. */

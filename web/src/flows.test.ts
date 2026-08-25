@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { alphaFor, buildFlowScene, processingSites } from "./flowScene";
+import {
+  alphaFor,
+  buildFlowScene,
+  countrySites,
+  processingSites,
+} from "./flowScene";
 import {
   MAX_DOTS,
   QUANTUM,
@@ -653,7 +658,7 @@ describe("country selections", () => {
     expect(selectionFor(arrest, new Set())).toBeNull();
   });
 
-  it("gives a country a clickable ring and labels its origin when selected", () => {
+  it("leaves countries to the permanent layer and labels a selected one", () => {
     const facility: [number, number] = [-92.13, 31.68];
     const flows = flowsFor([edge("removed:GUATEMALA", 100)]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
@@ -666,13 +671,9 @@ describe("country selections", () => {
       animate: false,
       rings: US_RINGS,
     });
-    const ring = fromFacility.markers.find((m) => m.kind === "endpoint");
     const exit = fromFacility.markers.find((m) => m.kind === "exit");
 
-    expect(ring).toMatchObject({
-      label: "Guatemala",
-      select: "country:GUATEMALA",
-    });
+    expect(fromFacility.markers.some((m) => m.kind === "endpoint")).toBe(false);
     expect(exit?.select).toBe("country:GUATEMALA");
 
     const asCountry = flowsFor([], [edge("transfer:JENATLA", 100)]);
@@ -688,7 +689,11 @@ describe("country selections", () => {
     });
 
     expect(fromCountry.markers).toEqual([
-      expect.objectContaining({ label: "Guatemala", select: null }),
+      expect.objectContaining({
+        label: "Guatemala",
+        kind: "origin",
+        select: null,
+      }),
     ]);
     expect(fromCountry.arcs[0].exit).toBeNull();
   });
@@ -733,5 +738,22 @@ describe("processingSites", () => {
     const sites = processingSites(table, new Set(["AEXSTAGE"]));
 
     expect(sites.map((site) => site.code)).toEqual(["DALHOLD"]);
+  });
+
+  it("lists every country with a board as a selectable grey site", () => {
+    const sites = countrySites({
+      ...table,
+      countries: {
+        GUATEMALA: { name: "Guatemala", lon: -90.23, lat: 15.78, stints: 50 },
+        MEXICO: { name: "Mexico", lon: -102.55, lat: 23.63, stints: 900 },
+      },
+    });
+
+    expect(sites.map((site) => site.code)).toEqual([
+      "country:MEXICO",
+      "country:GUATEMALA",
+    ]);
+    expect(sites[0]).toMatchObject({ kind: "country", name: "Mexico" });
+    expect(countrySites(table)).toEqual([]);
   });
 });

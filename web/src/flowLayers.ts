@@ -38,7 +38,9 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         getRadius: (site) => (site.code === frame.selectedSite ? 7 : 5),
         radiusUnits: "pixels",
         filled: true,
-        getFillColor: [253, 252, 250, 225],
+        // Countries are filled grey so they never pass for a hold room.
+        getFillColor: (site) =>
+          site.kind === "country" ? [138, 133, 125, 225] : [253, 252, 250, 225],
         stroked: true,
         getLineColor: (site) =>
           site.code === frame.selectedSite

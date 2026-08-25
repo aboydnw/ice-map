@@ -1,4 +1,10 @@
-import { buildArcs, buildDots, quantumFor, selectionFor } from "./flows";
+import {
+  COUNTRY_PREFIX,
+  buildArcs,
+  buildDots,
+  quantumFor,
+  selectionFor,
+} from "./flows";
 import type { BoardRow, FlowArc, FlowDot, RouteOptions } from "./flows";
 import type { FacilityFlows, FlowDirection, FlowEndpoints } from "./types";
 
@@ -25,10 +31,12 @@ export function alphaFor(
 
 /** A hold room, field office, or staging site the map has no circle for. */
 export interface ProcessingSite {
+  /** A facility code, or a `country:` id. */
   code: string;
   name: string;
   position: [number, number];
   stints: number;
+  kind: "processing" | "country";
 }
 
 /**
@@ -49,6 +57,23 @@ export function processingSites(
       name: entry.name,
       position: [entry.lon, entry.lat] as [number, number],
       stints: entry.stints ?? 0,
+      kind: "processing" as const,
+    }))
+    .sort((a, b) => b.stints - a.stints);
+}
+
+/**
+ * Every country with a board, so any destination can be clicked without first
+ * finding a facility that sends people there.
+ */
+export function countrySites(endpoints: FlowEndpoints): ProcessingSite[] {
+  return Object.entries(endpoints.countries ?? {})
+    .map(([key, entry]) => ({
+      code: `${COUNTRY_PREFIX}${key}`,
+      name: entry.name,
+      position: [entry.lon, entry.lat] as [number, number],
+      stints: entry.stints ?? 0,
+      kind: "country" as const,
     }))
     .sort((a, b) => b.stints - a.stints);
 }
@@ -60,8 +85,9 @@ export interface Marker {
    * An endpoint is a place and gets a ring. An exit is where a route crosses
    * the border: it is labelled so the destination can be read without zooming
    * out, but never marked, because nothing says anyone departed from there.
+   * An origin names a selected country, whose dot is already on the map.
    */
-  kind: "endpoint" | "exit";
+  kind: "endpoint" | "exit" | "origin";
   /** Stacks labels of routes leaving through the same stretch of border. */
   lane: number;
   /** What clicking selects — a country id or a facility code — if anything. */
@@ -116,7 +142,7 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
     markers.push({
       position: facility,
       label: options.originLabel,
-      kind: "endpoint",
+      kind: "origin",
       lane: 0,
       select: null,
       detail: `${rows.reduce((sum, row) => sum + row.count, 0).toLocaleString()} stints shown`,
@@ -124,9 +150,7 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
   }
   const verb = direction === "out" ? "sent here" : "came from here";
   rows.forEach((row) => {
-    if (!row.lonLat || (row.kind !== "facility" && row.kind !== "country")) {
-      return;
-    }
+    if (!row.lonLat || row.kind !== "facility") return;
     const select = selectionFor(row, options.mappedCodes);
     if (select === null || seen.has(select)) return;
     seen.add(select);

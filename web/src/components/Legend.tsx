@@ -147,6 +147,22 @@ export function Legend({ data, flows, quantum }: Props) {
           Where people are processed in transit. ICE reports no population for
           these; click one to see its flows.
         </Text>
+        <Box display="flex" alignItems="center" gap="2" py="2px" mt="1">
+          <Box
+            width="9px"
+            height="9px"
+            borderRadius="full"
+            bg="#8a857d"
+            flexShrink={0}
+            ml="1px"
+          />
+          <Text fontSize="xs" color="ink" lineHeight="1.25">
+            Deportation destination
+          </Text>
+        </Box>
+        <Text fontSize="10px" color="inkMuted" lineHeight="1.3" mt="2px">
+          Click a country to see which facilities removed people there.
+        </Text>
       </Box>
 
       <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
