@@ -8,9 +8,6 @@ import type {
 /** No dot ever stands for fewer stints than this, so small routes stay countable. */
 export const QUANTUM = 25;
 
-/** Map rendering stops here by default; the board's "Show all" lifts it. */
-export const TOP_EDGES = 10;
-
 /** Selection ids for destination countries, as distinct from facility codes. */
 export const COUNTRY_PREFIX = "country:";
 
@@ -65,11 +62,6 @@ export interface BoardRow extends ResolvedEndpoint {
   key: string;
   count: number;
   share: number;
-}
-
-export interface Remainder {
-  destinations: number;
-  count: number;
 }
 
 export interface DotSchedule {
@@ -174,16 +166,6 @@ export function buildBoardRows(
   }));
 }
 
-/** What the visible rows leave out, stated rather than folded into a bucket. */
-export function remainderOf(rows: BoardRow[], shown: number): Remainder | null {
-  const hidden = rows.slice(shown);
-  if (hidden.length === 0) return null;
-  return {
-    destinations: hidden.length,
-    count: hidden.reduce((sum, row) => sum + row.count, 0),
-  };
-}
-
 /** Every month in the data window, so all edges share one animation timeline. */
 export function monthAxis(window: [string, string]): string[] {
   const [startYear, startMonth] = window[0].split("-").map(Number);
@@ -278,8 +260,123 @@ export function familyOf(key: string): FlowFamily {
   return FAMILIES[separator === -1 ? key : key.slice(0, separator)] ?? "other";
 }
 
+/**
+ * A board opens showing routes until they cover this share of the direction's
+ * stints, bounded so a dominant route still has company and a diffuse board
+ * still fits on a map. Chosen from the data: the median board needs 4 routes
+ * to reach 80%, the p90 needs 17.
+ */
+export const COVERAGE_SHARE = 0.8;
+export const MIN_ROUTES = 3;
+export const MAX_ROUTES = 15;
+
+export const FAMILY_LABELS: Record<FlowFamily, string> = {
+  transfer: "Transfers",
+  removed: "Deportations",
+  arrested: "Arrests",
+  released: "Releases",
+  other: "Other",
+};
+
+const FAMILY_ORDER: FlowFamily[] = [
+  "transfer",
+  "removed",
+  "arrested",
+  "released",
+  "other",
+];
+
+/** What the reader has asked the board to show. */
+export interface FlowView {
+  /** Families to keep; empty means all of them. */
+  families: FlowFamily[];
+  /** Whether the "Other" remainder is listed and drawn. */
+  expanded: boolean;
+}
+
+export const DEFAULT_VIEW: FlowView = { families: [], expanded: false };
+
+export interface BoardCut {
+  /** Rows the board lists and the map draws. */
+  visible: BoardRow[];
+  /** The lossless remainder, listed only when expanded. */
+  hidden: BoardRow[];
+  /** Share of the filtered stints the visible rows carry. */
+  coverage: number;
+  /** Rows after the family filter, before the cut. */
+  matched: number;
+}
+
+/** Families present on a board, in legend order. */
+export function familiesIn(rows: BoardRow[]): FlowFamily[] {
+  const present = new Set(rows.map((row) => familyOf(row.key)));
+  return FAMILY_ORDER.filter((family) => present.has(family));
+}
+
+/**
+ * How many ranked rows it takes to reach the coverage share, bounded to
+ * [MIN_ROUTES, MAX_ROUTES]; a tie at the share boundary is kept together
+ * unless the maximum cuts it.
+ */
+export function cutoff(rows: BoardRow[]): number {
+  if (rows.length <= MIN_ROUTES) return rows.length;
+  const total = rows.reduce((sum, row) => sum + row.count, 0);
+  let reached = rows.length;
+  let running = 0;
+  for (let index = 0; index < rows.length; index += 1) {
+    running += rows[index].count;
+    if (running >= total * COVERAGE_SHARE) {
+      reached = index + 1;
+      break;
+    }
+  }
+  while (
+    reached < rows.length &&
+    rows[reached].count === rows[reached - 1].count
+  ) {
+    reached += 1;
+  }
+  return Math.min(Math.max(reached, MIN_ROUTES), MAX_ROUTES, rows.length);
+}
+
+/** Apply the reader's view to ranked rows: filter by family, then cut. */
+export function cutBoard(rows: BoardRow[], view: FlowView): BoardCut {
+  const kept =
+    view.families.length === 0
+      ? rows
+      : rows.filter((row) => view.families.includes(familyOf(row.key)));
+  const shown = view.expanded ? kept.length : cutoff(kept);
+  const visible = kept.slice(0, shown);
+  const hidden = kept.slice(shown);
+  const total = kept.reduce((sum, row) => sum + row.count, 0);
+  const carried = visible.reduce((sum, row) => sum + row.count, 0);
+  return {
+    visible,
+    hidden,
+    coverage: total > 0 ? carried / total : 1,
+    matched: kept.length,
+  };
+}
+
+/** Toggle one family chip; selecting every family is the same as none. */
+export function toggleFamily(
+  view: FlowView,
+  family: FlowFamily,
+  present: FlowFamily[],
+): FlowView {
+  const active = view.families.length === 0 ? present : view.families;
+  const next = active.includes(family)
+    ? active.filter((candidate) => candidate !== family)
+    : [...active, family];
+  if (next.length === 0) return { ...view, families: [family] };
+  const all = present.every((candidate) => next.includes(candidate));
+  return { ...view, families: all ? [] : next };
+}
+
 /** Routes closer in bearing than this share a trunk and fan apart at the end. */
 export const LANE_ANGLE = 12;
+/** Beyond this many lanes either side the fan folds back on itself. */
+export const MAX_LANE = 3;
 
 export interface FlowArc {
   key: string;
@@ -501,7 +598,8 @@ export function assignLanes(
   let cluster: typeof routed = [];
   const flush = () => {
     cluster.forEach((member, index) => {
-      lanes.set(member.key, index - (cluster.length - 1) / 2);
+      const lane = index - (cluster.length - 1) / 2;
+      lanes.set(member.key, Math.max(-MAX_LANE, Math.min(MAX_LANE, lane)));
     });
     cluster = [];
   };

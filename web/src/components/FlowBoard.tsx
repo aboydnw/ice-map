@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import { FLOW_COLORS, formatMonthYear } from "../config";
-import { TOP_EDGES, boardCsv, familyOf, remainderOf } from "../flows";
-import type { BoardRow } from "../flows";
+import {
+  FAMILY_LABELS,
+  boardCsv,
+  familiesIn,
+  familyOf,
+  toggleFamily,
+} from "../flows";
+import type { BoardCut, BoardRow, FlowFamily, FlowView } from "../flows";
 import type { FacilityFlows, FlowDirection } from "../types";
 
 interface Props {
@@ -11,8 +17,9 @@ interface Props {
   direction: FlowDirection;
   onDirectionChange: (direction: FlowDirection) => void;
   rows: BoardRow[];
-  showAll: boolean;
-  onShowAllChange: (showAll: boolean) => void;
+  cut: BoardCut;
+  view: FlowView;
+  onViewChange: (view: FlowView) => void;
   highlightedKey: string | null;
   onHighlight: (key: string | null) => void;
   /** A country has arrivals only, so its board offers no direction toggle. */
@@ -56,6 +63,54 @@ function Toggle({
           {HEADINGS[option]}
         </Box>
       ))}
+    </Box>
+  );
+}
+
+function Chips({
+  present,
+  view,
+  onChange,
+}: {
+  present: FlowFamily[];
+  view: FlowView;
+  onChange: (view: FlowView) => void;
+}) {
+  const active = view.families.length === 0 ? present : view.families;
+  return (
+    <Box display="flex" flexWrap="wrap" gap="4px" mb="2">
+      {present.map((family) => {
+        const on = active.includes(family);
+        return (
+          <Box
+            key={family}
+            as="button"
+            aria-pressed={on}
+            onClick={() => onChange(toggleFamily(view, family, present))}
+            display="flex"
+            alignItems="center"
+            gap="5px"
+            px="7px"
+            py="2px"
+            fontSize="11px"
+            fontWeight="600"
+            borderRadius="999px"
+            borderWidth="1px"
+            borderColor={on ? "ink" : "hairline"}
+            color={on ? "ink" : "inkMuted"}
+            _hover={{ color: "ink" }}
+          >
+            <Box
+              width="7px"
+              height="7px"
+              borderRadius="full"
+              bg={FLOW_COLORS[family]}
+              opacity={on ? 1 : 0.35}
+            />
+            {FAMILY_LABELS[family]}
+          </Box>
+        );
+      })}
     </Box>
   );
 }
@@ -128,18 +183,20 @@ export function FlowBoard({
   direction,
   onDirectionChange,
   rows,
-  showAll,
-  onShowAllChange,
+  cut,
+  view,
+  onViewChange,
   highlightedKey,
   onHighlight,
   lockDirection = false,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
-  const shown = showAll ? rows.length : Math.min(TOP_EDGES, rows.length);
-  const visible = rows.slice(0, shown);
-  const remainder = remainderOf(rows, shown);
-  const widest = rows.length > 0 ? rows[0].count : 0;
+  const present = familiesIn(rows);
+  const { visible, hidden, coverage, matched } = cut;
+  const hiddenCount = hidden.reduce((sum, row) => sum + row.count, 0);
+  const widest = visible.length > 0 ? visible[0].count : 0;
+  const noun = direction === "out" ? "destinations" : "origins";
   const total = flows.totals[direction];
   const linked = flows.coverage.origin_linked;
 
@@ -200,6 +257,10 @@ export function FlowBoard({
         </Text>
       </Box>
 
+      {present.length > 1 && (
+        <Chips present={present} view={view} onChange={onViewChange} />
+      )}
+
       <Box display="flex" flexDirection="column" gap="1px">
         {visible.map((row) => (
           <Row
@@ -212,25 +273,52 @@ export function FlowBoard({
         ))}
       </Box>
 
-      {remainder && (
-        <Text fontSize="11px" color="inkMuted" mt="6px">
-          and {remainder.destinations.toLocaleString()} more{" "}
-          {direction === "out" ? "destinations" : "origins"} ·{" "}
-          {remainder.count.toLocaleString()} stints
-        </Text>
+      {hidden.length > 0 && (
+        <Box
+          as="button"
+          display="flex"
+          width="100%"
+          alignItems="baseline"
+          gap="2"
+          py="3px"
+          px="4px"
+          mx="-4px"
+          mt="1px"
+          borderRadius="3px"
+          textAlign="left"
+          _hover={{ bg: "paper" }}
+          onClick={() => onViewChange({ ...view, expanded: true })}
+        >
+          <Text fontSize="12px" color="inkSecondary" flex="1 1 auto">
+            Other · {hidden.length.toLocaleString()} more {noun} · show ▸
+          </Text>
+          <Text
+            fontSize="12px"
+            fontVariantNumeric="tabular-nums"
+            color="inkSecondary"
+          >
+            {hiddenCount.toLocaleString()}
+          </Text>
+        </Box>
       )}
 
+      <Text fontSize="11px" color="inkMuted" mt="6px">
+        {visible.length.toLocaleString()} of {matched.toLocaleString()} {noun} ·{" "}
+        {Math.round(coverage * 100)}% of stints
+        {matched < rows.length && ` · ${rows.length - matched} filtered out`}
+      </Text>
+
       <Box display="flex" gap="3" mt="8px">
-        {rows.length > TOP_EDGES && (
+        {view.expanded && (
           <Box
             as="button"
-            onClick={() => onShowAllChange(!showAll)}
+            onClick={() => onViewChange({ ...view, expanded: false })}
             fontSize="11px"
             color="inkSecondary"
             textDecoration="underline"
             _hover={{ color: "ink" }}
           >
-            {showAll ? "Show top 10" : `Show all (${rows.length})`}
+            Collapse
           </Box>
         )}
         <Box

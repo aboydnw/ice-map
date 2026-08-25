@@ -17,14 +17,20 @@ import {
   buildBoardRows,
   buildDots,
   emitSchedule,
+  cutBoard,
+  cutoff,
+  familiesIn,
   familyOf,
   fanPath,
+  toggleFamily,
+  MAX_LANE,
+  MAX_ROUTES,
+  MIN_ROUTES,
   placeDots,
   straightLine,
   monthAxis,
   quantize,
   quantumFor,
-  remainderOf,
   resolveEndpoint,
   selectionFor,
   splitAtExit,
@@ -172,19 +178,105 @@ describe("buildBoardRows", () => {
   });
 });
 
-describe("remainderOf", () => {
-  it("counts exactly what the visible rows leave out", () => {
-    const flows = flowsFor([
-      edge("a", 50),
-      edge("b", 30),
-      edge("c", 12),
-      edge("d", 8),
-    ]);
-    const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+describe("cutoff", () => {
+  function rowsOf(counts: number[]) {
+    const flows = flowsFor(
+      counts.map((count, index) => edge(`transfer:R${index}`, count)),
+    );
+    return buildBoardRows(flows, "out", endpoints, states, countries);
+  }
 
-    expect(remainderOf(rows, 2)).toEqual({ destinations: 2, count: 20 });
-    expect(remainderOf(rows, 4)).toBeNull();
-    expect(remainderOf(rows, 10)).toBeNull();
+  it("stops once the ranked rows carry the coverage share", () => {
+    expect(cutoff(rowsOf([50, 30, 10, 5, 3, 2]))).toBe(3);
+    expect(cutoff(rowsOf([60, 25, 5, 4, 3]))).toBe(3);
+  });
+
+  it("never shows fewer than the minimum or more than the maximum", () => {
+    expect(cutoff(rowsOf([96, 2, 1, 0]))).toBe(MIN_ROUTES);
+    expect(cutoff(rowsOf([2, 1]))).toBe(2);
+    expect(cutoff(rowsOf(Array.from({ length: 40 }, () => 1)))).toBe(
+      MAX_ROUTES,
+    );
+  });
+
+  it("keeps a tie at the boundary together", () => {
+    expect(cutoff(rowsOf([50, 30, 10, 10, 10, 1]))).toBe(5);
+  });
+});
+
+describe("cutBoard", () => {
+  const flows = flowsFor([
+    edge("transfer:JENATLA", 50),
+    edge("removed:GUATEMALA", 30),
+    edge("transfer:PISABEL", 12),
+    edge("removed:MEXICO", 5),
+    edge("released:paroled", 3),
+  ]);
+  const rows = buildBoardRows(flows, "out", endpoints, states, countries);
+
+  it("shows the cut, states its coverage, and keeps the rest losslessly", () => {
+    const cut = cutBoard(rows, { families: [], expanded: false });
+
+    expect(cut.visible.map((row) => row.key)).toEqual([
+      "transfer:JENATLA",
+      "removed:GUATEMALA",
+      "transfer:PISABEL",
+    ]);
+    expect(cut.hidden.map((row) => row.key)).toEqual([
+      "removed:MEXICO",
+      "released:paroled",
+    ]);
+    expect(cut.coverage).toBeCloseTo(0.92, 2);
+    expect(cut.matched).toBe(5);
+  });
+
+  it("lists everything when expanded", () => {
+    const cut = cutBoard(rows, { families: [], expanded: true });
+
+    expect(cut.visible).toHaveLength(5);
+    expect(cut.hidden).toEqual([]);
+    expect(cut.coverage).toBe(1);
+  });
+
+  it("filters by family before cutting", () => {
+    const cut = cutBoard(rows, { families: ["removed"], expanded: false });
+
+    expect(cut.visible.map((row) => row.key)).toEqual([
+      "removed:GUATEMALA",
+      "removed:MEXICO",
+    ]);
+    expect(cut.matched).toBe(2);
+    expect(cut.coverage).toBe(1);
+  });
+
+  it("lists the families a board has, in legend order", () => {
+    expect(familiesIn(rows)).toEqual(["transfer", "removed", "released"]);
+  });
+
+  it("toggles chips so that all selected reads as no filter", () => {
+    const present = familiesIn(rows);
+    const view = { families: [], expanded: false };
+    const onlyRemoved = toggleFamily(
+      toggleFamily(view, "transfer", present),
+      "released",
+      present,
+    );
+
+    expect(toggleFamily(view, "transfer", present).families).toEqual([
+      "removed",
+      "released",
+    ]);
+    expect(onlyRemoved.families).toEqual(["removed"]);
+    expect(toggleFamily(onlyRemoved, "removed", present).families).toEqual([
+      "removed",
+    ]);
+    expect(
+      toggleFamily(
+        { families: ["removed", "released"], expanded: false },
+        "transfer",
+        present,
+      ).families,
+    ).toEqual([]);
   });
 });
 
@@ -508,6 +600,17 @@ describe("assignLanes", () => {
       ]),
     ).toEqual(new Set([-1, 0, 1]));
     expect(lanes.get("dallas")).toBe(0);
+  });
+
+  it("folds a wide cluster back to the outermost lane", () => {
+    const targets: Record<string, [number, number]> = {};
+    for (let index = 0; index < 12; index += 1) {
+      targets[`t${index}`] = [-95 - index * 0.05, 29.8];
+    }
+    const lanes = [...assignLanes(arcsTo(targets), facility).values()];
+
+    expect(Math.max(...lanes)).toBe(MAX_LANE);
+    expect(Math.min(...lanes)).toBe(-MAX_LANE);
   });
 
   it("gives a lone route the centre lane", () => {

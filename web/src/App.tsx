@@ -7,12 +7,14 @@ import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
 import { STALE_AFTER_DAYS, formatDate } from "./config";
 import {
-  TOP_EDGES,
+  DEFAULT_VIEW,
+  cutBoard,
   buildBoardRows,
   countryKey,
   isCountry,
   quantumFor,
 } from "./flows";
+import type { FlowView } from "./flows";
 import { useFacilityFlows, useFlowEndpoints } from "./useFlows";
 import type {
   FacilityCollection,
@@ -33,7 +35,7 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [showMethodology, setShowMethodology] = useState(false);
   const [flowDirection, setFlowDirection] = useState<FlowDirection>("out");
-  const [showAllFlows, setShowAllFlows] = useState(false);
+  const [flowView, setFlowView] = useState<FlowView>(DEFAULT_VIEW);
   const [highlightedFlowKey, setHighlightedFlowKey] = useState<string | null>(
     null,
   );
@@ -53,21 +55,22 @@ export default function App() {
         : [],
     [flowData, flowDirection],
   );
-  const mapFlowRows = useMemo(
-    () => (showAllFlows ? flowRows : flowRows.slice(0, TOP_EDGES)),
-    [flowRows, showAllFlows],
+  const flowCut = useMemo(
+    () => cutBoard(flowRows, flowView),
+    [flowRows, flowView],
   );
+  const mapFlowRows = flowCut.visible;
 
   function selectFacility(detloc: string | null) {
     setSelected(detloc);
     setFlowDirection(isCountry(detloc) ? "in" : "out");
-    setShowAllFlows(false);
+    setFlowView(DEFAULT_VIEW);
     setHighlightedFlowKey(null);
   }
 
   function changeFlowDirection(direction: FlowDirection) {
     setFlowDirection(direction);
-    setShowAllFlows(false);
+    setFlowView(DEFAULT_VIEW);
     setHighlightedFlowKey(null);
   }
 
@@ -227,8 +230,9 @@ export default function App() {
             flowRows={flowRows}
             flowDirection={flowDirection}
             onFlowDirectionChange={changeFlowDirection}
-            showAllFlows={showAllFlows}
-            onShowAllFlowsChange={setShowAllFlows}
+            flowCut={flowCut}
+            flowView={flowView}
+            onFlowViewChange={setFlowView}
             highlightedFlowKey={highlightedFlowKey}
             onHighlightFlow={setHighlightedFlowKey}
           />
@@ -243,8 +247,9 @@ export default function App() {
             flowRows={flowRows}
             flowDirection={flowDirection}
             onFlowDirectionChange={changeFlowDirection}
-            showAllFlows={showAllFlows}
-            onShowAllFlowsChange={setShowAllFlows}
+            flowCut={flowCut}
+            flowView={flowView}
+            onFlowViewChange={setFlowView}
             highlightedFlowKey={highlightedFlowKey}
             onHighlightFlow={setHighlightedFlowKey}
           />
@@ -258,8 +263,9 @@ export default function App() {
             flowRows={flowRows}
             flowDirection={flowDirection}
             onFlowDirectionChange={changeFlowDirection}
-            showAllFlows={showAllFlows}
-            onShowAllFlowsChange={setShowAllFlows}
+            flowCut={flowCut}
+            flowView={flowView}
+            onFlowViewChange={setFlowView}
             highlightedFlowKey={highlightedFlowKey}
             onHighlightFlow={setHighlightedFlowKey}
           />

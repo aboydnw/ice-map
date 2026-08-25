@@ -10,7 +10,7 @@ import {
 import { FlowBoard } from "./FlowBoard";
 import { Sparkline } from "./Sparkline";
 import { ThreatBar } from "./ThreatBar";
-import type { BoardRow } from "../flows";
+import type { BoardCut, BoardRow, FlowView } from "../flows";
 import type { FacilityFeature, FacilityFlows, FlowDirection } from "../types";
 
 interface Props {
@@ -21,8 +21,9 @@ interface Props {
   flowRows: BoardRow[];
   flowDirection: FlowDirection;
   onFlowDirectionChange: (direction: FlowDirection) => void;
-  showAllFlows: boolean;
-  onShowAllFlowsChange: (showAll: boolean) => void;
+  flowCut: BoardCut;
+  flowView: FlowView;
+  onFlowViewChange: (view: FlowView) => void;
   highlightedFlowKey: string | null;
   onHighlightFlow: (key: string | null) => void;
 }
@@ -116,8 +117,9 @@ export function DetailPanel({
   flowRows,
   flowDirection,
   onFlowDirectionChange,
-  showAllFlows,
-  onShowAllFlowsChange,
+  flowCut,
+  flowView,
+  onFlowViewChange,
   highlightedFlowKey,
   onHighlightFlow,
 }: Props) {
@@ -295,8 +297,9 @@ export function DetailPanel({
           direction={flowDirection}
           onDirectionChange={onFlowDirectionChange}
           rows={flowRows}
-          showAll={showAllFlows}
-          onShowAllChange={onShowAllFlowsChange}
+          cut={flowCut}
+          view={flowView}
+          onViewChange={onFlowViewChange}
           highlightedKey={highlightedFlowKey}
           onHighlight={onHighlightFlow}
         />

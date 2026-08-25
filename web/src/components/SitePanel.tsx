@@ -1,6 +1,6 @@
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { FlowBoard } from "./FlowBoard";
-import type { BoardRow } from "../flows";
+import type { BoardCut, BoardRow, FlowView } from "../flows";
 import type { FacilityFlows, FlowDirection } from "../types";
 
 export type SiteKind = "processing" | "country";
@@ -32,8 +32,9 @@ interface Props {
   flowRows: BoardRow[];
   flowDirection: FlowDirection;
   onFlowDirectionChange: (direction: FlowDirection) => void;
-  showAllFlows: boolean;
-  onShowAllFlowsChange: (showAll: boolean) => void;
+  flowCut: BoardCut;
+  flowView: FlowView;
+  onFlowViewChange: (view: FlowView) => void;
   highlightedFlowKey: string | null;
   onHighlightFlow: (key: string | null) => void;
 }
@@ -53,8 +54,9 @@ export function SitePanel({
   flowRows,
   flowDirection,
   onFlowDirectionChange,
-  showAllFlows,
-  onShowAllFlowsChange,
+  flowCut,
+  flowView,
+  onFlowViewChange,
   highlightedFlowKey,
   onHighlightFlow,
 }: Props) {
@@ -144,8 +146,9 @@ export function SitePanel({
           direction={flowDirection}
           onDirectionChange={onFlowDirectionChange}
           rows={flowRows}
-          showAll={showAllFlows}
-          onShowAllChange={onShowAllFlowsChange}
+          cut={flowCut}
+          view={flowView}
+          onViewChange={onFlowViewChange}
           highlightedKey={highlightedFlowKey}
           onHighlight={onHighlightFlow}
           lockDirection={kind === "country"}
