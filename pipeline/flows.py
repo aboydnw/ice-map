@@ -407,12 +407,24 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
     arrivals = edges[at_written & in_window]
     departures = edges[at_written & edges["out_key"].notna() & out_window]
 
+    # Country boards list their origins as transfer keys, so a facility that
+    # only ever removes people still needs an endpoint entry.
+    removal_origins = departures.loc[
+        departures["out_key"].str.startswith("removed:", na=False)
+        & (departures["out_key"] != "removed:unknown"),
+        "detention_facility_code",
+    ].astype("object")
     referenced, volume = set(), {}
-    for keys in (arrivals["in_key"], departures["out_key"]):
-        codes = keys[keys.str.startswith("transfer:", na=False)].str.slice(len("transfer:"))
+    for codes in (
+        keys[keys.str.startswith("transfer:", na=False)].str.slice(len("transfer:"))
+        for keys in (arrivals["in_key"], departures["out_key"])
+    ):
         referenced |= set(codes.unique()) - {"unknown"}
         for code, count in codes.value_counts().items():
             volume[code] = volume.get(code, 0) + int(count)
+    referenced |= set(removal_origins.unique())
+    for code, count in removal_origins.value_counts().items():
+        volume[code] = volume.get(code, 0) + int(count)
     endpoints = build_endpoints(master, referenced, volume)
     located = set(endpoints)
 

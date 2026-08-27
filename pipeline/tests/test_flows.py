@@ -302,7 +302,7 @@ def test_hold_rooms_and_staging_sites_are_marked_as_processing(tmp_path):
 
     assert endpoints["HOLDRM"]["kind"] == "processing"
     assert endpoints["BBB"]["kind"] == "detention"
-    assert endpoints["HOLDRM"]["stints"] == 1
+    assert endpoints["HOLDRM"]["stints"] == 2
     assert report["endpoints"]["processing_sites"] == 1
     assert report["endpoints"]["off_map_endpoints"] == 2
 
@@ -350,6 +350,19 @@ def test_each_destination_country_gets_a_board_of_its_origins(tmp_path):
     assert mexico["totals"] == {"in": 3, "out": 0}
     assert mexico["out"] == []
     assert keys(salvador, "in") == {"transfer:AAA": 1}
+
+
+def test_removal_only_origin_is_still_an_endpoint(tmp_path):
+    stints = [
+        stint("S1", "AAA", "2024-01-02", "2024-01-05", "Removed", "MEXICO", person="P1"),
+        stint("S2", "AAA", "2024-01-03", "2024-01-06", "Removed", "MEXICO", person="P2"),
+    ]
+    master = [facility("AAA", -97.0, 31.0)]
+    _, written = run(tmp_path, stints, [], master, ["AAA"])
+
+    facilities = written["endpoints"]["facilities"]
+    assert "AAA" in facilities
+    assert facilities["AAA"]["stints"] == 2
 
 
 def test_country_slug_is_file_safe():

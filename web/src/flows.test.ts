@@ -357,6 +357,7 @@ describe("boardCsv", () => {
 
     expect(lines[0]).toContain("2022-10-01 to 2026-03-10");
     expect(lines[0]).toContain("stints, not people");
+    expect(lines[0].startsWith('"') && lines[0].endsWith('"')).toBe(true);
     expect(lines[1]).toBe("destination,stints,share_of_total");
     expect(lines[2]).toBe('"Guatemala",60,0.6000');
     expect(lines[4]).toBe('"Total departures",100,1.0000');

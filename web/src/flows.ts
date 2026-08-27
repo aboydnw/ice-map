@@ -742,7 +742,7 @@ export function boardCsv(
   const stamp =
     `${facilityName} — ${heading}, ${flows.window[0]} to ${flows.window[1]} · ` +
     "stints, not people · source: ICE via Deportation Data Project";
-  const lines = [stamp, "destination,stints,share_of_total"];
+  const lines = [quote(stamp), "destination,stints,share_of_total"];
   for (const row of rows) {
     lines.push(`${quote(row.label)},${row.count},${row.share.toFixed(4)}`);
   }

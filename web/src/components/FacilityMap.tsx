@@ -373,8 +373,9 @@ export function FacilityMap({
     const map = mapRef.current;
     if (!map || !scene || !selected || !isCountry(selected)) return;
     if (fittedRef.current === selected) return;
-    fittedRef.current = selected;
     const points = scene.arcs.flatMap((arc) => [arc.source, arc.target]);
+    if (points.length === 0) return;
+    fittedRef.current = selected;
     const lons = points.map((point) => point[0]);
     const lats = points.map((point) => point[1]);
     map.fitBounds(
