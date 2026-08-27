@@ -167,14 +167,21 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
   const selectFor = new Map(
     rows.map((row) => [row.key, selectionFor(row, options.mappedCodes)]),
   );
+  // Labels stack only with neighbours on the same stretch of border; routes
+  // leaving through different crossings each keep their own baseline.
+  const stretchCounts = new Map<string, number>();
   arcs
     .filter((arc) => arc.exit)
-    .forEach((arc, index) => {
+    .forEach((arc) => {
+      const exit = arc.exit as [number, number];
+      const stretch = `${Math.round(exit[0])},${Math.round(exit[1])}`;
+      const lane = stretchCounts.get(stretch) ?? 0;
+      stretchCounts.set(stretch, lane + 1);
       markers.push({
-        position: arc.exit as [number, number],
+        position: exit,
         label: `${arrow} ${arc.label} · ${arc.count.toLocaleString()}`,
         kind: "exit",
-        lane: index,
+        lane,
         select: selectFor.get(arc.key) ?? null,
         detail: `${arc.count.toLocaleString()} stints · click to see where all of them came from`,
       });

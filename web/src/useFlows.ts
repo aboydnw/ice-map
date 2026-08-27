@@ -78,9 +78,11 @@ export function useFacilityFlows(detloc: string | null): FlowData | null {
 }
 
 /**
- * The endpoint table on its own, for the processing-site layer. Shares the
- * cached reference fetch with the flow panel, so turning the toggle on after
- * selecting a facility costs nothing.
+ * The endpoint table on its own, for the processing-site layer and the
+ * permanent removal-destination dots, so it is fetched on page load (three
+ * small JSON files; deck.gl itself is still deferred to the first selection).
+ * Shares the cached reference fetch with the flow panel, so selecting a
+ * facility afterwards costs nothing.
  */
 export function useFlowEndpoints(enabled: boolean): FlowEndpoints | null {
   const [endpoints, setEndpoints] = useState<FlowEndpoints | null>(null);

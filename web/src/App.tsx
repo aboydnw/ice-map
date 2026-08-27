@@ -235,6 +235,7 @@ export default function App() {
             onFlowViewChange={setFlowView}
             highlightedFlowKey={highlightedFlowKey}
             onHighlightFlow={setHighlightedFlowKey}
+            onSelectFlow={selectFacility}
           />
         )}
         {selectedSite && (
@@ -252,6 +253,7 @@ export default function App() {
             onFlowViewChange={setFlowView}
             highlightedFlowKey={highlightedFlowKey}
             onHighlightFlow={setHighlightedFlowKey}
+            onSelectFlow={selectFacility}
           />
         )}
         {selectedFeature && (
@@ -268,6 +270,7 @@ export default function App() {
             onFlowViewChange={setFlowView}
             highlightedFlowKey={highlightedFlowKey}
             onHighlightFlow={setHighlightedFlowKey}
+            onSelectFlow={selectFacility}
           />
         )}
       </Box>

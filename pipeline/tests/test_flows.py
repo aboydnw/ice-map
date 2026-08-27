@@ -362,7 +362,32 @@ def test_removal_only_origin_is_still_an_endpoint(tmp_path):
 
     facilities = written["endpoints"]["facilities"]
     assert "AAA" in facilities
-    assert facilities["AAA"]["stints"] == 2
+    assert facilities["AAA"]["stints"] == written["AAA"]["totals"]["in"] + written["AAA"]["totals"]["out"]
+
+
+def test_rebooking_at_the_same_facility_is_not_a_route(tmp_path):
+    stints = [
+        stint("S1", "AAA", "2024-01-02", "2024-01-05", "Transferred"),
+        stint("S1", "AAA", "2024-01-05", "2024-01-09", "Removed", "MEXICO"),
+    ]
+    master = [facility("AAA", -97.0, 31.0)]
+    _, written = run(tmp_path, stints, [], master, ["AAA"])
+
+    assert keys(written["AAA"], "out") == {"transfer:same-facility": 1, "removed:MEXICO": 1}
+    assert keys(written["AAA"], "in") == {"arrived:unlinked": 1, "transfer:same-facility": 1}
+    assert written["AAA"]["totals"] == {"in": 2, "out": 2}
+
+
+def test_country_board_collapses_origins_the_map_cannot_place(tmp_path):
+    stints = [
+        stint("S1", "AAA", "2024-01-02", "2024-01-05", "Removed", "MEXICO", person="P1"),
+        stint("S2", "NOCOORD", "2024-01-03", "2024-01-06", "Removed", "MEXICO", person="P2"),
+    ]
+    master = [facility("AAA", -97.0, 31.0), facility("NOCOORD", None, None)]
+    run(tmp_path, stints, [], master, ["AAA", "NOCOORD"])
+    mexico = json.loads((tmp_path / "flows" / "country" / "MEXICO.json").read_text())
+
+    assert keys(mexico, "in") == {"transfer:AAA": 1, "transfer:no-location": 1}
 
 
 def test_country_slug_is_file_safe():

@@ -37,6 +37,7 @@ interface Props {
   onFlowViewChange: (view: FlowView) => void;
   highlightedFlowKey: string | null;
   onHighlightFlow: (key: string | null) => void;
+  onSelectFlow: (detloc: string) => void;
 }
 
 /**
@@ -59,6 +60,7 @@ export function SitePanel({
   onFlowViewChange,
   highlightedFlowKey,
   onHighlightFlow,
+  onSelectFlow,
 }: Props) {
   const copy = COPY[kind];
   return (
@@ -151,6 +153,7 @@ export function SitePanel({
           onViewChange={onFlowViewChange}
           highlightedKey={highlightedFlowKey}
           onHighlight={onHighlightFlow}
+          onSelect={onSelectFlow}
           lockDirection={kind === "country"}
         />
       ) : (

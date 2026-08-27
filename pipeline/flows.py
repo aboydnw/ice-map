@@ -83,6 +83,8 @@ TRANSFER_TEMPLATE = "transfer:{next}"
 REMOVAL_TEMPLATE = "removed:{country}"
 UNKNOWN_TRANSFER = "transfer:unknown"
 NO_LOCATION_TRANSFER = "transfer:no-location"
+SAME_FACILITY_TRANSFER = "transfer:same-facility"
+SPECIAL_TRANSFER_CODES = {"unknown", "same-facility"}
 UNLINKED_ARRIVAL = "arrived:unlinked"
 NOT_REPORTED = "not-reported"
 
@@ -211,6 +213,9 @@ def build_edges(stints: pd.DataFrame, countries: dict) -> pd.DataFrame:
     out_key = templates.copy()
     transfers = templates == TRANSFER_TEMPLATE
     out_key[transfers] = "transfer:" + frame.loc[transfers, "next_fac"].fillna("unknown")
+    # A "transfer" that re-books at the same facility is a paperwork event,
+    # not a journey; it keeps its own key so no route is drawn to nowhere.
+    out_key[transfers & frame["next_fac"].eq(codes)] = SAME_FACILITY_TRANSFER
 
     removals = templates == REMOVAL_TEMPLATE
     country = frame.loc[removals, "departure_country"].astype("object").fillna("").str.strip().str.upper()
@@ -221,6 +226,7 @@ def build_edges(stints: pd.DataFrame, countries: dict) -> pd.DataFrame:
     frame["in_key"] = ""
     chained = ~frame["is_first"]
     frame.loc[chained, "in_key"] = "transfer:" + frame.loc[chained, "prev_fac"].fillna("unknown")
+    frame.loc[chained & frame["prev_fac"].eq(codes), "in_key"] = SAME_FACILITY_TRANSFER
 
     # A stint that is still open at the end of the data has no out edge.
     frame.loc[frame["book_out_date_time"].isna(), "out_key"] = None
@@ -306,7 +312,7 @@ def collapse_unlocated(keys: pd.Series, located: set) -> pd.Series:
     """Rewrite transfers to facilities we cannot plot onto one shared key."""
     transfers = keys.str.startswith("transfer:", na=False)
     codes = keys.where(transfers).str.slice(len("transfer:"))
-    unlocated = transfers & ~codes.isin(located) & (codes != "unknown")
+    unlocated = transfers & ~codes.isin(located) & ~codes.isin(SPECIAL_TRANSFER_CODES)
     return keys.mask(unlocated, NO_LOCATION_TRANSFER)
 
 
@@ -329,12 +335,15 @@ def country_slug(key: str) -> str:
     return re.sub(r"[^A-Z0-9]+", "_", key.upper()).strip("_")
 
 
-def write_country_boards(departures: pd.DataFrame, as_of: str, flows_dir: pathlib.Path) -> dict:
+def write_country_boards(
+    departures: pd.DataFrame, as_of: str, flows_dir: pathlib.Path, located: set
+) -> dict:
     """
     One board per removal destination: its arrivals are the facilities people
     were removed from. Only removals from facilities that have their own board
-    count, so a country's total is the sum of its rows on those boards.
-    Returns the total written per country.
+    count, so a country's total is the sum of its rows on those boards. Origins
+    the map cannot place collapse to the shared no-location row, as they do on
+    facility boards. Returns the total written per country.
     """
     removed = departures[
         departures["out_key"].str.startswith("removed:", na=False)
@@ -346,7 +355,9 @@ def write_country_boards(departures: pd.DataFrame, as_of: str, flows_dir: pathli
     country_dir.mkdir(exist_ok=True)
     frame = removed.assign(
         country=removed["out_key"].str.slice(len("removed:")),
-        in_key="transfer:" + removed["detention_facility_code"].astype("object"),
+        in_key=collapse_unlocated(
+            "transfer:" + removed["detention_facility_code"].astype("object"), located
+        ),
     )
     totals = {}
     for country, group in frame.groupby("country", sort=True):
@@ -419,7 +430,7 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         keys[keys.str.startswith("transfer:", na=False)].str.slice(len("transfer:"))
         for keys in (arrivals["in_key"], departures["out_key"])
     ):
-        referenced |= set(codes.unique()) - {"unknown"}
+        referenced |= set(codes.unique()) - SPECIAL_TRANSFER_CODES
         for code, count in codes.value_counts().items():
             volume[code] = volume.get(code, 0) + int(count)
     referenced |= set(removal_origins.unique())
@@ -439,16 +450,10 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         stale.unlink()
     for stale in flows_dir.glob("country/*.json"):
         stale.unlink()
-    country_totals = write_country_boards(departures, as_of, flows_dir)
+    country_totals = write_country_boards(departures, as_of, flows_dir, located)
     country_endpoints = {
         key: {**countries[key], "stints": total} for key, total in country_totals.items()
     }
-    (flows_dir / "endpoints.json").write_text(
-        json.dumps(
-            {"as_of": as_of, "facilities": endpoints, "countries": country_endpoints},
-            separators=(",", ":"),
-        )
-    )
     for name in ("states.json", "countries.json"):
         (flows_dir / name).write_text(json.dumps(load_reference(name), separators=(",", ":")))
 
@@ -488,6 +493,17 @@ def build(stints_path, arrests_path, master: pd.DataFrame, mapped_codes: set, ou
         }
         (flows_dir / f"{detloc}.json").write_text(json.dumps(payload, separators=(",", ":")))
         written_facilities.append(detloc)
+        # A site with its own board shows that board's totals as its headline,
+        # so the two numbers can never disagree.
+        if detloc in endpoints:
+            endpoints[detloc]["stints"] = payload["totals"]["in"] + payload["totals"]["out"]
+
+    (flows_dir / "endpoints.json").write_text(
+        json.dumps(
+            {"as_of": as_of, "facilities": endpoints, "countries": country_endpoints},
+            separators=(",", ":"),
+        )
+    )
 
     mapped_arrivals = arrivals[arrivals["detention_facility_code"].isin(mapped_codes)]
     mapped_departures = departures[departures["detention_facility_code"].isin(mapped_codes)]

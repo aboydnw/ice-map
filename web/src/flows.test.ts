@@ -28,7 +28,6 @@ import {
   MIN_ROUTES,
   placeDots,
   straightLine,
-  monthAxis,
   quantize,
   quantumFor,
   resolveEndpoint,
@@ -281,14 +280,6 @@ describe("cutBoard", () => {
 });
 
 describe("quantize", () => {
-  it("builds one month per step across the window", () => {
-    const axis = monthAxis(["2022-10-01", "2026-03-10"]);
-
-    expect(axis).toHaveLength(42);
-    expect(axis[0]).toBe("2022-10");
-    expect(axis[41]).toBe("2026-03");
-  });
-
   it("allocates dots so they sum to the total divided by the quantum", () => {
     const edges = [
       edge("a", 1013),

@@ -19,9 +19,24 @@ export interface FlowFrame {
   onSelectSite: (id: string) => void;
 }
 
+const OTHER_RGB = flowRgb("other");
+const sceneColors = new WeakMap<FlowScene, Map<string, number[]>>();
+
+/** Route colour per edge key, computed once per scene rather than per frame. */
+function colorsFor(scene: FlowScene): Map<string, number[]> {
+  let colors = sceneColors.get(scene);
+  if (!colors) {
+    colors = new Map(scene.arcs.map((arc) => [arc.key, flowRgb(arc.family)]));
+    sceneColors.set(scene, colors);
+  }
+  return colors;
+}
+
 /**
- * Fresh layer instances for one frame. They share the scene's data arrays, so
- * deck.gl re-uploads attributes only when the highlight or the scene changes.
+ * Fresh layer instances for one frame. Channels, markers and sites share the
+ * scene's arrays, so deck.gl re-uploads their attributes only when the
+ * highlight or the scene changes. The dots are placed on the CPU every frame
+ * (a few hundred points at most), so their layer does get new data each tick.
  */
 export function flowLayers(frame: FlowFrame): Layer[] {
   const { scene, highlighted, currentTime } = frame;
@@ -71,7 +86,7 @@ export function flowLayers(frame: FlowFrame): Layer[] {
 
   if (!scene) return layers;
 
-  const family = new Map(scene.arcs.map((arc) => [arc.key, arc.family]));
+  const colors = colorsFor(scene);
   layers.push(
     // The channel is permanent: it says a route exists whether or not a dot
     // happens to be passing. Small facilities move a handful of people a year,
@@ -111,11 +126,11 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         // A sub-quantum dot is drawn as an outline so it is never mistaken for
         // a full unit.
         getFillColor: (dot) => [
-          ...flowRgb(family.get(dot.key) ?? "other"),
+          ...(colors.get(dot.key) ?? OTHER_RGB),
           dot.hollow ? 0 : alphaFor(dot.key, highlighted, 255),
         ],
         getLineColor: (dot) => [
-          ...flowRgb(family.get(dot.key) ?? "other"),
+          ...(colors.get(dot.key) ?? OTHER_RGB),
           alphaFor(dot.key, highlighted, dot.hollow ? 220 : 255),
         ],
         updateTriggers: {

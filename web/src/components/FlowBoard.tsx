@@ -6,6 +6,7 @@ import {
   boardCsv,
   familiesIn,
   familyOf,
+  rowTarget,
   toggleFamily,
 } from "../flows";
 import type { BoardCut, BoardRow, FlowFamily, FlowView } from "../flows";
@@ -22,6 +23,8 @@ interface Props {
   onViewChange: (view: FlowView) => void;
   highlightedKey: string | null;
   onHighlight: (key: string | null) => void;
+  /** Selects the far end of a row: a facility code or a country id. */
+  onSelect?: (detloc: string) => void;
   /** A country has arrivals only, so its board offers no direction toggle. */
   lockDirection?: boolean;
 }
@@ -120,15 +123,22 @@ function Row({
   widest,
   highlighted,
   onHighlight,
+  onSelect,
 }: {
   row: BoardRow;
   widest: number;
   highlighted: boolean;
   onHighlight: (key: string | null) => void;
+  onSelect?: (detloc: string) => void;
 }) {
+  const target = onSelect ? rowTarget(row) : null;
   return (
     <Box
-      as="button"
+      as={target ? "button" : "div"}
+      tabIndex={0}
+      title={row.label}
+      cursor={target ? "pointer" : "default"}
+      onClick={target ? () => onSelect?.(target) : undefined}
       display="block"
       width="100%"
       textAlign="left"
@@ -188,6 +198,7 @@ export function FlowBoard({
   onViewChange,
   highlightedKey,
   onHighlight,
+  onSelect,
   lockDirection = false,
 }: Props) {
   const [copied, setCopied] = useState(false);
@@ -269,6 +280,7 @@ export function FlowBoard({
             widest={widest}
             highlighted={row.key === highlightedKey}
             onHighlight={onHighlight}
+            onSelect={onSelect}
           />
         ))}
       </Box>
@@ -336,7 +348,7 @@ export function FlowBoard({
       {direction === "in" && linked !== null && (
         <Text fontSize="11px" color="inkMuted" mt="8px" lineHeight="1.4">
           Origin linked for {Math.round(linked * 100)}% of the{" "}
-          {flows.coverage.origin_linked_of.toLocaleString()} people booked in
+          {flows.coverage.origin_linked_of.toLocaleString()} stays that began
           here from outside detention. ICE's arrest data covers interior arrests
           by ERO; people apprehended by CBP at the border generally do not
           appear.

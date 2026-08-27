@@ -49,13 +49,13 @@
       "not_reported": 0.0
     },
     "endpoints": {
-      "referenced": 691,
-      "with_coordinates": 511,
-      "coordinate_share": 0.7395,
+      "referenced": 692,
+      "with_coordinates": 512,
+      "coordinate_share": 0.7399,
       "processing_boards_written": 82,
-      "processing_sites": 80,
-      "stints_via_processing_sites": 874915,
-      "off_map_endpoints": 306
+      "processing_sites": 81,
+      "stints_via_processing_sites": 1594561,
+      "off_map_endpoints": 307
     },
     "arrest_link_rate": {
       "national": 0.3212,

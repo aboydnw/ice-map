@@ -50,6 +50,14 @@ export function selectionFor(
   return null;
 }
 
+/** What a board row leads to when clicked: the far facility or country, if any. */
+export function rowTarget(row: BoardRow): string | null {
+  const value = row.key.slice(row.key.indexOf(":") + 1);
+  if (row.kind === "country") return COUNTRY_PREFIX + value;
+  if (row.kind === "facility") return value;
+  return null;
+}
+
 export type EndpointKind = "facility" | "state" | "country" | "none";
 
 export interface ResolvedEndpoint {
@@ -74,6 +82,7 @@ export interface DotSchedule {
 const FIXED_LABELS: Record<string, string> = {
   "transfer:unknown": "Another facility (not identified)",
   "transfer:no-location": "Another facility (location not published)",
+  "transfer:same-facility": "Re-booked at this facility",
   "removed:unknown": "Removed — country not recorded",
   "arrived:unlinked": "Origin not recorded in ICE arrest data",
   "released:paroled": "Released — paroled",
@@ -164,23 +173,6 @@ export function buildBoardRows(
     share: total > 0 ? edge.count / total : 0,
     ...resolveEndpoint(edge.key, endpoints, states, countries),
   }));
-}
-
-/** Every month in the data window, so all edges share one animation timeline. */
-export function monthAxis(window: [string, string]): string[] {
-  const [startYear, startMonth] = window[0].split("-").map(Number);
-  const [endYear, endMonth] = window[1].split("-").map(Number);
-  const axis: string[] = [];
-  for (
-    let index = startYear * 12 + startMonth - 1;
-    index <= endYear * 12 + endMonth - 1;
-    index += 1
-  ) {
-    axis.push(
-      `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`,
-    );
-  }
-  return axis;
 }
 
 /** The busiest route in a selection gets this many dots; the rest scale down. */

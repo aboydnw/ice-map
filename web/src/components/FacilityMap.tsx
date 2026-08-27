@@ -287,6 +287,7 @@ export function FacilityMap({
   }, []);
 
   useEffect(() => {
+    if (!selected) fittedRef.current = null;
     const map = mapRef.current;
     if (!map || !map.getLayer("facility-selected")) return;
     map.setFilter("facility-selected", [

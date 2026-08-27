@@ -26,6 +26,7 @@ interface Props {
   onFlowViewChange: (view: FlowView) => void;
   highlightedFlowKey: string | null;
   onHighlightFlow: (key: string | null) => void;
+  onSelectFlow: (detloc: string) => void;
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -122,6 +123,7 @@ export function DetailPanel({
   onFlowViewChange,
   highlightedFlowKey,
   onHighlightFlow,
+  onSelectFlow,
 }: Props) {
   const p = facility.properties;
   const bucket = BUCKETS.find((b) => b.key === p.bucket);
@@ -302,6 +304,7 @@ export function DetailPanel({
           onViewChange={onFlowViewChange}
           highlightedKey={highlightedFlowKey}
           onHighlight={onHighlightFlow}
+          onSelect={onSelectFlow}
         />
       )}
 
