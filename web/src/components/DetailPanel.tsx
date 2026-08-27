@@ -10,6 +10,7 @@ import {
 import { FlowBoard } from "./FlowBoard";
 import { Sparkline } from "./Sparkline";
 import { ThreatBar } from "./ThreatBar";
+import { CountUp, SlidePanel } from "../motion";
 import type { BoardCut, BoardRow, FlowView } from "../flows";
 import type { FacilityFeature, FacilityFlows, FlowDirection } from "../types";
 
@@ -136,7 +137,7 @@ export function DetailPanel({
   const showStay = p.alos || p.last_year;
 
   return (
-    <Box
+    <SlidePanel
       position="absolute"
       top={{ base: "unset", md: "12px" }}
       bottom={{ base: "0", md: "12px" }}
@@ -256,15 +257,13 @@ export function DetailPanel({
       </Box>
 
       <Box display="flex" alignItems="baseline" gap="2" mt="4">
-        <Text
+        <CountUp
+          value={p.adp}
           fontFamily="heading"
           fontSize="4xl"
           fontWeight="600"
           lineHeight="1"
-          fontVariantNumeric="tabular-nums"
-        >
-          {p.adp.toLocaleString()}
-        </Text>
+        />
         <Text fontSize="xs" color="inkSecondary" maxW="140px" lineHeight="1.3">
           avg. daily population, FY to date
         </Text>
@@ -441,6 +440,6 @@ export function DetailPanel({
           </Text>
         </Box>
       </Box>
-    </Box>
+    </SlidePanel>
   );
 }

@@ -12,6 +12,7 @@ import {
 } from "../flows";
 import type { BoardCut, BoardRow, FlowFamily, FlowView } from "../flows";
 import type { FacilityFlows, FlowDirection } from "../types";
+import { AnimatePresence, Appear, CountUp, FadeSwap } from "../motion";
 
 interface Props {
   facilityName: string;
@@ -103,6 +104,7 @@ function Chips({
             borderColor={on ? "ink" : "hairline"}
             color={on ? "ink" : "inkMuted"}
             _hover={{ color: "ink" }}
+            transition="color 160ms ease-out, border-color 160ms ease-out"
           >
             <Box
               width="7px"
@@ -110,6 +112,7 @@ function Chips({
               borderRadius="full"
               bg={FLOW_COLORS[family]}
               opacity={on ? 1 : 0.35}
+              transition="opacity 160ms ease-out"
             />
             {FAMILY_LABELS[family]}
           </Box>
@@ -182,6 +185,7 @@ function Row({
           bg={FLOW_COLORS[familyOf(row.key)] ?? FLOW_COLORS.other}
           width={`${widest > 0 ? (row.count / widest) * 100 : 0}%`}
           opacity={highlighted ? 1 : 0.8}
+          transition="width 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease-out"
         />
       </Box>
     </Box>
@@ -253,15 +257,13 @@ export function FlowBoard({
       </Text>
 
       <Box display="flex" alignItems="baseline" gap="2" mb="1">
-        <Text
+        <CountUp
+          value={total}
           fontFamily="heading"
           fontSize="18px"
           fontWeight="600"
-          fontVariantNumeric="tabular-nums"
           lineHeight="1"
-        >
-          {total.toLocaleString()}
-        </Text>
+        />
         <Text fontSize="11px" color="inkSecondary">
           {direction === "out" ? "book-outs" : "book-ins"} across{" "}
           {rows.length.toLocaleString()}{" "}
@@ -274,18 +276,23 @@ export function FlowBoard({
         <Chips present={present} view={view} onChange={onViewChange} />
       )}
 
-      <Box display="flex" flexDirection="column" gap="1px">
-        {visible.map((row) => (
-          <Row
-            key={row.key}
-            row={row}
-            widest={widest}
-            highlighted={row.key === highlightedKey}
-            onHighlight={onHighlight}
-            onSelect={onSelect}
-          />
-        ))}
-      </Box>
+      <FadeSwap id={direction}>
+        <Box display="flex" flexDirection="column" gap="1px">
+          <AnimatePresence initial={false}>
+            {visible.map((row, index) => (
+              <Appear key={row.key} index={index}>
+                <Row
+                  row={row}
+                  widest={widest}
+                  highlighted={row.key === highlightedKey}
+                  onHighlight={onHighlight}
+                  onSelect={onSelect}
+                />
+              </Appear>
+            ))}
+          </AnimatePresence>
+        </Box>
+      </FadeSwap>
 
       {hidden.length > 0 && (
         <Box

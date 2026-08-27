@@ -16,6 +16,7 @@ import {
 } from "./flows";
 import type { FlowView } from "./flows";
 import { useFacilityFlows, useFlowEndpoints } from "./useFlows";
+import { AnimatePresence } from "./motion";
 import type {
   FacilityCollection,
   FlowDirection,
@@ -220,59 +221,64 @@ export default function App() {
           flows={flowData?.flows ?? null}
           quantum={quantumFor(mapFlowRows.map((row) => row.count))}
         />
-        {selectedCountry && (
-          <SitePanel
-            kind="country"
-            name={selectedCountry.name}
-            stints={flowData?.flows.totals.in ?? 0}
-            onClose={() => selectFacility(null)}
-            flows={flowData?.flows ?? null}
-            flowRows={flowRows}
-            flowDirection={flowDirection}
-            onFlowDirectionChange={changeFlowDirection}
-            flowCut={flowCut}
-            flowView={flowView}
-            onFlowViewChange={setFlowView}
-            highlightedFlowKey={highlightedFlowKey}
-            onHighlightFlow={setHighlightedFlowKey}
-            onSelectFlow={selectFacility}
-          />
-        )}
-        {selectedSite && (
-          <SitePanel
-            kind="processing"
-            name={selectedSite.name}
-            stints={selectedSite.stints ?? 0}
-            onClose={() => selectFacility(null)}
-            flows={flowData?.flows ?? null}
-            flowRows={flowRows}
-            flowDirection={flowDirection}
-            onFlowDirectionChange={changeFlowDirection}
-            flowCut={flowCut}
-            flowView={flowView}
-            onFlowViewChange={setFlowView}
-            highlightedFlowKey={highlightedFlowKey}
-            onHighlightFlow={setHighlightedFlowKey}
-            onSelectFlow={selectFacility}
-          />
-        )}
-        {selectedFeature && (
-          <DetailPanel
-            facility={selectedFeature}
-            history={data.history[selectedFeature.properties.detloc]}
-            onClose={() => selectFacility(null)}
-            flows={flowData?.flows ?? null}
-            flowRows={flowRows}
-            flowDirection={flowDirection}
-            onFlowDirectionChange={changeFlowDirection}
-            flowCut={flowCut}
-            flowView={flowView}
-            onFlowViewChange={setFlowView}
-            highlightedFlowKey={highlightedFlowKey}
-            onHighlightFlow={setHighlightedFlowKey}
-            onSelectFlow={selectFacility}
-          />
-        )}
+        <AnimatePresence>
+          {selectedCountry && (
+            <SitePanel
+              key="country"
+              kind="country"
+              name={selectedCountry.name}
+              stints={flowData?.flows.totals.in ?? 0}
+              onClose={() => selectFacility(null)}
+              flows={flowData?.flows ?? null}
+              flowRows={flowRows}
+              flowDirection={flowDirection}
+              onFlowDirectionChange={changeFlowDirection}
+              flowCut={flowCut}
+              flowView={flowView}
+              onFlowViewChange={setFlowView}
+              highlightedFlowKey={highlightedFlowKey}
+              onHighlightFlow={setHighlightedFlowKey}
+              onSelectFlow={selectFacility}
+            />
+          )}
+          {selectedSite && (
+            <SitePanel
+              key="site"
+              kind="processing"
+              name={selectedSite.name}
+              stints={selectedSite.stints ?? 0}
+              onClose={() => selectFacility(null)}
+              flows={flowData?.flows ?? null}
+              flowRows={flowRows}
+              flowDirection={flowDirection}
+              onFlowDirectionChange={changeFlowDirection}
+              flowCut={flowCut}
+              flowView={flowView}
+              onFlowViewChange={setFlowView}
+              highlightedFlowKey={highlightedFlowKey}
+              onHighlightFlow={setHighlightedFlowKey}
+              onSelectFlow={selectFacility}
+            />
+          )}
+          {selectedFeature && (
+            <DetailPanel
+              key="facility"
+              facility={selectedFeature}
+              history={data.history[selectedFeature.properties.detloc]}
+              onClose={() => selectFacility(null)}
+              flows={flowData?.flows ?? null}
+              flowRows={flowRows}
+              flowDirection={flowDirection}
+              onFlowDirectionChange={changeFlowDirection}
+              flowCut={flowCut}
+              flowView={flowView}
+              onFlowViewChange={setFlowView}
+              highlightedFlowKey={highlightedFlowKey}
+              onHighlightFlow={setHighlightedFlowKey}
+              onSelectFlow={selectFacility}
+            />
+          )}
+        </AnimatePresence>
       </Box>
 
       <Box

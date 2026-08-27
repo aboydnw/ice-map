@@ -8,6 +8,7 @@ import {
   radiusFor,
 } from "../config";
 import { monthsIn } from "../flows";
+import { AnimatePresence, Appear } from "../motion";
 import type { FacilityCollection, FacilityFlows } from "../types";
 
 const FLOW_KEYS: { family: string; label: string }[] = [
@@ -82,52 +83,60 @@ export function Legend({ data, flows, quantum }: Props) {
           </Text>
         </Box>
       ))}
-      {flows && (
-        <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
-          <Text fontSize="xs" color="inkSecondary" mb="1">
-            ● = {quantum} stays, not people
-          </Text>
-          <Box display="flex" alignItems="center" gap="2" py="1px" mb="1px">
-            <Box
-              width="14px"
-              height="4px"
-              borderRadius="2px"
-              bg={FLOW_CHANNEL}
-              flexShrink={0}
-            />
-            <Text fontSize="11px" color="inkSecondary" lineHeight="1.25">
-              A route people are moved along
+      <AnimatePresence initial={false}>
+        {flows && (
+          <Appear
+            key="flows"
+            borderTopWidth="1px"
+            borderColor="hairline"
+            mt="2"
+            pt="2"
+          >
+            <Text fontSize="xs" color="inkSecondary" mb="1">
+              ● = {quantum} stays, not people
             </Text>
-          </Box>
-
-          {FLOW_KEYS.map((entry) => (
-            <Box
-              key={entry.family}
-              display="flex"
-              alignItems="center"
-              gap="2"
-              py="1px"
-            >
+            <Box display="flex" alignItems="center" gap="2" py="1px" mb="1px">
               <Box
-                width="7px"
-                height="7px"
-                borderRadius="full"
-                bg={FLOW_COLORS[entry.family]}
+                width="14px"
+                height="4px"
+                borderRadius="2px"
+                bg={FLOW_CHANNEL}
                 flexShrink={0}
               />
-              <Text fontSize="11px" color="ink" lineHeight="1.25">
-                {entry.label}
+              <Text fontSize="11px" color="inkSecondary" lineHeight="1.25">
+                A route people are moved along
               </Text>
             </Box>
-          ))}
-          <Text fontSize="10px" color="inkMuted" mt="1" lineHeight="1.3">
-            {formatMonthYear(flows.window[0])} –{" "}
-            {formatMonthYear(flows.window[1])} · the last{" "}
-            {monthsIn(flows.window)} complete months · data through{" "}
-            {formatDate(flows.as_of)}
-          </Text>
-        </Box>
-      )}
+
+            {FLOW_KEYS.map((entry) => (
+              <Box
+                key={entry.family}
+                display="flex"
+                alignItems="center"
+                gap="2"
+                py="1px"
+              >
+                <Box
+                  width="7px"
+                  height="7px"
+                  borderRadius="full"
+                  bg={FLOW_COLORS[entry.family]}
+                  flexShrink={0}
+                />
+                <Text fontSize="11px" color="ink" lineHeight="1.25">
+                  {entry.label}
+                </Text>
+              </Box>
+            ))}
+            <Text fontSize="10px" color="inkMuted" mt="1" lineHeight="1.3">
+              {formatMonthYear(flows.window[0])} –{" "}
+              {formatMonthYear(flows.window[1])} · the last{" "}
+              {monthsIn(flows.window)} complete months · data through{" "}
+              {formatDate(flows.as_of)}
+            </Text>
+          </Appear>
+        )}
+      </AnimatePresence>
 
       <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
         <Box display="flex" alignItems="center" gap="2" py="2px">

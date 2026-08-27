@@ -1,5 +1,6 @@
 import { Box, Heading, Text } from "@chakra-ui/react";
 import { FlowBoard } from "./FlowBoard";
+import { CountUp, SlidePanel } from "../motion";
 import type { BoardCut, BoardRow, FlowView } from "../flows";
 import type { FacilityFlows, FlowDirection } from "../types";
 
@@ -64,7 +65,7 @@ export function SitePanel({
 }: Props) {
   const copy = COPY[kind];
   return (
-    <Box
+    <SlidePanel
       position="absolute"
       top={{ base: "unset", md: "12px" }}
       bottom={{ base: "0", md: "12px" }}
@@ -123,15 +124,13 @@ export function SitePanel({
       </Box>
 
       <Box display="flex" alignItems="baseline" gap="2" mt="4">
-        <Text
+        <CountUp
+          value={stints}
           fontFamily="heading"
           fontSize="4xl"
           fontWeight="600"
           lineHeight="1"
-          fontVariantNumeric="tabular-nums"
-        >
-          {stints.toLocaleString()}
-        </Text>
+        />
         <Text fontSize="xs" color="inkSecondary" maxW="150px" lineHeight="1.3">
           {copy.stints}
         </Text>
@@ -161,6 +160,6 @@ export function SitePanel({
           No recorded movement through this site in the data window.
         </Text>
       )}
-    </Box>
+    </SlidePanel>
   );
 }

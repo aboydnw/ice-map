@@ -6,12 +6,15 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "@fontsource-variable/newsreader";
 import "@fontsource-variable/public-sans";
 import { system } from "./theme";
+import { MotionProvider } from "./motion";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ChakraProvider value={system}>
-      <App />
+      <MotionProvider>
+        <App />
+      </MotionProvider>
     </ChakraProvider>
     <Analytics />
   </StrictMode>,
