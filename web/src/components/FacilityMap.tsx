@@ -19,7 +19,6 @@ import {
 import type { Marker, ProcessingSite } from "../flowScene";
 import { countryKey, isCountry } from "../flows";
 import type { BoardRow } from "../flows";
-import { US_RINGS } from "../usOutline";
 import type {
   Bucket,
   FacilityCollection,
@@ -38,11 +37,7 @@ const US_BOUNDS: [[number, number], [number, number]] = [
   [-65.5, 50],
 ];
 /** Overlay layers whose clicks select something, so an empty-map click must not undo them. */
-const PICKABLE_FLOW_LAYERS = [
-  "flow-processing",
-  "flow-endpoint-dots",
-  "flow-endpoint-labels",
-];
+const PICKABLE_FLOW_LAYERS = ["flow-processing", "flow-endpoint-dots"];
 /** Spacing between fanned lanes on screen. */
 const LANE_PX = 7;
 /** Web Mercator, 512px tiles: degrees of longitude per pixel at a zoom. */
@@ -117,10 +112,6 @@ export function FacilityMap({
     const site = selected ? endpoints?.facilities[selected] : undefined;
     return site ? ([site.lon, site.lat] as [number, number]) : null;
   }, [data, selected, endpoints, flows]);
-  const originLabel =
-    selected && isCountry(selected)
-      ? flows?.countries[countryKey(selected)]?.name
-      : undefined;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -354,19 +345,9 @@ export function FacilityMap({
       facility: facilityLonLat,
       mappedCodes,
       animate: !prefersReducedMotion(),
-      rings: US_RINGS,
       laneWidthDeg: LANE_PX * degreesPerPixel(zoom),
-      originLabel,
     });
-  }, [
-    flows,
-    facilityLonLat,
-    flowRows,
-    direction,
-    mappedCodes,
-    zoom,
-    originLabel,
-  ]);
+  }, [flows, facilityLonLat, flowRows, direction, mappedCodes, zoom]);
 
   // A country's centroid is usually off-screen when it is clicked, so bring
   // it and its origins into view once per selection.

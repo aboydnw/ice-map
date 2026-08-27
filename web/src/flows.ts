@@ -460,17 +460,8 @@ export interface FlowArc {
   family: FlowFamily;
   source: [number, number];
   target: [number, number];
-  /**
-   * The route the dots ride. For a route that leaves the country this is only
-   * the leg inside it; the rest is `tail`.
-   */
+  /** The route the dots ride, from source to target. */
   path: [number, number][];
-  /**
-   * Where the route crosses the border, when it does. The destination label
-   * sits here so it can be read without zooming out; the route itself runs
-   * on to the country. Never drawn as a marker.
-   */
-  exit: [number, number] | null;
   /** Lateral lane within a bearing cluster; 0 when the route has the corridor to itself. */
   lane: number;
   /** How long a dot takes to cross `path`, in ms. */
@@ -499,8 +490,6 @@ export interface PlacedDot {
 const PATH_STEPS = 48;
 
 export interface RouteOptions {
-  /** Border rings; a route crossing out of them gets its label at the crossing. */
-  rings?: [number, number][][];
   /** Lane spacing in degrees at the current zoom; 0 disables the fan. */
   laneWidthDeg?: number;
 }
@@ -509,8 +498,7 @@ export interface RouteOptions {
  * Routes for the rows with a recorded place at the far end. A release has no
  * destination in ICE's data, so it gets no route at all: it stays on the board
  * and off the map, rather than being drawn to a place it never went. Routes
- * that leave the country are labelled at the border, and routes sharing a
- * bearing are fanned into lanes so neighbours stay distinguishable.
+ * sharing a bearing are fanned into lanes so neighbours stay distinguishable.
  */
 export function buildArcs(
   rows: BoardRow[],
@@ -518,11 +506,6 @@ export function buildArcs(
   direction: FlowDirection,
   options: RouteOptions = {},
 ): FlowArc[] {
-  // A border label helps when the far end is abroad. When the origin itself
-  // is abroad (a country is selected) the far ends are facilities already on
-  // the map, and ten "← Mexico" labels along the border would say nothing.
-  const rings =
-    options.rings && pointInRings(facility, options.rings) ? options.rings : [];
   const laneWidth = options.laneWidthDeg ?? 0;
   const arcs: FlowArc[] = [];
   for (const row of rows) {
@@ -531,7 +514,6 @@ export function buildArcs(
     const source = direction === "out" ? facility : far;
     const target = direction === "out" ? far : facility;
     const path = straightLine(source, target, PATH_STEPS);
-    const split = rings.length === 0 ? null : splitAtExit(path, rings);
     arcs.push({
       key: row.key,
       label: row.label,
@@ -540,7 +522,6 @@ export function buildArcs(
       source,
       target,
       path,
-      exit: split?.exit ?? null,
       lane: 0,
       travel: travelFor(path),
     });
@@ -576,74 +557,6 @@ export function straightLine(
     ]);
   }
   return points;
-}
-
-/** Ray-cast point-in-polygon across every ring. */
-export function pointInRings(
-  point: [number, number],
-  rings: [number, number][][],
-): boolean {
-  const [x, y] = point;
-  for (const ring of rings) {
-    let inside = false;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i, i += 1) {
-      const [xi, yi] = ring[i];
-      const [xj, yj] = ring[j];
-      if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
-        inside = !inside;
-      }
-    }
-    if (inside) return true;
-  }
-  return false;
-}
-
-export interface ExitSplit {
-  /** The part of the route inside the rings, in travel order. */
-  leg: [number, number][];
-  /** The part outside, in travel order. */
-  tail: [number, number][];
-  exit: [number, number];
-}
-
-/**
- * Cut a route where it leaves the rings, walking from whichever end is
- * inside. Null when the route never crosses — both ends inside, or neither.
- */
-export function splitAtExit(
-  path: [number, number][],
-  rings: [number, number][][],
-): ExitSplit | null {
-  const startInside = pointInRings(path[0], rings);
-  const endInside = pointInRings(path[path.length - 1], rings);
-  if (startInside === endInside) return null;
-  const ordered = startInside ? path : [...path].reverse();
-  let index = 0;
-  while (
-    index + 1 < ordered.length &&
-    pointInRings(ordered[index + 1], rings)
-  ) {
-    index += 1;
-  }
-  let inside = ordered[index];
-  let outside = ordered[index + 1];
-  for (let step = 0; step < 20; step += 1) {
-    const mid: [number, number] = [
-      (inside[0] + outside[0]) / 2,
-      (inside[1] + outside[1]) / 2,
-    ];
-    if (pointInRings(mid, rings)) inside = mid;
-    else outside = mid;
-  }
-  const exit: [number, number] = [
-    (inside[0] + outside[0]) / 2,
-    (inside[1] + outside[1]) / 2,
-  ];
-  const within = [...ordered.slice(0, index + 1), exit];
-  const beyond = [exit, ...ordered.slice(index + 1)];
-  return startInside
-    ? { leg: within, tail: beyond, exit }
-    : { leg: within.reverse(), tail: beyond.reverse(), exit };
 }
 
 function bearingFrom(from: [number, number], to: [number, number]): number {

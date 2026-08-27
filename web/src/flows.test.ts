@@ -38,10 +38,8 @@ import {
   quantumFor,
   resolveEndpoint,
   selectionFor,
-  splitAtExit,
   travelFor,
 } from "./flows";
-import { US_RINGS } from "./usOutline";
 import type {
   Centroids,
   FacilityFlows,
@@ -56,6 +54,12 @@ const endpoints: FlowEndpoints = {
       name: "Jena/Lasalle ICE Processing Center",
       lon: -92.13,
       lat: 31.68,
+    },
+    DALHOLD: {
+      name: "Dallas F.O. Hold",
+      lon: -96.8,
+      lat: 32.78,
+      kind: "processing",
     },
   },
 };
@@ -513,52 +517,6 @@ describe("placeDots", () => {
   });
 });
 
-describe("splitAtExit", () => {
-  const texas: [number, number] = [-98.5, 29.4];
-
-  it("cuts a route to Mexico at the land border", () => {
-    const path = straightLine(texas, [-99.1, 19.4], 24);
-    const split = splitAtExit(path, US_RINGS);
-
-    expect(split).not.toBeNull();
-    expect(split?.exit[1]).toBeGreaterThan(25);
-    expect(split?.exit[1]).toBeLessThan(28);
-    expect(split?.leg[0][0]).toBeCloseTo(texas[0], 6);
-    expect(split?.leg[0][1]).toBeCloseTo(texas[1], 6);
-    expect(split?.leg[split.leg.length - 1]).toEqual(split?.exit);
-    expect(split?.tail[0]).toEqual(split?.exit);
-    expect(split?.tail[split.tail.length - 1][1]).toBeCloseTo(19.4, 3);
-  });
-
-  it("cuts a route to Venezuela at the coast", () => {
-    const georgia: [number, number] = [-83.6, 32.8];
-    const split = splitAtExit(
-      straightLine(georgia, [-66.6, 6.4], 24),
-      US_RINGS,
-    );
-
-    expect(split).not.toBeNull();
-    expect(split?.exit[1]).toBeGreaterThan(24);
-    expect(split?.exit[1]).toBeLessThan(32);
-    expect(split?.exit[0]).toBeGreaterThan(-84);
-    expect(split?.exit[0]).toBeLessThan(-78);
-  });
-
-  it("leaves a domestic route whole", () => {
-    expect(
-      splitAtExit(straightLine(texas, [-118, 34], 24), US_RINGS),
-    ).toBeNull();
-  });
-
-  it("keeps travel order when the far end comes first", () => {
-    const path = straightLine([-99.1, 19.4], texas, 24);
-    const split = splitAtExit(path, US_RINGS);
-
-    expect(split?.tail[0][1]).toBeCloseTo(19.4, 3);
-    expect(split?.leg[split.leg.length - 1][1]).toBeCloseTo(texas[1], 6);
-  });
-});
-
 describe("assignLanes", () => {
   const facility: [number, number] = [-92.13, 31.68];
 
@@ -571,7 +529,6 @@ describe("assignLanes", () => {
       source: facility,
       target,
       path: [facility, target],
-      exit: null,
       lane: 0,
       travel: 0,
     }));
@@ -807,7 +764,7 @@ describe("routes and channels", () => {
     );
   });
 
-  it("labels a foreign route at the border but runs it to the country", () => {
+  it("runs a foreign route all the way to the country, with no label", () => {
     const flows = flowsFor([edge("removed:GUATEMALA", 100)]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
     const scene = buildFlowScene({
@@ -817,16 +774,12 @@ describe("routes and channels", () => {
       facility,
       mappedCodes: new Set<string>(),
       animate: true,
-      rings: US_RINGS,
     });
     const [arc] = scene.arcs;
 
-    expect(arc.exit).not.toBeNull();
     expect(arc.path[arc.path.length - 1][1]).toBeCloseTo(15.78, 3);
     expect(scene.dots.every((dot) => dot.path === arc.path)).toBe(true);
-    expect(scene.markers).toContainEqual(
-      expect.objectContaining({ kind: "exit", label: "→ Guatemala · 100" }),
-    );
+    expect(scene.markers).toEqual([]);
   });
 
   it("reports the quantum the dots were counted in", () => {
@@ -870,23 +823,24 @@ describe("country selections", () => {
     expect(selectionFor(arrest, new Set())).toBeNull();
   });
 
-  it("leaves countries to the permanent layer and labels a selected one", () => {
+  it("marks only far ends that have no circle of their own", () => {
     const facility: [number, number] = [-92.13, 31.68];
-    const flows = flowsFor([edge("removed:GUATEMALA", 100)]);
+    const flows = flowsFor([
+      edge("removed:GUATEMALA", 100),
+      edge("transfer:JENATLA", 50),
+      edge("transfer:DALHOLD", 25),
+    ]);
     const rows = buildBoardRows(flows, "out", endpoints, states, countries);
-    const fromFacility = buildFlowScene({
+    const scene = buildFlowScene({
       flows,
       direction: "out",
       rows,
       facility,
       mappedCodes: new Set(["JENATLA"]),
       animate: false,
-      rings: US_RINGS,
     });
-    const exit = fromFacility.markers.find((m) => m.kind === "exit");
 
-    expect(fromFacility.markers.some((m) => m.kind === "endpoint")).toBe(false);
-    expect(exit?.select).toBe("country:GUATEMALA");
+    expect(scene.markers.map((m) => m.select)).toEqual(["DALHOLD"]);
 
     const asCountry = flowsFor([], [edge("transfer:JENATLA", 100)]);
     const fromCountry = buildFlowScene({
@@ -896,18 +850,9 @@ describe("country selections", () => {
       facility: [-90.23, 15.78],
       mappedCodes: new Set(["JENATLA"]),
       animate: false,
-      rings: US_RINGS,
-      originLabel: "Guatemala",
     });
 
-    expect(fromCountry.markers).toEqual([
-      expect.objectContaining({
-        label: "Guatemala",
-        kind: "origin",
-        select: null,
-      }),
-    ]);
-    expect(fromCountry.arcs[0].exit).toBeNull();
+    expect(fromCountry.markers).toEqual([]);
   });
 });
 

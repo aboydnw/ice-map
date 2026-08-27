@@ -1,4 +1,4 @@
-import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
+import { PathLayer, ScatterplotLayer } from "@deck.gl/layers";
 import type { Layer } from "@deck.gl/core";
 import { FLOW_CHANNEL, flowRgb, hexRgb } from "./config";
 import { LOOP_MS, alphaFor, dotPresence } from "./flowScene";
@@ -155,14 +155,11 @@ export function flowLayers(frame: FlowFrame): Layer[] {
     );
   }
 
-  const endpoints = scene.markers.filter(
-    (marker) => marker.kind === "endpoint",
-  );
-  if (endpoints.length > 0) {
+  if (scene.markers.length > 0) {
     layers.push(
       new ScatterplotLayer<Marker>({
         id: "flow-endpoint-dots",
-        data: endpoints,
+        data: scene.markers,
         getPosition: (marker) => marker.position,
         getRadius: 6,
         radiusUnits: "pixels",
@@ -174,34 +171,6 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         getLineColor: [90, 86, 80, 230],
         lineWidthUnits: "pixels",
         getLineWidth: 1.6,
-        pickable: true,
-        onHover: (info) =>
-          frame.onHoverMarker((info.object as Marker) ?? null, info.x, info.y),
-        onClick: (info) => {
-          const marker = info.object as Marker | undefined;
-          if (marker?.select) frame.onSelectSite(marker.select);
-          return Boolean(marker?.select);
-        },
-      }),
-    );
-  }
-
-  if (scene.markers.length > 0) {
-    layers.push(
-      new TextLayer<Marker>({
-        id: "flow-endpoint-labels",
-        data: scene.markers,
-        getPosition: (marker) => marker.position,
-        getText: (marker) => marker.label,
-        getSize: 11,
-        sizeUnits: "pixels",
-        getColor: [26, 24, 23, 225],
-        getPixelOffset: (marker) => [0, -12 - marker.lane * 13],
-        outlineWidth: 3,
-        outlineColor: [253, 252, 250, 255],
-        fontSettings: { sdf: true },
-        characterSet: "auto",
-        maxWidth: 160,
         pickable: true,
         onHover: (info) =>
           frame.onHoverMarker((info.object as Marker) ?? null, info.x, info.y),

@@ -96,18 +96,14 @@ export function countrySites(endpoints: FlowEndpoints): ProcessingSite[] {
     .sort((a, b) => b.stints - a.stints);
 }
 
+/**
+ * A ring at the far end of a route that has no circle of its own — a hold
+ * room, staging site, or country — so a route never ends at nothing. Rings
+ * carry no text; the name and count come up on hover and in the board.
+ */
 export interface Marker {
   position: [number, number];
   label: string;
-  /**
-   * An endpoint is a place and gets a ring. An exit is where a route crosses
-   * the border: it is labelled so the destination can be read without zooming
-   * out, but never marked, because nothing says anyone departed from there.
-   * An origin names a selected country, whose dot is already on the map.
-   */
-  kind: "endpoint" | "exit" | "origin";
-  /** Stacks labels of routes leaving through the same stretch of border. */
-  lane: number;
   /** What clicking selects — a country id or a facility code — if anything. */
   select: string | null;
   /** Hover text. */
@@ -141,14 +137,11 @@ export interface SceneOptions extends RouteOptions {
   /** Facility codes drawn as circles; other endpoints need their own marker. */
   mappedCodes: Set<string>;
   animate: boolean;
-  /** Names the origin when it has no circle of its own — a selected country. */
-  originLabel?: string;
 }
 
 export function buildFlowScene(options: SceneOptions): FlowScene {
   const { direction, rows, facility } = options;
   const arcs = buildArcs(rows, facility, direction, {
-    rings: options.rings,
     laneWidthDeg: options.laneWidthDeg,
   });
   const quantum = quantumFor(rows.map((row) => row.count));
@@ -156,16 +149,6 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
 
   const seen = new Set<string>();
   const markers: Marker[] = [];
-  if (options.originLabel) {
-    markers.push({
-      position: facility,
-      label: options.originLabel,
-      kind: "origin",
-      lane: 0,
-      select: null,
-      detail: `${rows.reduce((sum, row) => sum + row.count, 0).toLocaleString()} stays shown`,
-    });
-  }
   const verb = direction === "out" ? "sent here" : "came from here";
   rows.forEach((row) => {
     if (!row.lonLat || row.kind !== "facility") return;
@@ -175,35 +158,10 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
     markers.push({
       position: row.lonLat,
       label: row.label,
-      kind: "endpoint",
-      lane: 0,
       select,
       detail: `${row.count.toLocaleString()} stays ${verb} · click for its own flows`,
     });
   });
-  const arrow = direction === "out" ? "→" : "←";
-  const selectFor = new Map(
-    rows.map((row) => [row.key, selectionFor(row, options.mappedCodes)]),
-  );
-  // Labels stack only with neighbours on the same stretch of border; routes
-  // leaving through different crossings each keep their own baseline.
-  const stretchCounts = new Map<string, number>();
-  arcs
-    .filter((arc) => arc.exit)
-    .forEach((arc) => {
-      const exit = arc.exit as [number, number];
-      const stretch = `${Math.round(exit[0])},${Math.round(exit[1])}`;
-      const lane = stretchCounts.get(stretch) ?? 0;
-      stretchCounts.set(stretch, lane + 1);
-      markers.push({
-        position: exit,
-        label: `${arrow} ${arc.label} · ${arc.count.toLocaleString()}`,
-        kind: "exit",
-        lane,
-        select: selectFor.get(arc.key) ?? null,
-        detail: `${arc.count.toLocaleString()} stays · click to see where all of them came from`,
-      });
-    });
 
   return {
     arcs,
