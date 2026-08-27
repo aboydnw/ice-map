@@ -129,7 +129,7 @@ export interface FlowScene {
   /** Every dot, with its departure time; the renderer places them per frame. */
   dots: FlowDot[];
   markers: Marker[];
-  /** Stints per dot for this selection. */
+  /** Stays per dot for this selection. */
   quantum: number;
 }
 
@@ -163,7 +163,7 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
       kind: "origin",
       lane: 0,
       select: null,
-      detail: `${rows.reduce((sum, row) => sum + row.count, 0).toLocaleString()} stints shown`,
+      detail: `${rows.reduce((sum, row) => sum + row.count, 0).toLocaleString()} stays shown`,
     });
   }
   const verb = direction === "out" ? "sent here" : "came from here";
@@ -178,7 +178,7 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
       kind: "endpoint",
       lane: 0,
       select,
-      detail: `${row.count.toLocaleString()} stints ${verb} · click for its own flows`,
+      detail: `${row.count.toLocaleString()} stays ${verb} · click for its own flows`,
     });
   });
   const arrow = direction === "out" ? "→" : "←";
@@ -201,7 +201,7 @@ export function buildFlowScene(options: SceneOptions): FlowScene {
         kind: "exit",
         lane,
         select: selectFor.get(arc.key) ?? null,
-        detail: `${arc.count.toLocaleString()} stints · click to see where all of them came from`,
+        detail: `${arc.count.toLocaleString()} stays · click to see where all of them came from`,
       });
     });
 

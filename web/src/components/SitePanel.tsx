@@ -11,13 +11,13 @@ const COPY: Record<
 > = {
   processing: {
     eyebrow: "Hold room or staging site",
-    stints: "stints moved through, in either direction",
+    stints: "stays that passed through, in either direction",
     note: "ICE publishes no detained population for hold rooms, field offices, or staging sites — they are excluded from the Detention Management reports the rest of this map is built from. What the individual-level records do show is who was moved through, and where they went next.",
     close: "Close site details",
   },
   country: {
     eyebrow: "Deportation destination",
-    stints: "stints removed here from facilities on this map",
+    stints: "stays that ended in removal here, from facilities on this map",
     note: "Each row is the facility a person was in when ICE recorded their removal to this country. Removals from facilities the map cannot place are not counted, so this is a floor, not a total.",
     close: "Close country details",
   },

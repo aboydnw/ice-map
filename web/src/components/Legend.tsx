@@ -21,7 +21,7 @@ const SIZE_STEPS = [10, 100, 1000];
 interface Props {
   data: FacilityCollection;
   flows: FacilityFlows | null;
-  /** Stints per dot for the current selection. */
+  /** Stays per dot for the current selection. */
   quantum: number;
 }
 
@@ -85,7 +85,7 @@ export function Legend({ data, flows, quantum }: Props) {
       {flows && (
         <Box borderTopWidth="1px" borderColor="hairline" mt="2" pt="2">
           <Text fontSize="xs" color="inkSecondary" mb="1">
-            ● = {quantum} stints, not people
+            ● = {quantum} stays, not people
           </Text>
           <Box display="flex" alignItems="center" gap="2" py="1px" mb="1px">
             <Box

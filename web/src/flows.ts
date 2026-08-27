@@ -846,8 +846,8 @@ export function boardCsv(
   const heading = direction === "out" ? "Departures" : "Arrivals";
   const stamp =
     `${facilityName} — ${heading}, ${flows.window[0]} to ${flows.window[1]} · ` +
-    "stints, not people · source: ICE via Deportation Data Project";
-  const lines = [quote(stamp), "destination,stints,share_of_total"];
+    "stays, not people · source: ICE via Deportation Data Project";
+  const lines = [quote(stamp), "destination,stays,share_of_total"];
   for (const row of rows) {
     lines.push(`${quote(row.label)},${row.count},${row.share.toFixed(4)}`);
   }

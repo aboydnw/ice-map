@@ -214,30 +214,30 @@ export function MethodologyDialog({ report, onClose }: Props) {
 
         <Section title="Flows: arrivals and departures">
           <Text fontSize="sm" color="inkSecondary">
-            The flows shown when you select a facility count <b>stints</b>, not
-            people: one booking into one facility. Someone moved three times
-            appears three times. Every stint has exactly one way in and one way
-            out, so the board always sums to the facility's book-ins and
-            book-outs. Departures come from ICE's own release reason — a
-            transfer to the next facility, a deportation to a named country, or
-            a release into the community. Releases have{" "}
+            The flows shown when you select a facility count <b>stays</b>, not
+            people: one continuous period in custody at one facility. Someone
+            moved three times appears three times. Every stay has exactly one
+            way in and one way out, so the board always sums to the facility's
+            book-ins and book-outs. Departures come from ICE's own release
+            reason — a transfer to the next facility, a deportation to a named
+            country, or a release into the community. Releases have{" "}
             <b>no destination in ICE's data</b>, so they appear on the board but
             not on the map, rather than being drawn to a place they never went.
             Clicking a destination country turns the question around: its board
             lists the facilities people were removed from, counting only
             facilities this map can place. A board opens with the routes that
-            carry 80% of its stints (never fewer than 3 or more than 15) and
+            carry 80% of its stays (never fewer than 3 or more than 15) and
             folds the rest into one "Other" row you can expand; the footer
-            always states how many routes are shown and what share of stints
-            they carry. Where ICE redacted the reason, the row reads "Not
-            reported by ICE". Arrivals are transfers from another facility, or
-            an ICE arrest matched to the person within 10 days before or 5 days
-            after book-in. That match only works for{" "}
-            <b>interior arrests by ICE's ERO</b> — people apprehended by CBP at
-            the border are absent from the arrest data, so border facilities
-            link only a small share of their arrivals and each board states its
-            own coverage. These figures come from DDP's individual-level
-            records, which lag the population figures above by several months
+            always states how many routes are shown and what share of stays they
+            carry. Where ICE redacted the reason, the row reads "Not reported by
+            ICE". Arrivals are transfers from another facility, or an ICE arrest
+            matched to the person within 10 days before or 5 days after book-in.
+            That match only works for <b>interior arrests by ICE's ERO</b> —
+            people apprehended by CBP at the border are absent from the arrest
+            data, so border facilities link only a small share of their arrivals
+            and each board states its own coverage. These figures come from
+            DDP's individual-level records, which lag the population figures
+            above by several months
             {report.flows &&
               ` and run from ${formatMonthYear(report.flows.window_start)} through ${formatMonthYear(report.flows.as_of)}`}
             . Each board, and the moving dots that go with it, shows the last 12

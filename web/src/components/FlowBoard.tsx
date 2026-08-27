@@ -248,7 +248,7 @@ export function FlowBoard({
       </Box>
 
       <Text fontSize="11px" color="inkMuted" lineHeight="1.35" mb="2">
-        Stints, not people · {formatMonthYear(flows.window[0])} –{" "}
+        Stays, not people · {formatMonthYear(flows.window[0])} –{" "}
         {formatMonthYear(flows.window[1])} · source: DDP
       </Text>
 
@@ -318,7 +318,7 @@ export function FlowBoard({
 
       <Text fontSize="11px" color="inkMuted" mt="6px">
         {visible.length.toLocaleString()} of {matched.toLocaleString()} {noun} ·{" "}
-        {Math.round(coverage * 100)}% of stints
+        {Math.round(coverage * 100)}% of stays
         {matched < rows.length && ` · ${rows.length - matched} filtered out`}
       </Text>
 

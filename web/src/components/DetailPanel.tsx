@@ -292,22 +292,6 @@ export function DetailPanel({
         )}
       </Box>
 
-      {flows && flowRows.length > 0 && (
-        <FlowBoard
-          facilityName={p.name}
-          flows={flows}
-          direction={flowDirection}
-          onDirectionChange={onFlowDirectionChange}
-          rows={flowRows}
-          cut={flowCut}
-          view={flowView}
-          onViewChange={onFlowViewChange}
-          highlightedKey={highlightedFlowKey}
-          onHighlight={onHighlightFlow}
-          onSelect={onSelectFlow}
-        />
-      )}
-
       {showStay && (
         <Box mt="5">
           <Eyebrow>Stay &amp; use</Eyebrow>
@@ -332,6 +316,22 @@ export function DetailPanel({
             )}
           </Box>
         </Box>
+      )}
+
+      {flows && flowRows.length > 0 && (
+        <FlowBoard
+          facilityName={p.name}
+          flows={flows}
+          direction={flowDirection}
+          onDirectionChange={onFlowDirectionChange}
+          rows={flowRows}
+          cut={flowCut}
+          view={flowView}
+          onViewChange={onFlowViewChange}
+          highlightedKey={highlightedFlowKey}
+          onHighlight={onHighlightFlow}
+          onSelect={onSelectFlow}
+        />
       )}
 
       {(inspection || p.deaths) && (
