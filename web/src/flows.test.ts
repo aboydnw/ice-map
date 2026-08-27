@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  DOT_FADE_IN,
+  DOT_FADE_OUT,
   alphaFor,
+  dotPresence,
   buildFlowScene,
   countrySites,
   processingSites,
@@ -26,7 +29,10 @@ import {
   MAX_LANE,
   MAX_ROUTES,
   MIN_ROUTES,
+  lastCompleteMonth,
+  monthsIn,
   placeDots,
+  recentFlows,
   straightLine,
   quantize,
   quantumFor,
@@ -613,24 +619,135 @@ describe("assignLanes", () => {
 });
 
 describe("fanPath", () => {
-  const path = straightLine([-92, 31], [-72, 31], 40);
+  const path = straightLine([-92, 31], [-72, 31], 80);
+
+  function steepest(fanned: [number, number][]): number {
+    let worst = 0;
+    for (let index = 1; index < fanned.length; index += 1) {
+      const lateral = Math.abs(fanned[index][1] - fanned[index - 1][1]);
+      const along = Math.abs(fanned[index][0] - fanned[index - 1][0]);
+      worst = Math.max(worst, lateral / along);
+    }
+    return worst;
+  }
 
   it("leaves the trunk and both ends alone, and bends only the last stretch", () => {
-    const fanned = fanPath(path, 0.5, false);
+    const fanned = fanPath(path, 0.1, false);
 
     expect(fanned[0]).toEqual(path[0]);
-    expect(fanned[40]).toEqual(path[40]);
-    for (let index = 0; index <= 32; index += 1) {
+    expect(fanned[80]).toEqual(path[80]);
+    for (let index = 0; index <= 60; index += 1) {
       expect(fanned[index]).toEqual(path[index]);
     }
-    expect(Math.abs(fanned[37][1] - path[37][1])).toBeCloseTo(0.5, 2);
+    const widest = Math.max(
+      ...fanned.map((point, index) => Math.abs(point[1] - path[index][1])),
+    );
+    expect(widest).toBeCloseTo(0.1, 3);
   });
 
   it("bends the first stretch instead when the far end comes first", () => {
-    const fanned = fanPath(path, 0.5, true);
+    const fanned = fanPath(path, 0.1, true);
 
     expect(fanned[3]).not.toEqual(path[3]);
-    expect(fanned[37]).toEqual(path[37]);
+    expect(fanned[77]).toEqual(path[77]);
+  });
+
+  it("folds back at the same gentle angle on a short hop as on a long route", () => {
+    const hop = straightLine([-92, 31], [-91, 31], 80);
+    const longAngle = steepest(fanPath(path, 0.1, false));
+    const hopAngle = steepest(fanPath(hop, 0.1, false));
+
+    expect(longAngle).toBeLessThan(0.25);
+    expect(hopAngle).toBeLessThan(0.25);
+    expect(hopAngle).toBeCloseTo(longAngle, 1);
+  });
+
+  it("shrinks the offset rather than the fold when the route is short", () => {
+    const hop = straightLine([-92, 31], [-91, 31], 80);
+    const fanned = fanPath(hop, 0.1, false);
+    const widest = Math.max(
+      ...fanned.map((point, index) => Math.abs(point[1] - hop[index][1])),
+    );
+
+    expect(widest).toBeGreaterThan(0);
+    expect(widest).toBeLessThan(0.1);
+  });
+});
+
+describe("dotPresence", () => {
+  it("is absent before departure and after arrival", () => {
+    expect(dotPresence(0)).toBe(0);
+    expect(dotPresence(1)).toBe(0);
+  });
+
+  it("is fully drawn for the middle of the route", () => {
+    expect(dotPresence(0.5)).toBe(1);
+    expect(dotPresence(DOT_FADE_IN)).toBe(1);
+    expect(dotPresence(1 - DOT_FADE_OUT)).toBe(1);
+  });
+
+  it("rises without overshoot on the way out and sinks without bounce on the way in", () => {
+    let previous = 0;
+    for (let step = 1; step <= 20; step += 1) {
+      const value = dotPresence((step / 20) * DOT_FADE_IN);
+      expect(value).toBeGreaterThanOrEqual(previous);
+      expect(value).toBeLessThanOrEqual(1);
+      previous = value;
+    }
+    previous = 1;
+    for (let step = 1; step <= 20; step += 1) {
+      const value = dotPresence(1 - DOT_FADE_OUT + (step / 20) * DOT_FADE_OUT);
+      expect(value).toBeLessThanOrEqual(previous);
+      previous = value;
+    }
+  });
+});
+
+describe("recentFlows", () => {
+  const whole = flowsFor(
+    [
+      edge("transfer:BBB", 300, [
+        ["2024-01", 100],
+        ["2025-03", 100],
+        ["2025-08", 100],
+      ]),
+      edge("removed:MEXICO", 50, [["2023-06", 50]]),
+      edge("released:paroled", 20, [["2026-02", 20]]),
+    ],
+    [
+      edge("arrested:TEXAS", 40, [["2025-09", 40]]),
+      edge("arrived:unlinked", 60, [
+        ["2024-01", 30],
+        ["2025-09", 30],
+      ]),
+    ],
+  );
+
+  it("ends on the last complete month", () => {
+    expect(lastCompleteMonth("2026-03-10")).toBe("2026-02");
+    expect(lastCompleteMonth("2026-03-31")).toBe("2026-03");
+    expect(lastCompleteMonth("2026-01-05")).toBe("2025-12");
+  });
+
+  it("keeps twelve complete months and drops routes with nothing in them", () => {
+    const recent = recentFlows(whole);
+
+    expect(recent.window).toEqual(["2025-03-01", "2026-02-28"]);
+    expect(monthsIn(recent.window)).toBe(12);
+    expect(recent.out.map((row) => [row.key, row.count])).toEqual([
+      ["transfer:BBB", 200],
+      ["released:paroled", 20],
+    ]);
+    expect(recent.totals).toEqual({ out: 220, in: 70 });
+  });
+
+  it("recomputes arrest coverage from the rows it keeps", () => {
+    const recent = recentFlows(whole);
+
+    expect(recent.coverage).toEqual({
+      origin_linked: 0.571,
+      origin_linked_of: 70,
+    });
   });
 });
 

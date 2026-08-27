@@ -1,7 +1,7 @@
 import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
 import type { Layer } from "@deck.gl/core";
 import { FLOW_CHANNEL, flowRgb, hexRgb } from "./config";
-import { LOOP_MS, alphaFor } from "./flowScene";
+import { LOOP_MS, alphaFor, dotPresence } from "./flowScene";
 import type { FlowScene, Marker, ProcessingSite } from "./flowScene";
 import { placeDots } from "./flows";
 import type { FlowArc, PlacedDot } from "./flows";
@@ -120,7 +120,10 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         id: "flow-dots",
         data: placed,
         getPosition: (dot) => dot.position,
-        getRadius: (dot) => (dot.hollow ? 2.4 : 3.2),
+        // Dots grow in as they leave and shrink into the far end as they
+        // arrive, so the stream reads as movement rather than spawning.
+        getRadius: (dot) =>
+          (dot.hollow ? 2.4 : 3.2) * (0.5 + 0.5 * dotPresence(dot.progress)),
         radiusUnits: "pixels",
         filled: true,
         stroked: true,
@@ -130,11 +133,18 @@ export function flowLayers(frame: FlowFrame): Layer[] {
         // a full unit.
         getFillColor: (dot) => [
           ...(colors.get(dot.key) ?? OTHER_RGB),
-          dot.hollow ? 0 : alphaFor(dot.key, highlighted, 255),
+          dot.hollow
+            ? 0
+            : Math.round(
+                alphaFor(dot.key, highlighted, 255) * dotPresence(dot.progress),
+              ),
         ],
         getLineColor: (dot) => [
           ...(colors.get(dot.key) ?? OTHER_RGB),
-          alphaFor(dot.key, highlighted, dot.hollow ? 220 : 255),
+          Math.round(
+            alphaFor(dot.key, highlighted, dot.hollow ? 220 : 255) *
+              dotPresence(dot.progress),
+          ),
         ],
         updateTriggers: {
           getFillColor: highlighted,

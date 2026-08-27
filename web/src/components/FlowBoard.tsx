@@ -6,6 +6,7 @@ import {
   boardCsv,
   familiesIn,
   familyOf,
+  monthsIn,
   rowTarget,
   toggleFamily,
 } from "../flows";
@@ -264,7 +265,8 @@ export function FlowBoard({
         <Text fontSize="11px" color="inkSecondary">
           {direction === "out" ? "book-outs" : "book-ins"} across{" "}
           {rows.length.toLocaleString()}{" "}
-          {direction === "out" ? "destinations" : "origins"}
+          {direction === "out" ? "destinations" : "origins"} · about{" "}
+          {Math.round(total / monthsIn(flows.window)).toLocaleString()} a month
         </Text>
       </Box>
 

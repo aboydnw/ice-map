@@ -240,7 +240,11 @@ export function MethodologyDialog({ report, onClose }: Props) {
             records, which lag the population figures above by several months
             {report.flows &&
               ` and run from ${formatMonthYear(report.flows.window_start)} through ${formatMonthYear(report.flows.as_of)}`}
-            .
+            . Each board, and the moving dots that go with it, shows the last 12
+            complete months of that record: a picture of recent movement, not a
+            ledger of everything since 2022. The dots are a representative flow
+            — their number follows the board's figures, not the timing of
+            individual transfers.
           </Text>
         </Section>
 

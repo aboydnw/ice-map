@@ -19,6 +19,24 @@ const DIMMED = 0.16;
 const HIGHLIGHTED = 1.7;
 
 /** Highlight and dim scale the base alpha rather than replacing it. */
+/** Share of a route over which a dot appears after departing. */
+export const DOT_FADE_IN = 0.06;
+/** Share of a route over which a dot is absorbed into its destination. */
+export const DOT_FADE_OUT = 0.14;
+
+/**
+ * How fully a dot is drawn at `progress` along its route: it comes into being
+ * over the first stretch and sinks into the far end over the last, monotonic
+ * in both directions so nothing pops, bounces, or flares on arrival.
+ */
+export function dotPresence(progress: number): number {
+  if (progress <= 0 || progress >= 1) return 0;
+  const ease = (t: number) => t * t * (3 - 2 * t);
+  if (progress < DOT_FADE_IN) return ease(progress / DOT_FADE_IN);
+  if (progress > 1 - DOT_FADE_OUT) return ease((1 - progress) / DOT_FADE_OUT);
+  return 1;
+}
+
 export function alphaFor(
   key: string,
   highlighted: string | null,

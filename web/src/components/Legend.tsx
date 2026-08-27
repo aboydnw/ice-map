@@ -7,6 +7,7 @@ import {
   formatMonthYear,
   radiusFor,
 } from "../config";
+import { monthsIn } from "../flows";
 import type { FacilityCollection, FacilityFlows } from "../types";
 
 const FLOW_KEYS: { family: string; label: string }[] = [
@@ -121,8 +122,9 @@ export function Legend({ data, flows, quantum }: Props) {
           ))}
           <Text fontSize="10px" color="inkMuted" mt="1" lineHeight="1.3">
             {formatMonthYear(flows.window[0])} –{" "}
-            {formatMonthYear(flows.window[1])} · after {formatDate(flows.as_of)}
-            , not yet reported
+            {formatMonthYear(flows.window[1])} · the last{" "}
+            {monthsIn(flows.window)} complete months · data through{" "}
+            {formatDate(flows.as_of)}
           </Text>
         </Box>
       )}

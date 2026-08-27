@@ -2,6 +2,7 @@ import type {
   Centroids,
   FacilityFlows,
   FlowDirection,
+  FlowEdge,
   FlowEndpoints,
 } from "./types";
 
@@ -153,6 +154,88 @@ export function resolveEndpoint(
       : unresolved(FIXED_LABELS["arrived:unlinked"]);
   }
   return unresolved(key);
+}
+
+/** The board and the animation describe this many complete months. */
+export const RECENT_MONTHS = 12;
+
+function monthKey(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+function daysIn(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+/** The last month that is complete on `asOf`, as YYYY-MM. */
+export function lastCompleteMonth(asOf: string): string {
+  const [year, month, day] = asOf.split("-").map(Number);
+  if (day >= daysIn(year, month)) return monthKey(year, month);
+  return month === 1 ? monthKey(year - 1, 12) : monthKey(year, month - 1);
+}
+
+/** Whole months spanned by a window, inclusive of both ends. */
+export function monthsIn(window: [string, string]): number {
+  const [startYear, startMonth] = window[0].split("-").map(Number);
+  const [endYear, endMonth] = window[1].split("-").map(Number);
+  return (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+}
+
+/**
+ * A facility's flows over its last `months` complete months. The board is a
+ * picture of recent movement, not a ledger of everything since 2022, and the
+ * animation's dot count follows the same figures, so the two always agree.
+ * Coverage is recomputed from the rows: every first arrival is either linked
+ * to an arrest or explicitly unlinked.
+ */
+export function recentFlows(
+  flows: FacilityFlows,
+  months = RECENT_MONTHS,
+): FacilityFlows {
+  const end = lastCompleteMonth(flows.as_of);
+  const [endYear, endMonth] = end.split("-").map(Number);
+  const startIndex = endYear * 12 + endMonth - 1 - (months - 1);
+  const start = monthKey(Math.floor(startIndex / 12), (startIndex % 12) + 1);
+  const trim = (edges: FlowEdge[]): FlowEdge[] =>
+    edges
+      .map((edge) => {
+        const kept = edge.months.filter(
+          ([month]) => month >= start && month <= end,
+        );
+        return {
+          key: edge.key,
+          count: kept.reduce((sum, [, count]) => sum + count, 0),
+          months: kept,
+        };
+      })
+      .filter((edge) => edge.count > 0)
+      .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+  const inRows = trim(flows.in);
+  const outRows = trim(flows.out);
+  const sum = (edges: FlowEdge[]) =>
+    edges.reduce((total, edge) => total + edge.count, 0);
+  const first = sum(
+    inRows.filter(
+      (edge) =>
+        edge.key.startsWith("arrested:") || edge.key === "arrived:unlinked",
+    ),
+  );
+  const linked = sum(inRows.filter((edge) => edge.key.startsWith("arrested:")));
+  return {
+    ...flows,
+    window: [
+      `${start}-01`,
+      `${end}-${String(daysIn(endYear, endMonth)).padStart(2, "0")}`,
+    ],
+    totals: { in: sum(inRows), out: sum(outRows) },
+    coverage: {
+      origin_linked:
+        first > 0 ? Math.round((linked / first) * 1000) / 1000 : null,
+      origin_linked_of: first,
+    },
+    in: inRows,
+    out: outRows,
+  };
 }
 
 /**
@@ -408,6 +491,8 @@ export interface PlacedDot {
   key: string;
   position: [number, number];
   hollow: boolean;
+  /** How far along its route the dot is, 0 at departure and 1 on arrival. */
+  progress: number;
 }
 
 /** Samples per route; enough for the lane fan to read as a curve. */
@@ -604,13 +689,28 @@ export function assignLanes(
   return lanes;
 }
 
-const FAN_START = 0.8;
-const FAN_FULL = 0.9;
-const FAN_HOLD = 0.96;
+/** Each stage of the fan (ramp in, hold, fold back) runs this many lane widths. */
+export const FAN_STAGE = 8;
+/** The fan never occupies more than this share of a route. */
+export const FAN_SHARE = 0.25;
+
+function smoothstep(t: number): number {
+  const clamped = Math.max(0, Math.min(1, t));
+  return clamped * clamped * (3 - 2 * clamped);
+}
+
+function segmentLength(a: [number, number], b: [number, number]): number {
+  const scale = Math.cos(((a[1] + b[1]) / 2) * (Math.PI / 180));
+  return Math.hypot((b[0] - a[0]) * scale, b[1] - a[1]);
+}
 
 /**
- * Push the far end of a route sideways by `offsetDeg`, ramping in over the
- * last stretch and folding back so the dot still lands on its destination.
+ * Push the far end of a route sideways by `offsetDeg`, ramping in, holding,
+ * and folding back so the dot still lands on its destination. The stages are
+ * measured in lane widths, not as a share of the route, so the fold-back
+ * meets the destination at the same gentle angle on a short hop as on a
+ * cross-country route and at every zoom. A route too short to fit the fan
+ * gets a proportionally smaller offset rather than a hook.
  */
 export function fanPath(
   path: [number, number][],
@@ -618,16 +718,28 @@ export function fanPath(
   farEndFirst: boolean,
 ): [number, number][] {
   const last = path.length - 1;
-  if (last < 1) return path;
+  if (last < 1 || offsetDeg === 0) return path;
+  const along = [0];
+  for (let index = 1; index <= last; index += 1) {
+    along.push(along[index - 1] + segmentLength(path[index - 1], path[index]));
+  }
+  const total = along[last];
+  if (total === 0) return path;
+  let amount = offsetDeg;
+  let stage = Math.abs(offsetDeg) * FAN_STAGE;
+  const room = FAN_SHARE * total;
+  if (3 * stage > room) {
+    const scale = room / (3 * stage);
+    amount *= scale;
+    stage *= scale;
+  }
   return path.map((point, index) => {
-    const along = farEndFirst ? 1 - index / last : index / last;
+    const toFarEnd = farEndFirst ? along[index] : total - along[index];
     let weight = 0;
-    if (along >= FAN_FULL && along <= FAN_HOLD) weight = 1;
-    else if (along > FAN_START && along < FAN_FULL) {
-      weight = (along - FAN_START) / (FAN_FULL - FAN_START);
-    } else if (along > FAN_HOLD && along < 1) {
-      weight = (1 - along) / (1 - FAN_HOLD);
-    }
+    if (toFarEnd <= stage) weight = smoothstep(toFarEnd / stage);
+    else if (toFarEnd <= 2 * stage) weight = 1;
+    else if (toFarEnd <= 3 * stage)
+      weight = smoothstep((3 * stage - toFarEnd) / stage);
     if (weight === 0) return point;
     const before = path[Math.max(index - 1, 0)];
     const after = path[Math.min(index + 1, last)];
@@ -635,10 +747,10 @@ export function fanPath(
     const dx = (after[0] - before[0]) * scale;
     const dy = after[1] - before[1];
     const length = Math.hypot(dx, dy) || 1;
-    const amount = offsetDeg * weight;
+    const shift = amount * weight;
     return [
-      point[0] + ((-dy / length) * amount) / scale,
-      point[1] + (dx / length) * amount,
+      point[0] + ((-dy / length) * shift) / scale,
+      point[1] + (dx / length) * shift,
     ];
   });
 }
@@ -718,6 +830,7 @@ export function placeDots(
         from[1] + (to[1] - from[1]) * within,
       ],
       hollow: dot.hollow,
+      progress,
     });
   }
   return placed;
