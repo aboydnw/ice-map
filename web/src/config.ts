@@ -108,16 +108,6 @@ export function flowRgb(family: string): [number, number, number] {
   return hexRgb(FLOW_COLORS[family] ?? FLOW_COLORS.other);
 }
 
-/**
- * How moving marks are drawn: GPU-timed trails by default, or the earlier
- * CPU-placed dots with `?dots=classic` in the URL, kept for comparison.
- */
-export function dotStyle(): "trails" | "dots" {
-  if (typeof window === "undefined") return "trails";
-  const wanted = new URLSearchParams(window.location.search).get("dots");
-  return wanted === "classic" ? "dots" : "trails";
-}
-
 export const HOTLINE = {
   label: "National Immigration Detention Hotline",
   number: "209-757-3733",

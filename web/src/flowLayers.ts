@@ -1,25 +1,10 @@
 import { PathLayer, ScatterplotLayer, TextLayer } from "@deck.gl/layers";
-import { TripsLayer } from "@deck.gl/geo-layers";
 import type { Layer } from "@deck.gl/core";
-import { FLOW_CHANNEL, dotStyle, flowRgb, hexRgb } from "./config";
+import { FLOW_CHANNEL, flowRgb, hexRgb } from "./config";
 import { LOOP_MS, alphaFor, dotPresence } from "./flowScene";
 import type { FlowScene, Marker, ProcessingSite } from "./flowScene";
 import { placeDots } from "./flows";
 import type { FlowArc, PlacedDot } from "./flows";
-import { TRAIL_MS, buildTrips } from "./flowTrips";
-import type { FlowTrip } from "./flowTrips";
-
-const sceneTrips = new WeakMap<FlowScene, FlowTrip[]>();
-
-/** Trips for a scene, built once; the clock is the only per-frame input. */
-function tripsFor(scene: FlowScene): FlowTrip[] {
-  let trips = sceneTrips.get(scene);
-  if (!trips) {
-    trips = buildTrips(scene.dots, LOOP_MS);
-    sceneTrips.set(scene, trips);
-  }
-  return trips;
-}
 
 export interface FlowFrame {
   /** Null when no facility is selected; processing sites can still be shown. */
@@ -125,36 +110,11 @@ export function flowLayers(frame: FlowFrame): Layer[] {
     }),
   );
 
-  if (scene.dots.length > 0 && dotStyle() === "trails") {
-    // The GPU places every mark from the clock alone: each trip carries the
-    // times its dot passes each vertex, and the layer draws the stretch it
-    // covered in the last TRAIL_MS. A mark grows out of its origin and sinks
-    // into its destination for free, and nothing is rebuilt per frame.
-    layers.push(
-      new TripsLayer<FlowTrip>({
-        id: "flow-trails",
-        data: tripsFor(scene),
-        getPath: (trip) => trip.path,
-        getTimestamps: (trip) => trip.timestamps,
-        getColor: (trip) => [
-          ...(colors.get(trip.key) ?? OTHER_RGB),
-          alphaFor(trip.key, highlighted, trip.hollow ? 150 : 255),
-        ],
-        // A sub-quantum mark is drawn thinner so it is never mistaken for a
-        // full unit.
-        getWidth: (trip) => (trip.hollow ? 2.5 : 4.5),
-        widthUnits: "pixels",
-        capRounded: true,
-        jointRounded: true,
-        fadeTrail: true,
-        trailLength: TRAIL_MS,
-        currentTime,
-        updateTriggers: { getColor: highlighted },
-      }),
-    );
-  } else if (scene.dots.length > 0) {
-    // Round dots at a fixed pixel radius, placed on the CPU each frame. Kept
-    // behind `?dots=classic` to compare against the trails.
+  if (scene.dots.length > 0) {
+    // Round dots at a fixed pixel radius, placed on the CPU each frame. A
+    // TripsLayer was tried instead: its trails overlap into a solid streak at
+    // any real dot density, and a dot is the countable mark the legend
+    // promises.
     const placed = placeDots(scene.dots, currentTime, LOOP_MS);
     layers.push(
       new ScatterplotLayer<PlacedDot>({
