@@ -20,7 +20,10 @@ export interface FlowFrame {
 }
 
 const OTHER_RGB = flowRgb("other");
-const sceneColors = new WeakMap<FlowScene, Map<string, [number, number, number]>>();
+const sceneColors = new WeakMap<
+  FlowScene,
+  Map<string, [number, number, number]>
+>();
 
 /** Route colour per edge key, computed once per scene rather than per frame. */
 function colorsFor(scene: FlowScene): Map<string, [number, number, number]> {
