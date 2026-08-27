@@ -11,8 +11,7 @@ import {
 import {
   MAX_DOTS,
   QUANTUM,
-  TRAVEL_MAX_MS,
-  TRAVEL_MIN_MS,
+  MS_PER_DEGREE,
   assignLanes,
   boardCsv,
   boardFile,
@@ -470,15 +469,14 @@ describe("buildDots", () => {
 });
 
 describe("travelFor", () => {
-  it("takes longer to cross a longer route, within bounds", () => {
-    const short = travelFor(straightLine([-92, 31], [-91, 31], 8));
-    const medium = travelFor(straightLine([-92, 31], [-82, 31], 8));
-    const long = travelFor(straightLine([-92, 31], [80, 20], 8));
+  it("moves every dot at the same speed, however long the road", () => {
+    const short = travelFor(straightLine([-92, 0], [-91, 0], 8));
+    const medium = travelFor(straightLine([-92, 0], [-82, 0], 8));
+    const long = travelFor(straightLine([-92, 0], [-52, 0], 8));
 
-    expect(short).toBe(TRAVEL_MIN_MS);
-    expect(medium).toBeGreaterThan(short);
-    expect(medium).toBeLessThan(TRAVEL_MAX_MS);
-    expect(long).toBe(TRAVEL_MAX_MS);
+    expect(short).toBeCloseTo(MS_PER_DEGREE, 0);
+    expect(medium).toBeCloseTo(10 * MS_PER_DEGREE, 0);
+    expect(long).toBeCloseTo(40 * MS_PER_DEGREE, 0);
   });
 });
 
@@ -509,6 +507,17 @@ describe("placeDots", () => {
     expect(placeDots([dot], 2000, loop)[0].position[0]).toBeCloseTo(10, 6);
     expect(placeDots([dot], 3000, loop)[0].position[0]).toBeCloseTo(20, 6);
     expect(placeDots([dot], 1500, loop)[0].position[0]).toBeCloseTo(5, 6);
+  });
+
+  it("keeps a slow crossing in flight past the next departure", () => {
+    const long = { ...dot, travel: 25_000 };
+
+    expect(placeDots([long], 1000, loop)).toHaveLength(3);
+    expect(placeDots([long], 12_000, loop)).toHaveLength(3);
+    expect(
+      placeDots([long], 22_000, loop).map((p) => p.progress.toFixed(2)),
+    ).toEqual(["0.04", "0.44", "0.84"]);
+    expect(placeDots([long], 27_000, loop)).toHaveLength(2);
   });
 
   it("sets off again every loop, so the stream never drains", () => {

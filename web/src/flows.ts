@@ -668,12 +668,13 @@ export function fanPath(
   });
 }
 
-/** Milliseconds per degree of route; longer roads take longer to cross. */
+/**
+ * Milliseconds per degree of route. Every dot moves at this one speed, so a
+ * long route simply takes longer to cross — even longer than one loop.
+ */
 export const MS_PER_DEGREE = 1_100;
-export const TRAVEL_MIN_MS = 9_000;
-export const TRAVEL_MAX_MS = 16_000;
 
-/** Crossing time proportional to the route's length, within sane bounds. */
+/** Crossing time proportional to the route's length; never clamped. */
 export function travelFor(path: [number, number][]): number {
   let length = 0;
   for (let index = 1; index < path.length; index += 1) {
@@ -682,10 +683,7 @@ export function travelFor(path: [number, number][]): number {
     const scale = Math.cos(((y0 + y1) / 2) * (Math.PI / 180));
     length += Math.hypot((x1 - x0) * scale, y1 - y0);
   }
-  return Math.min(
-    TRAVEL_MAX_MS,
-    Math.max(TRAVEL_MIN_MS, Math.round(length * MS_PER_DEGREE)),
-  );
+  return Math.max(1, Math.round(length * MS_PER_DEGREE));
 }
 
 /**
@@ -727,24 +725,28 @@ export function placeDots(
 ): PlacedDot[] {
   const placed: PlacedDot[] = [];
   for (const dot of dots) {
-    const elapsed = (((currentTime - dot.start) % loop) + loop) % loop;
-    const progress = elapsed / dot.travel;
-    if (progress > 1) continue;
-    const steps = dot.path.length - 1;
-    const exact = progress * steps;
-    const index = Math.min(Math.floor(exact), steps - 1);
-    const within = exact - index;
-    const from = dot.path[index];
-    const to = dot.path[index + 1];
-    placed.push({
-      key: dot.key,
-      position: [
-        from[0] + (to[0] - from[0]) * within,
-        from[1] + (to[1] - from[1]) * within,
-      ],
-      hollow: dot.hollow,
-      progress,
-    });
+    const sinceStart = (((currentTime - dot.start) % loop) + loop) % loop;
+    // A dot sets off once per loop. One whose crossing outlasts the loop is
+    // still in flight when the next one departs, so every departure that has
+    // not yet arrived is placed — the speed stays put; the road is just long.
+    for (let elapsed = sinceStart; elapsed <= dot.travel; elapsed += loop) {
+      const progress = elapsed / dot.travel;
+      const steps = dot.path.length - 1;
+      const exact = progress * steps;
+      const index = Math.min(Math.floor(exact), steps - 1);
+      const within = exact - index;
+      const from = dot.path[index];
+      const to = dot.path[index + 1];
+      placed.push({
+        key: dot.key,
+        position: [
+          from[0] + (to[0] - from[0]) * within,
+          from[1] + (to[1] - from[1]) * within,
+        ],
+        hollow: dot.hollow,
+        progress,
+      });
+    }
   }
   return placed;
 }
