@@ -330,7 +330,7 @@ export function FlowBoard({
       </Text>
 
       <Box display="flex" gap="3" mt="8px">
-        {view.expanded && (
+        {view.expanded ? (
           <Box
             as="button"
             onClick={() => onViewChange({ ...view, expanded: false })}
@@ -341,6 +341,19 @@ export function FlowBoard({
           >
             Collapse
           </Box>
+        ) : (
+          hidden.length > 0 && (
+            <Box
+              as="button"
+              onClick={() => onViewChange({ ...view, expanded: true })}
+              fontSize="11px"
+              color="inkSecondary"
+              textDecoration="underline"
+              _hover={{ color: "ink" }}
+            >
+              Show all flows
+            </Box>
+          )
         )}
         <Box
           as="button"
