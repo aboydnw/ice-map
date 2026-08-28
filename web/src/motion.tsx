@@ -6,9 +6,9 @@ import {
   AnimatePresence,
   LazyMotion,
   MotionConfig,
-  m,
   useReducedMotion,
 } from "motion/react";
+import * as m from "motion/react-m";
 import type { MotionProps } from "motion/react";
 
 /**
