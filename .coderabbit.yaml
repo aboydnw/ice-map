@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+reviews:
+  # Everything under web/public/data is emitted by pipeline/build_data.py, and a
+  # weekly refresh rewrites hundreds of files at once. Reviewing them buries the
+  # hand-written code and trips CodeRabbit's per-PR file limit.
+  path_filters:
+    - "!web/public/data/**"
+    - "!pipeline/reference/countries.json"
+    - "!pipeline/reference/states.json"

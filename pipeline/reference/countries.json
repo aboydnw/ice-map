@@ -1,0 +1,1063 @@
+{
+ "_source": "Centroids from google/dspl canonical countries (Apache-2.0), plus hand-added entries for territories the dataset omits. Keys are ICE's departure_country spellings; unlisted values fall back to removed:unknown.",
+ "AFGHANISTAN": {
+  "lat": 33.9391,
+  "lon": 67.71,
+  "name": "Afghanistan"
+ },
+ "ALBANIA": {
+  "lat": 41.1533,
+  "lon": 20.1683,
+  "name": "Albania"
+ },
+ "ALGERIA": {
+  "lat": 28.0339,
+  "lon": 1.6596,
+  "name": "Algeria"
+ },
+ "ANDORRA": {
+  "lat": 42.5462,
+  "lon": 1.6016,
+  "name": "Andorra"
+ },
+ "ANGOLA": {
+  "lat": -11.2027,
+  "lon": 17.8739,
+  "name": "Angola"
+ },
+ "ANGUILLA": {
+  "lat": 18.2206,
+  "lon": -63.0686,
+  "name": "Anguilla"
+ },
+ "ANTIGUA-BARBUDA": {
+  "lat": 17.0608,
+  "lon": -61.7964,
+  "name": "Antigua and Barbuda"
+ },
+ "ARGENTINA": {
+  "lat": -38.4161,
+  "lon": -63.6167,
+  "name": "Argentina"
+ },
+ "ARMENIA": {
+  "lat": 40.0691,
+  "lon": 45.0382,
+  "name": "Armenia"
+ },
+ "ARUBA": {
+  "lat": 12.5211,
+  "lon": -69.9683,
+  "name": "Aruba"
+ },
+ "AUSTRALIA": {
+  "lat": -25.2744,
+  "lon": 133.7751,
+  "name": "Australia"
+ },
+ "AUSTRIA": {
+  "lat": 47.5162,
+  "lon": 14.5501,
+  "name": "Austria"
+ },
+ "AZERBAIJAN": {
+  "lat": 40.1431,
+  "lon": 47.5769,
+  "name": "Azerbaijan"
+ },
+ "BAHAMAS": {
+  "lat": 25.0343,
+  "lon": -77.3963,
+  "name": "Bahamas"
+ },
+ "BAHRAIN": {
+  "lat": 25.9304,
+  "lon": 50.6378,
+  "name": "Bahrain"
+ },
+ "BANGLADESH": {
+  "lat": 23.685,
+  "lon": 90.3563,
+  "name": "Bangladesh"
+ },
+ "BARBADOS": {
+  "lat": 13.1939,
+  "lon": -59.5432,
+  "name": "Barbados"
+ },
+ "BELARUS": {
+  "lat": 53.7098,
+  "lon": 27.9534,
+  "name": "Belarus"
+ },
+ "BELGIUM": {
+  "lat": 50.5039,
+  "lon": 4.4699,
+  "name": "Belgium"
+ },
+ "BELIZE": {
+  "lat": 17.1899,
+  "lon": -88.4976,
+  "name": "Belize"
+ },
+ "BENIN": {
+  "lat": 9.3077,
+  "lon": 2.3158,
+  "name": "Benin"
+ },
+ "BERMUDA": {
+  "lat": 32.3214,
+  "lon": -64.7574,
+  "name": "Bermuda"
+ },
+ "BHUTAN": {
+  "lat": 27.5142,
+  "lon": 90.4336,
+  "name": "Bhutan"
+ },
+ "BOLIVIA": {
+  "lat": -16.2902,
+  "lon": -63.5887,
+  "name": "Bolivia"
+ },
+ "BONAIRE": {
+  "name": "Bonaire",
+  "lon": -68.2624,
+  "lat": 12.2019
+ },
+ "BOSNIA-HERZEGOVINA": {
+  "lat": 43.9159,
+  "lon": 17.6791,
+  "name": "Bosnia and Herzegovina"
+ },
+ "BOTSWANA": {
+  "lat": -22.3285,
+  "lon": 24.6849,
+  "name": "Botswana"
+ },
+ "BRAZIL": {
+  "lat": -14.235,
+  "lon": -51.9253,
+  "name": "Brazil"
+ },
+ "BRITISH VIRGIN ISLANDS": {
+  "lat": 18.4207,
+  "lon": -64.64,
+  "name": "British Virgin Islands"
+ },
+ "BRUNEI": {
+  "lat": 4.5353,
+  "lon": 114.7277,
+  "name": "Brunei"
+ },
+ "BULGARIA": {
+  "lat": 42.7339,
+  "lon": 25.4858,
+  "name": "Bulgaria"
+ },
+ "BURKINA FASO": {
+  "lat": 12.2383,
+  "lon": -1.5616,
+  "name": "Burkina Faso"
+ },
+ "BURMA": {
+  "lat": 21.914,
+  "lon": 95.9562,
+  "name": "Myanmar [Burma]"
+ },
+ "BURUNDI": {
+  "lat": -3.3731,
+  "lon": 29.9189,
+  "name": "Burundi"
+ },
+ "CAMBODIA": {
+  "lat": 12.5657,
+  "lon": 104.991,
+  "name": "Cambodia"
+ },
+ "CAMEROON": {
+  "lat": 7.3697,
+  "lon": 12.3547,
+  "name": "Cameroon"
+ },
+ "CANADA": {
+  "lat": 56.1304,
+  "lon": -106.3468,
+  "name": "Canada"
+ },
+ "CAPE VERDE": {
+  "lat": 16.0021,
+  "lon": -24.0132,
+  "name": "Cape Verde"
+ },
+ "CAYMAN ISLANDS": {
+  "lat": 19.5135,
+  "lon": -80.567,
+  "name": "Cayman Islands"
+ },
+ "CENTRAL AFRICAN REPUBLIC": {
+  "lat": 6.6111,
+  "lon": 20.9394,
+  "name": "Central African Republic"
+ },
+ "CHAD": {
+  "lat": 15.4542,
+  "lon": 18.7322,
+  "name": "Chad"
+ },
+ "CHILE": {
+  "lat": -35.6751,
+  "lon": -71.543,
+  "name": "Chile"
+ },
+ "CHINA, PEOPLES REPUBLIC OF": {
+  "lat": 35.8617,
+  "lon": 104.1954,
+  "name": "China"
+ },
+ "CHRISTMAS ISLAND": {
+  "lat": -10.4475,
+  "lon": 105.6904,
+  "name": "Christmas Island"
+ },
+ "COCOS ISLANDS": {
+  "lat": -12.1642,
+  "lon": 96.871,
+  "name": "Cocos [Keeling] Islands"
+ },
+ "COLOMBIA": {
+  "lat": 4.5709,
+  "lon": -74.2973,
+  "name": "Colombia"
+ },
+ "CONGO": {
+  "lat": -0.228,
+  "lon": 15.8277,
+  "name": "Congo [Republic]"
+ },
+ "COOK ISLANDS": {
+  "lat": -21.2367,
+  "lon": -159.7777,
+  "name": "Cook Islands"
+ },
+ "COSTA RICA": {
+  "lat": 9.7489,
+  "lon": -83.7534,
+  "name": "Costa Rica"
+ },
+ "CROATIA": {
+  "lat": 45.1,
+  "lon": 15.2,
+  "name": "Croatia"
+ },
+ "CUBA": {
+  "lat": 21.5218,
+  "lon": -77.7812,
+  "name": "Cuba"
+ },
+ "CURACAO": {
+  "name": "Curaçao",
+  "lon": -68.99,
+  "lat": 12.1696
+ },
+ "CYPRUS": {
+  "lat": 35.1264,
+  "lon": 33.4299,
+  "name": "Cyprus"
+ },
+ "CZECH REPUBLIC": {
+  "lat": 49.8175,
+  "lon": 15.473,
+  "name": "Czech Republic"
+ },
+ "DEM REP OF THE CONGO": {
+  "lat": -4.0383,
+  "lon": 21.7587,
+  "name": "Congo [DRC]"
+ },
+ "DENMARK": {
+  "lat": 56.2639,
+  "lon": 9.5018,
+  "name": "Denmark"
+ },
+ "DJIBOUTI": {
+  "lat": 11.8251,
+  "lon": 42.5903,
+  "name": "Djibouti"
+ },
+ "DOMINICA": {
+  "lat": 15.415,
+  "lon": -61.371,
+  "name": "Dominica"
+ },
+ "DOMINICAN REPUBLIC": {
+  "lat": 18.7357,
+  "lon": -70.1627,
+  "name": "Dominican Republic"
+ },
+ "EAST TIMOR": {
+  "lat": -8.8742,
+  "lon": 125.7275,
+  "name": "Timor-Leste"
+ },
+ "ECUADOR": {
+  "lat": -1.8312,
+  "lon": -78.1834,
+  "name": "Ecuador"
+ },
+ "EGYPT": {
+  "lat": 26.8206,
+  "lon": 30.8025,
+  "name": "Egypt"
+ },
+ "EL SALVADOR": {
+  "lat": 13.7942,
+  "lon": -88.8965,
+  "name": "El Salvador"
+ },
+ "EQUATORIAL GUINEA": {
+  "lat": 1.6508,
+  "lon": 10.2679,
+  "name": "Equatorial Guinea"
+ },
+ "ERITREA": {
+  "lat": 15.1794,
+  "lon": 39.7823,
+  "name": "Eritrea"
+ },
+ "ESTONIA": {
+  "lat": 58.5953,
+  "lon": 25.0136,
+  "name": "Estonia"
+ },
+ "ESWATINI": {
+  "lat": -26.5225,
+  "lon": 31.4659,
+  "name": "Swaziland"
+ },
+ "ETHIOPIA": {
+  "lat": 9.145,
+  "lon": 40.4897,
+  "name": "Ethiopia"
+ },
+ "FIJI": {
+  "lat": -16.5782,
+  "lon": 179.4144,
+  "name": "Fiji"
+ },
+ "FINLAND": {
+  "lat": 61.9241,
+  "lon": 25.7482,
+  "name": "Finland"
+ },
+ "FRANCE": {
+  "lat": 46.2276,
+  "lon": 2.2137,
+  "name": "France"
+ },
+ "FRENCH GUIANA": {
+  "lat": 3.9339,
+  "lon": -53.1258,
+  "name": "French Guiana"
+ },
+ "FRENCH POLYNESIA": {
+  "lat": -17.6797,
+  "lon": -149.4068,
+  "name": "French Polynesia"
+ },
+ "FRENCH SOUTHERN AND ANTARCTIC": {
+  "lat": -49.2804,
+  "lon": 69.3486,
+  "name": "French Southern Territories"
+ },
+ "GABON": {
+  "lat": -0.8037,
+  "lon": 11.6094,
+  "name": "Gabon"
+ },
+ "GAMBIA": {
+  "lat": 13.4432,
+  "lon": -15.3101,
+  "name": "Gambia"
+ },
+ "GEORGIA": {
+  "lat": 42.3154,
+  "lon": 43.3569,
+  "name": "Georgia"
+ },
+ "GERMANY": {
+  "lat": 51.1657,
+  "lon": 10.4515,
+  "name": "Germany"
+ },
+ "GHANA": {
+  "lat": 7.9465,
+  "lon": -1.0232,
+  "name": "Ghana"
+ },
+ "GREECE": {
+  "lat": 39.0742,
+  "lon": 21.8243,
+  "name": "Greece"
+ },
+ "GRENADA": {
+  "lat": 12.2628,
+  "lon": -61.6042,
+  "name": "Grenada"
+ },
+ "GUADELOUPE": {
+  "lat": 16.996,
+  "lon": -62.0676,
+  "name": "Guadeloupe"
+ },
+ "GUATEMALA": {
+  "lat": 15.7835,
+  "lon": -90.2308,
+  "name": "Guatemala"
+ },
+ "GUINEA": {
+  "lat": 9.9456,
+  "lon": -9.6966,
+  "name": "Guinea"
+ },
+ "GUINEA-BISSAU": {
+  "lat": 11.8037,
+  "lon": -15.1804,
+  "name": "Guinea-Bissau"
+ },
+ "GUYANA": {
+  "lat": 4.8604,
+  "lon": -58.9302,
+  "name": "Guyana"
+ },
+ "HAITI": {
+  "lat": 18.9712,
+  "lon": -72.2852,
+  "name": "Haiti"
+ },
+ "HOLY SEE": {
+  "lat": 41.9029,
+  "lon": 12.4534,
+  "name": "Vatican City"
+ },
+ "HONDURAS": {
+  "lat": 15.2,
+  "lon": -86.2419,
+  "name": "Honduras"
+ },
+ "HONG KONG": {
+  "lat": 22.3964,
+  "lon": 114.1095,
+  "name": "Hong Kong"
+ },
+ "HUNGARY": {
+  "lat": 47.1625,
+  "lon": 19.5033,
+  "name": "Hungary"
+ },
+ "ICELAND": {
+  "lat": 64.9631,
+  "lon": -19.0208,
+  "name": "Iceland"
+ },
+ "INDIA": {
+  "lat": 20.5937,
+  "lon": 78.9629,
+  "name": "India"
+ },
+ "INDONESIA": {
+  "lat": -0.7893,
+  "lon": 113.9213,
+  "name": "Indonesia"
+ },
+ "IRAN": {
+  "lat": 32.4279,
+  "lon": 53.688,
+  "name": "Iran"
+ },
+ "IRAQ": {
+  "lat": 33.2232,
+  "lon": 43.6793,
+  "name": "Iraq"
+ },
+ "IRELAND": {
+  "lat": 53.4129,
+  "lon": -8.2439,
+  "name": "Ireland"
+ },
+ "ISRAEL": {
+  "lat": 31.0461,
+  "lon": 34.8516,
+  "name": "Israel"
+ },
+ "ITALY": {
+  "lat": 41.8719,
+  "lon": 12.5674,
+  "name": "Italy"
+ },
+ "IVORY COAST": {
+  "lat": 7.54,
+  "lon": -5.5471,
+  "name": "Côte d'Ivoire"
+ },
+ "JAMAICA": {
+  "lat": 18.1096,
+  "lon": -77.2975,
+  "name": "Jamaica"
+ },
+ "JAPAN": {
+  "lat": 36.2048,
+  "lon": 138.2529,
+  "name": "Japan"
+ },
+ "JORDAN": {
+  "lat": 30.5852,
+  "lon": 36.2384,
+  "name": "Jordan"
+ },
+ "KAZAKHSTAN": {
+  "lat": 48.0196,
+  "lon": 66.9237,
+  "name": "Kazakhstan"
+ },
+ "KENYA": {
+  "lat": -0.0236,
+  "lon": 37.9062,
+  "name": "Kenya"
+ },
+ "KOSOVO": {
+  "lat": 42.6026,
+  "lon": 20.903,
+  "name": "Kosovo"
+ },
+ "KUWAIT": {
+  "lat": 29.3117,
+  "lon": 47.4818,
+  "name": "Kuwait"
+ },
+ "KYRGYZSTAN": {
+  "lat": 41.2044,
+  "lon": 74.7661,
+  "name": "Kyrgyzstan"
+ },
+ "LAOS": {
+  "lat": 19.8563,
+  "lon": 102.4955,
+  "name": "Laos"
+ },
+ "LATVIA": {
+  "lat": 56.8796,
+  "lon": 24.6032,
+  "name": "Latvia"
+ },
+ "LEBANON": {
+  "lat": 33.8547,
+  "lon": 35.8623,
+  "name": "Lebanon"
+ },
+ "LIBERIA": {
+  "lat": 6.4281,
+  "lon": -9.4295,
+  "name": "Liberia"
+ },
+ "LIBYA": {
+  "lat": 26.3351,
+  "lon": 17.2283,
+  "name": "Libya"
+ },
+ "LIECHTENSTEIN": {
+  "lat": 47.166,
+  "lon": 9.5554,
+  "name": "Liechtenstein"
+ },
+ "LITHUANIA": {
+  "lat": 55.1694,
+  "lon": 23.8813,
+  "name": "Lithuania"
+ },
+ "LUXEMBOURG": {
+  "lat": 49.8153,
+  "lon": 6.1296,
+  "name": "Luxembourg"
+ },
+ "MACAU": {
+  "lat": 22.1987,
+  "lon": 113.5439,
+  "name": "Macau"
+ },
+ "MALAWI": {
+  "lat": -13.2543,
+  "lon": 34.3015,
+  "name": "Malawi"
+ },
+ "MALAYSIA": {
+  "lat": 4.2105,
+  "lon": 101.9758,
+  "name": "Malaysia"
+ },
+ "MALDIVES": {
+  "lat": 3.2028,
+  "lon": 73.2207,
+  "name": "Maldives"
+ },
+ "MALI": {
+  "lat": 17.5707,
+  "lon": -3.9962,
+  "name": "Mali"
+ },
+ "MALTA": {
+  "lat": 35.9375,
+  "lon": 14.3754,
+  "name": "Malta"
+ },
+ "MARSHALL ISLANDS": {
+  "lat": 7.1315,
+  "lon": 171.1845,
+  "name": "Marshall Islands"
+ },
+ "MARTINIQUE": {
+  "lat": 14.6415,
+  "lon": -61.0242,
+  "name": "Martinique"
+ },
+ "MAURITANIA": {
+  "lat": 21.0079,
+  "lon": -10.9408,
+  "name": "Mauritania"
+ },
+ "MAURITIUS": {
+  "lat": -20.3484,
+  "lon": 57.5522,
+  "name": "Mauritius"
+ },
+ "MEXICO": {
+  "lat": 23.6345,
+  "lon": -102.5528,
+  "name": "Mexico"
+ },
+ "MICRONESIA, FEDERATED STATES OF": {
+  "lat": 7.4256,
+  "lon": 150.5508,
+  "name": "Micronesia"
+ },
+ "MOLDOVA": {
+  "lat": 47.4116,
+  "lon": 28.3699,
+  "name": "Moldova"
+ },
+ "MONACO": {
+  "lat": 43.7503,
+  "lon": 7.4128,
+  "name": "Monaco"
+ },
+ "MONGOLIA": {
+  "lat": 46.8625,
+  "lon": 103.8467,
+  "name": "Mongolia"
+ },
+ "MONTENEGRO": {
+  "lat": 42.7087,
+  "lon": 19.3744,
+  "name": "Montenegro"
+ },
+ "MOROCCO": {
+  "lat": 31.7917,
+  "lon": -7.0926,
+  "name": "Morocco"
+ },
+ "MOZAMBIQUE": {
+  "lat": -18.6657,
+  "lon": 35.5296,
+  "name": "Mozambique"
+ },
+ "NAMIBIA": {
+  "lat": -22.9576,
+  "lon": 18.4904,
+  "name": "Namibia"
+ },
+ "NAURU": {
+  "lat": -0.5228,
+  "lon": 166.9315,
+  "name": "Nauru"
+ },
+ "NEPAL": {
+  "lat": 28.3949,
+  "lon": 84.124,
+  "name": "Nepal"
+ },
+ "NETHERLANDS": {
+  "lat": 52.1326,
+  "lon": 5.2913,
+  "name": "Netherlands"
+ },
+ "NETHERLANDS ANTILLES": {
+  "lat": 12.2261,
+  "lon": -69.0601,
+  "name": "Netherlands Antilles"
+ },
+ "NEW ZEALAND": {
+  "lat": -40.9006,
+  "lon": 174.886,
+  "name": "New Zealand"
+ },
+ "NICARAGUA": {
+  "lat": 12.8654,
+  "lon": -85.2072,
+  "name": "Nicaragua"
+ },
+ "NIGER": {
+  "lat": 17.6078,
+  "lon": 8.0817,
+  "name": "Niger"
+ },
+ "NIGERIA": {
+  "lat": 9.082,
+  "lon": 8.6753,
+  "name": "Nigeria"
+ },
+ "NORTH KOREA": {
+  "lat": 40.3399,
+  "lon": 127.5101,
+  "name": "North Korea"
+ },
+ "NORTH MACEDONIA": {
+  "lat": 41.6086,
+  "lon": 21.7453,
+  "name": "Macedonia [FYROM]"
+ },
+ "NORWAY": {
+  "lat": 60.472,
+  "lon": 8.4689,
+  "name": "Norway"
+ },
+ "OMAN": {
+  "lat": 21.5126,
+  "lon": 55.9233,
+  "name": "Oman"
+ },
+ "PAKISTAN": {
+  "lat": 30.3753,
+  "lon": 69.3451,
+  "name": "Pakistan"
+ },
+ "PALAU": {
+  "lat": 7.515,
+  "lon": 134.5825,
+  "name": "Palau"
+ },
+ "PANAMA": {
+  "lat": 8.538,
+  "lon": -80.7821,
+  "name": "Panama"
+ },
+ "PAPUA NEW GUINEA": {
+  "lat": -6.315,
+  "lon": 143.9555,
+  "name": "Papua New Guinea"
+ },
+ "PARAGUAY": {
+  "lat": -23.4425,
+  "lon": -58.4438,
+  "name": "Paraguay"
+ },
+ "PERU": {
+  "lat": -9.19,
+  "lon": -75.0152,
+  "name": "Peru"
+ },
+ "PHILIPPINES": {
+  "lat": 12.8797,
+  "lon": 121.774,
+  "name": "Philippines"
+ },
+ "POLAND": {
+  "lat": 51.9194,
+  "lon": 19.1451,
+  "name": "Poland"
+ },
+ "PORTUGAL": {
+  "lat": 39.3999,
+  "lon": -8.2245,
+  "name": "Portugal"
+ },
+ "QATAR": {
+  "lat": 25.3548,
+  "lon": 51.1839,
+  "name": "Qatar"
+ },
+ "ROMANIA": {
+  "lat": 45.9432,
+  "lon": 24.9668,
+  "name": "Romania"
+ },
+ "RUSSIA": {
+  "lat": 61.524,
+  "lon": 105.3188,
+  "name": "Russia"
+ },
+ "RWANDA": {
+  "lat": -1.9403,
+  "lon": 29.8739,
+  "name": "Rwanda"
+ },
+ "SABA": {
+  "name": "Saba",
+  "lon": -63.2325,
+  "lat": 17.6325
+ },
+ "SAINT BARTHELEMY": {
+  "name": "Saint Barthélemy",
+  "lon": -62.8333,
+  "lat": 17.9
+ },
+ "SAINT MARTIN(FRENCH)": {
+  "name": "Saint Martin",
+  "lon": -63.0501,
+  "lat": 18.0708
+ },
+ "SAMOA": {
+  "lat": -13.759,
+  "lon": -172.1046,
+  "name": "Samoa"
+ },
+ "SAN MARINO": {
+  "lat": 43.9424,
+  "lon": 12.4578,
+  "name": "San Marino"
+ },
+ "SAO TOME AND PRINCIPE": {
+  "lat": 0.1864,
+  "lon": 6.6131,
+  "name": "São Tomé and Príncipe"
+ },
+ "SAUDI ARABIA": {
+  "lat": 23.8859,
+  "lon": 45.0792,
+  "name": "Saudi Arabia"
+ },
+ "SENEGAL": {
+  "lat": 14.4974,
+  "lon": -14.4524,
+  "name": "Senegal"
+ },
+ "SERBIA": {
+  "lat": 44.0165,
+  "lon": 21.0059,
+  "name": "Serbia"
+ },
+ "SIERRA LEONE": {
+  "lat": 8.4606,
+  "lon": -11.7799,
+  "name": "Sierra Leone"
+ },
+ "SINGAPORE": {
+  "lat": 1.3521,
+  "lon": 103.8198,
+  "name": "Singapore"
+ },
+ "SINT MAARTEN(DUTCH)": {
+  "name": "Sint Maarten",
+  "lon": -63.0548,
+  "lat": 18.0425
+ },
+ "SLOVAKIA": {
+  "lat": 48.669,
+  "lon": 19.699,
+  "name": "Slovakia"
+ },
+ "SLOVENIA": {
+  "lat": 46.1512,
+  "lon": 14.9955,
+  "name": "Slovenia"
+ },
+ "SOMALIA": {
+  "lat": 5.1521,
+  "lon": 46.1996,
+  "name": "Somalia"
+ },
+ "SOUTH AFRICA": {
+  "lat": -30.5595,
+  "lon": 22.9375,
+  "name": "South Africa"
+ },
+ "SOUTH KOREA": {
+  "lat": 35.9078,
+  "lon": 127.7669,
+  "name": "South Korea"
+ },
+ "SOUTH SUDAN": {
+  "name": "South Sudan",
+  "lon": 31.307,
+  "lat": 6.877
+ },
+ "SPAIN": {
+  "lat": 40.4637,
+  "lon": -3.7492,
+  "name": "Spain"
+ },
+ "SRI LANKA": {
+  "lat": 7.8731,
+  "lon": 80.7718,
+  "name": "Sri Lanka"
+ },
+ "ST. HELENA": {
+  "lat": -24.1435,
+  "lon": -10.0307,
+  "name": "Saint Helena"
+ },
+ "ST. KITTS-NEVIS": {
+  "lat": 17.3578,
+  "lon": -62.783,
+  "name": "Saint Kitts and Nevis"
+ },
+ "ST. LUCIA": {
+  "lat": 13.9094,
+  "lon": -60.9789,
+  "name": "Saint Lucia"
+ },
+ "ST. VINCENT-GRENADINES": {
+  "lat": 12.9843,
+  "lon": -61.2872,
+  "name": "Saint Vincent and the Grenadines"
+ },
+ "SUDAN": {
+  "lat": 12.8628,
+  "lon": 30.2176,
+  "name": "Sudan"
+ },
+ "SURINAME": {
+  "lat": 3.9193,
+  "lon": -56.0278,
+  "name": "Suriname"
+ },
+ "SWEDEN": {
+  "lat": 60.1282,
+  "lon": 18.6435,
+  "name": "Sweden"
+ },
+ "SWITZERLAND": {
+  "lat": 46.8182,
+  "lon": 8.2275,
+  "name": "Switzerland"
+ },
+ "SYRIA": {
+  "lat": 34.8021,
+  "lon": 38.9968,
+  "name": "Syria"
+ },
+ "TAIWAN": {
+  "lat": 23.6978,
+  "lon": 120.9605,
+  "name": "Taiwan"
+ },
+ "TAJIKISTAN": {
+  "lat": 38.861,
+  "lon": 71.2761,
+  "name": "Tajikistan"
+ },
+ "TANZANIA": {
+  "lat": -6.369,
+  "lon": 34.8888,
+  "name": "Tanzania"
+ },
+ "THAILAND": {
+  "lat": 15.87,
+  "lon": 100.9925,
+  "name": "Thailand"
+ },
+ "TOGO": {
+  "lat": 8.6195,
+  "lon": 0.8248,
+  "name": "Togo"
+ },
+ "TONGA": {
+  "lat": -21.179,
+  "lon": -175.1982,
+  "name": "Tonga"
+ },
+ "TRINIDAD AND TOBAGO": {
+  "lat": 10.6918,
+  "lon": -61.2225,
+  "name": "Trinidad and Tobago"
+ },
+ "TUNISIA": {
+  "lat": 33.8869,
+  "lon": 9.5375,
+  "name": "Tunisia"
+ },
+ "TURKIYE": {
+  "lat": 38.9637,
+  "lon": 35.2433,
+  "name": "Turkey"
+ },
+ "TURKMENISTAN": {
+  "lat": 38.9697,
+  "lon": 59.5563,
+  "name": "Turkmenistan"
+ },
+ "TURKS AND CAICOS ISLANDS": {
+  "lat": 21.694,
+  "lon": -71.7979,
+  "name": "Turks and Caicos Islands"
+ },
+ "UGANDA": {
+  "lat": 1.3733,
+  "lon": 32.2903,
+  "name": "Uganda"
+ },
+ "UKRAINE": {
+  "lat": 48.3794,
+  "lon": 31.1656,
+  "name": "Ukraine"
+ },
+ "UNITED ARAB EMIRATES": {
+  "lat": 23.4241,
+  "lon": 53.8478,
+  "name": "United Arab Emirates"
+ },
+ "UNITED KINGDOM": {
+  "lat": 55.3781,
+  "lon": -3.436,
+  "name": "United Kingdom"
+ },
+ "URUGUAY": {
+  "lat": -32.5228,
+  "lon": -55.7658,
+  "name": "Uruguay"
+ },
+ "UZBEKISTAN": {
+  "lat": 41.3775,
+  "lon": 64.5853,
+  "name": "Uzbekistan"
+ },
+ "VANUATU": {
+  "lat": -15.3767,
+  "lon": 166.9592,
+  "name": "Vanuatu"
+ },
+ "VENEZUELA": {
+  "lat": 6.4238,
+  "lon": -66.5897,
+  "name": "Venezuela"
+ },
+ "VIETNAM": {
+  "lat": 14.0583,
+  "lon": 108.2772,
+  "name": "Vietnam"
+ },
+ "YEMEN": {
+  "lat": 15.5527,
+  "lon": 48.5164,
+  "name": "Yemen"
+ },
+ "ZAMBIA": {
+  "lat": -13.1339,
+  "lon": 27.8493,
+  "name": "Zambia"
+ },
+ "ZIMBABWE": {
+  "lat": -19.0154,
+  "lon": 29.1549,
+  "name": "Zimbabwe"
+ }
+}

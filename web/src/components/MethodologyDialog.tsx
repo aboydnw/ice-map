@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Box, Heading, Link, Text } from "@chakra-ui/react";
-import { formatDate } from "../config";
+import { formatDate, formatMonthYear } from "../config";
 import type { MatchReport } from "../types";
 
 interface Props {
@@ -135,7 +135,11 @@ export function MethodologyDialog({ report, onClose }: Props) {
             ICE's facility spreadsheet only lists facilities that held at least
             one person on the snapshot date, and excludes hold rooms and medical
             facilities. Facilities that stopped holding ICE detainees don't
-            appear, even though many held people in the recent past.
+            appear, even though many held people in the recent past. Hold rooms,
+            field offices, and staging sites move a large share of everyone in
+            the system but have no reported population, so they are drawn as
+            fixed-size rings rather than sized circles; selecting one shows its
+            arrivals and departures like any facility.
           </Text>
         </Section>
 
@@ -205,6 +209,42 @@ export function MethodologyDialog({ report, onClose }: Props) {
             own name, or its federal type. Photos and official page links are
             from ice.gov; photos are U.S. government works. Any item that fails
             validation is left out for that facility rather than guessed.
+          </Text>
+        </Section>
+
+        <Section title="Flows: arrivals and departures">
+          <Text fontSize="sm" color="inkSecondary">
+            The flows shown when you select a facility count <b>stays</b>, not
+            people: one continuous period in custody at one facility. Someone
+            moved three times appears three times. Every stay has exactly one
+            way in and one way out, so the board always sums to the facility's
+            book-ins and book-outs. Departures come from ICE's own release
+            reason — a transfer to the next facility, a deportation to a named
+            country, or a release into the community. Releases have{" "}
+            <b>no destination in ICE's data</b>, so they appear on the board but
+            not on the map, rather than being drawn to a place they never went.
+            Clicking a destination country turns the question around: its board
+            lists the facilities people were removed from, counting only
+            facilities this map can place. A board opens with the routes that
+            carry 80% of its stays (never fewer than 3 or more than 15) and
+            folds the rest into one "Other" row you can expand; the footer
+            always states how many routes are shown and what share of stays they
+            carry. Where ICE redacted the reason, the row reads "Not reported by
+            ICE". Arrivals are transfers from another facility, or an ICE arrest
+            matched to the person within 10 days before or 5 days after book-in.
+            That match only works for <b>interior arrests by ICE's ERO</b> —
+            people apprehended by CBP at the border are absent from the arrest
+            data, so border facilities link only a small share of their arrivals
+            and each board states its own coverage. These figures come from
+            DDP's individual-level records, which lag the population figures
+            above by several months
+            {report.flows &&
+              ` and run from ${formatMonthYear(report.flows.window_start)} through ${formatMonthYear(report.flows.as_of)}`}
+            . Each board, and the moving dots that go with it, shows the last 12
+            complete months of that record: a picture of recent movement, not a
+            ledger of everything since 2022. The dots are a representative flow
+            — their number follows the board's figures, not the timing of
+            individual transfers.
           </Text>
         </Section>
 

@@ -193,3 +193,20 @@ def test_match_ice_site_skips_archived_pages():
 def test_load_json_requires_reference_file():
     with pytest.raises(FileNotFoundError):
         enrich.load_json("definitely-missing.json")
+
+
+def test_display_name_preserves_mixed_case_and_acronyms():
+    assert enrich.display_name("Northwest ICE Processing Center (NWIPC)") == (
+        "Northwest ICE Processing Center (NWIPC)"
+    )
+    assert enrich.display_name("MONTGOMERY COUNTY JAIL") == "Montgomery County Jail"
+    assert enrich.display_name("FCI ATLANTA") == "FCI Atlanta"
+
+
+def test_display_name_keeps_possessives_ordinals_and_initials_readable():
+    assert enrich.display_name("CULBERSON COUNTY SHERIFF'S") == "Culberson County Sheriff's"
+    assert enrich.display_name("ST. JOHN'S COUNTY JAIL") == "St. John's County Jail"
+    assert enrich.display_name("CBP O'HARE AIRPORT TRM 5 B.C. EXT") == (
+        "Cbp O'Hare Airport Trm 5 B.C. Ext"
+    )
+    assert enrich.display_name("41ST STREET ANNEX") == "41st Street Annex"
