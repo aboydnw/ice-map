@@ -28,6 +28,12 @@ The detail panel adds, per facility: ICE threat-level classification, mandatory-
 
 External reference data lives in `pipeline/reference/` and is refreshed manually with the scripts in `pipeline/scrapers/` (they read ice.gov through the Wayback Machine, since ice.gov blocks datacenter traffic). The weekly refresh workflow only re-pulls DDP and UCLA data.
 
+### Source reconciliation
+
+The DDP parquet files are the canonical source for the map's population figures. Every build fails unless each row in the latest DDP snapshot maps to exactly one published facility, required population fields are present, and the source's independent population breakdowns reconcile. After generating the GeoJSON, the pipeline also compares every published ADP and demographic count with its source-derived value. The `reconciliation` block in `web/public/data/match_report.json` records the row counts and totals checked by that gate.
+
+DDP's fiscal-year-to-date averages contain fractional people. Facility figures are rounded individually for display, while the national figure is summed before rounding. `facility_rounding_delta` records the resulting presentational difference; it is not treated as a source mismatch.
+
 ## Structure
 
 - `pipeline/` — Python build step that downloads the source data, joins populations to the facility master, validates totals, enriches each facility, and emits the static artifacts the site serves (`web/public/data/`). `scrapers/` and `reference/` hold the manually refreshed external data.
