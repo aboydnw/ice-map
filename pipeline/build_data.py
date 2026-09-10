@@ -59,7 +59,7 @@ BREAKDOWN_COLUMNS = ["male_crim", "male_non_crim", "female_crim", "female_non_cr
 
 MIN_PLAUSIBLE_TOTAL = 10_000
 MAX_PLAUSIBLE_TOTAL = 200_000
-MIN_MATCH_RATE = 0.7
+BREAKDOWN_RECONCILIATION_TOLERANCE = 0.01
 
 
 def normalize_name(value: str) -> str:
@@ -222,11 +222,41 @@ def validate(matched: pd.DataFrame, snapshot: pd.DataFrame) -> None:
     total = snapshot["adp"].sum()
     if not MIN_PLAUSIBLE_TOTAL <= total <= MAX_PLAUSIBLE_TOTAL:
         raise ValueError(f"implausible national total ADP: {total:,.0f}")
-    match_rate = len(matched) / len(snapshot)
-    if match_rate < MIN_MATCH_RATE:
-        raise ValueError(f"match rate {match_rate:.0%} below threshold {MIN_MATCH_RATE:.0%}")
+    missing_rows = len(snapshot) - len(matched)
+    if missing_rows:
+        noun = "row was" if missing_rows == 1 else "rows were"
+        raise ValueError(f"{missing_rows} source {noun} not published")
+    collisions = matched.loc[matched["detloc"].duplicated(keep=False), "detloc"].unique()
+    if len(collisions):
+        raise ValueError(
+            "facility-code collision for " + ", ".join(sorted(map(str, collisions)))
+        )
     if (snapshot["adp"] < 0).any():
         raise ValueError("negative population values in snapshot")
+
+
+def validate_source_snapshot(snapshot: pd.DataFrame) -> None:
+    """Fail closed when DDP's latest population snapshot cannot be represented safely."""
+    required = LEVEL_COLUMNS + BREAKDOWN_COLUMNS
+    missing_columns = [column for column in required if column not in snapshot]
+    if missing_columns:
+        raise ValueError(
+            "missing required source columns: " + ", ".join(sorted(missing_columns))
+        )
+    missing_values = [column for column in required if snapshot[column].isna().any()]
+    if missing_values:
+        raise ValueError(
+            "missing required numeric source values in: "
+            + ", ".join(sorted(missing_values))
+        )
+    breakdown_total = snapshot[BREAKDOWN_COLUMNS].sum(axis=1)
+    inconsistent = (snapshot["adp"] - breakdown_total).abs() > BREAKDOWN_RECONCILIATION_TOLERANCE
+    if inconsistent.any():
+        names = snapshot.loc[inconsistent, "name"].astype(str).tolist()
+        raise ValueError(
+            "population breakdown does not reconcile with level-based ADP for: "
+            + ", ".join(names)
+        )
 
 
 def coalesce(row, *columns):
@@ -296,6 +326,61 @@ def build_features(matched: pd.DataFrame, master: pd.DataFrame, enrichment: Enri
     return features
 
 
+def reconcile_features(matched: pd.DataFrame, features: list[dict]) -> dict:
+    """Prove that published population numbers equal the mapped DDP source rows."""
+    feature_codes = [feature["properties"]["detloc"] for feature in features]
+    duplicate_codes = sorted(
+        {code for code in feature_codes if feature_codes.count(code) > 1}
+    )
+    if duplicate_codes:
+        raise ValueError(
+            "duplicate published facility code: "
+            + ", ".join(map(str, duplicate_codes))
+        )
+    published = {feature["properties"]["detloc"]: feature["properties"] for feature in features}
+    source_codes = set(matched["detloc"])
+    published_codes = set(published)
+    if source_codes != published_codes:
+        missing = sorted(map(str, source_codes - published_codes))
+        extra = sorted(map(str, published_codes - source_codes))
+        raise ValueError(
+            f"published facility set differs from source; missing={missing}, extra={extra}"
+        )
+
+    for row in matched.itertuples(index=False):
+        properties = published[row.detloc]
+        expected = {
+            "adp": round(float(row.adp)),
+            **{
+                column: round(float(getattr(row, column)))
+                for column in BREAKDOWN_COLUMNS
+            },
+            "guaranteed_minimum": (
+                None
+                if pd.isna(row.guaranteed_minimum)
+                else round(float(row.guaranteed_minimum))
+            ),
+        }
+        for field, value in expected.items():
+            if properties.get(field) != value:
+                raise ValueError(
+                    f"published numeric mismatch for {row.detloc}.{field}: "
+                    f"expected {value}, got {properties.get(field)}"
+                )
+
+    source_adp = float(matched["adp"].sum())
+    national_adp = round(source_adp)
+    published_adp = sum(properties["adp"] for properties in published.values())
+    return {
+        "source_rows": len(matched),
+        "published_facilities": len(features),
+        "source_adp_unrounded": round(source_adp, 6),
+        "national_adp": national_adp,
+        "published_facility_adp_sum": published_adp,
+        "facility_rounding_delta": published_adp - national_adp,
+    }
+
+
 def build_history(
     timeseries: pd.DataFrame, aliases: dict, code_lookup: dict, address_lookup: dict, codes: set
 ) -> tuple[dict, dict]:
@@ -345,6 +430,7 @@ def main() -> int:
 
     latest_date = timeseries["pull_date"].max()
     snapshot = timeseries[timeseries["pull_date"] == latest_date]
+    validate_source_snapshot(snapshot)
     resolved = resolve_codes(snapshot, aliases, code_lookup, address_lookup)
     matched = resolved[resolved["detloc"].isin(known_codes)]
     unmatched = resolved[~resolved["detloc"].isin(known_codes)]
@@ -357,6 +443,7 @@ def main() -> int:
     enrichment = Enrichment(paths["alos"], paths["deaths"])
     enrichment.history = history
     features = build_features(matched, master, enrichment)
+    reconciliation = reconcile_features(matched, features)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     flow_report = flows.build(
@@ -376,6 +463,7 @@ def main() -> int:
         "match_methods": resolved["match_method"].value_counts().to_dict(),
         "national_adp": round(float(snapshot["adp"].sum())),
         "unmatched_adp": round(float(unmatched["adp"].sum())),
+        "reconciliation": reconciliation,
         "history_coverage": history_coverage,
         "enrichment_coverage": enrichment.coverage,
         "flows": flow_report,

@@ -54,7 +54,12 @@ def test_resolve_codes_precedence():
 
 
 def make_populated(count, adp_each):
-    return pd.DataFrame({"adp": [adp_each] * count})
+    return pd.DataFrame(
+        {
+            "detloc": [f"CODE{i:04d}" for i in range(count)],
+            "adp": [adp_each] * count,
+        }
+    )
 
 
 def test_validate_rejects_implausible_total():
@@ -70,6 +75,21 @@ def test_validate_rejects_low_match_rate():
         build_data.validate(matched, snapshot)
 
 
+def test_validate_rejects_even_one_unmatched_source_row():
+    snapshot = make_populated(100, 500)
+    matched = snapshot.head(99)
+    with pytest.raises(ValueError, match="1 source row was not published"):
+        build_data.validate(matched, snapshot)
+
+
+def test_validate_rejects_facility_code_collisions():
+    snapshot = make_populated(100, 500)
+    matched = snapshot.copy()
+    matched.loc[1, "detloc"] = matched.loc[0, "detloc"]
+    with pytest.raises(ValueError, match="facility-code collision"):
+        build_data.validate(matched, snapshot)
+
+
 def test_validate_rejects_negative_populations():
     snapshot = make_populated(100, 500)
     snapshot.loc[0, "adp"] = -1
@@ -80,6 +100,86 @@ def test_validate_rejects_negative_populations():
 def test_validate_accepts_current_shape():
     snapshot = make_populated(200, 300)
     build_data.validate(snapshot, snapshot)
+
+
+def source_snapshot(**overrides):
+    row = {
+        "name": "Some Jail",
+        "level_a": 1.0,
+        "level_b": 2.0,
+        "level_c": 3.0,
+        "level_d": 4.0,
+        "male_crim": 4.0,
+        "male_non_crim": 3.0,
+        "female_crim": 2.0,
+        "female_non_crim": 1.0,
+        "adp": 10.0,
+    }
+    row.update(overrides)
+    return pd.DataFrame([row])
+
+
+def test_validate_source_snapshot_rejects_missing_population_values():
+    snapshot = source_snapshot(level_b=float("nan"))
+    with pytest.raises(ValueError, match="missing required numeric source values.*level_b"):
+        build_data.validate_source_snapshot(snapshot)
+
+
+def test_validate_source_snapshot_rejects_inconsistent_population_breakdowns():
+    snapshot = source_snapshot(female_non_crim=4.0)
+    with pytest.raises(ValueError, match="population breakdown does not reconcile"):
+        build_data.validate_source_snapshot(snapshot)
+
+
+def published_feature(detloc="CODE0001", adp=10):
+    return {
+        "properties": {
+            "detloc": detloc,
+            "adp": adp,
+            "male_crim": 4,
+            "male_non_crim": 3,
+            "female_crim": 2,
+            "female_non_crim": 1,
+            "guaranteed_minimum": None,
+        }
+    }
+
+
+def test_reconcile_features_rejects_a_changed_published_number():
+    matched = source_snapshot(detloc="CODE0001", guaranteed_minimum=float("nan"))
+    features = [published_feature(adp=11)]
+    with pytest.raises(ValueError, match="published numeric mismatch.*CODE0001.*adp"):
+        build_data.reconcile_features(matched, features)
+
+
+def test_reconcile_features_rejects_duplicate_published_facility_codes():
+    matched = source_snapshot(detloc="CODE0001", guaranteed_minimum=float("nan"))
+    features = [published_feature(), published_feature()]
+    with pytest.raises(ValueError, match="duplicate published facility code"):
+        build_data.reconcile_features(matched, features)
+
+
+def test_reconcile_features_reports_documented_per_facility_rounding():
+    first = source_snapshot(
+        detloc="CODE0001",
+        level_a=1.4,
+        adp=10.4,
+        male_crim=4.4,
+        guaranteed_minimum=float("nan"),
+    )
+    second = first.copy()
+    second.loc[0, "detloc"] = "CODE0002"
+    matched = pd.concat([first, second], ignore_index=True)
+    features = [published_feature("CODE0001"), published_feature("CODE0002")]
+
+    assert build_data.reconcile_features(matched, features) == {
+        "source_rows": 2,
+        "published_facilities": 2,
+        "source_adp_unrounded": 20.8,
+        "national_adp": 21,
+        "published_facility_adp_sum": 20,
+        "facility_rounding_delta": -1,
+    }
 
 
 def test_prepare_timeseries_drops_total_row_and_sums_levels():
