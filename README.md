@@ -53,3 +53,21 @@ cd web
 yarn
 yarn dev
 ```
+
+## Deployment
+
+The frontend deploys to Cloudflare Workers with Static Assets at
+`https://icemap.anthonynboyd.com`. The custom domain is declared in
+`web/wrangler.jsonc`, so Cloudflare provisions its DNS record and TLS certificate
+when Wrangler deploys the Worker.
+
+```bash
+cd web
+yarn
+yarn deploy:dry-run # build and validate the Worker bundle locally
+yarn deploy         # deploy to Cloudflare and attach the custom domain
+```
+
+For Cloudflare Workers Builds, set the project root directory to `web`, the build
+command to `yarn build`, and the deploy command to `yarn wrangler deploy`. Yarn is
+pinned in `web/package.json` so local and hosted builds use the same release.

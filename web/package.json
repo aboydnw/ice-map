@@ -2,13 +2,16 @@
   "name": "web-tmp",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "yarn@4.13.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "yarn build && wrangler deploy",
+    "deploy:dry-run": "yarn build && wrangler deploy --dry-run"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.36.1",
@@ -33,6 +36,7 @@
     "prettier": "^3.9.6",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "wrangler": "^4.131.2"
   }
 }
