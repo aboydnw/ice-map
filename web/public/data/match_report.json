@@ -10,6 +10,14 @@
   },
   "national_adp": 62517,
   "unmatched_adp": 0,
+  "reconciliation": {
+    "source_rows": 208,
+    "published_facilities": 208,
+    "source_adp_unrounded": 62516.733098,
+    "national_adp": 62517,
+    "published_facility_adp_sum": 62504,
+    "facility_rounding_delta": -13
+  },
   "history_coverage": {
     "rows_resolved": 16663,
     "rows_total": 20430,
@@ -23,47 +31,48 @@
     "alos": 208,
     "last_year": 197,
     "inspection": 159,
-    "deaths": 56,
+    "deaths": 59,
     "operator": 101,
     "photo": 141
   },
   "flows": {
     "as_of": "2026-08-05",
     "window_start": "2022-10-01",
-    "facilities_written": 284,
+    "facilities_written": 285,
     "country_boards_written": 212,
-    "stints_at_mapped_facilities": 2160218,
-    "book_ins_in_window": 2137366,
-    "book_outs_in_window": 2096926,
+    "stints_at_mapped_facilities": 2161552,
+    "book_ins_in_window": 2138700,
+    "book_outs_in_window": 2097884,
     "out_families": {
-      "transfer": 1139195,
-      "removed": 666757,
-      "released": 261718,
-      "custody": 18716,
-      "other": 10540
+      "transfer": 1139984,
+      "removed": 666821,
+      "released": 261778,
+      "custody": 18758,
+      "other": 10543
     },
     "unknown_shares": {
       "transfer_unknown": 0.0051,
-      "transfer_no_location": 0.0325,
+      "transfer_no_location": 0.0326,
       "removed_unknown": 0.0046,
       "not_reported": 0.0
     },
     "endpoints": {
       "referenced": 692,
-      "with_coordinates": 512,
-      "coordinate_share": 0.7399,
+      "with_coordinates": 543,
+      "coordinate_share": 0.7847,
       "processing_boards_written": 82,
       "processing_sites": 81,
       "stints_via_processing_sites": 1594561,
-      "off_map_endpoints": 307
+      "off_map_endpoints": 337
     },
     "arrest_link_rate": {
-      "national": 0.3212,
+      "national": 0.3191,
       "median_facility": 0.748,
-      "facilities_measured": 205
+      "facilities_measured": 206
     },
     "unmapped_departure_countries": {
       "UNKNOWN": 10,
+      "KIRIBATI": 1,
       "COMOROS": 1,
       "LESOTHO": 1,
       "USSR": 1
