@@ -93,6 +93,9 @@ export interface ConsularCountry {
   districts: number;
   source: string;
   source_dates: [string, string];
+  coverage_note?: string;
+  unverified_counties?: number;
+  source_date_kind?: "checked" | "published";
   built: string;
 }
 

@@ -1,0 +1,258 @@
+{
+  "country": "Colombia",
+  "source": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+  "source_date_kind": "checked",
+  "coverage_note": "Partial coverage: California is not mapped. Official sources describe northern/southern California without a verified county boundary. Blank areas do not mean no consular service. Los Angeles and San Francisco show only their verified out-of-state coverage.",
+  "unverified": {
+    "CA": "all"
+  },
+  "consulates": [
+    {
+      "id": "atlanta",
+      "name": "Consulate of Colombia in Atlanta",
+      "city": "Atlanta",
+      "state": "GA",
+      "counties": {
+        "GA": "all",
+        "AL": "all",
+        "NC": "all",
+        "SC": "all",
+        "KY": "all",
+        "MS": "all",
+        "TN": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "boston",
+      "name": "Consulate of Colombia in Boston",
+      "city": "Boston",
+      "state": "MA",
+      "counties": {
+        "MA": "all",
+        "ME": "all",
+        "NH": "all",
+        "RI": "all",
+        "VT": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "chicago",
+      "name": "Consulate of Colombia in Chicago",
+      "city": "Chicago",
+      "state": "IL",
+      "counties": {
+        "IL": "all",
+        "ND": "all",
+        "SD": "all",
+        "IN": "all",
+        "IA": "all",
+        "KS": "all",
+        "MI": "all",
+        "MN": "all",
+        "MO": "all",
+        "NE": "all",
+        "OH": "all",
+        "WI": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "houston",
+      "name": "Consulate of Colombia in Houston",
+      "city": "Houston",
+      "state": "TX",
+      "counties": {
+        "TX": "all",
+        "AR": "all",
+        "LA": "all",
+        "OK": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "los-angeles",
+      "name": "Consulate of Colombia in Los Angeles",
+      "city": "Los Angeles",
+      "state": "CA",
+      "counties": {
+        "AZ": "all",
+        "NM": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "newark",
+      "name": "Consulate of Colombia in Newark",
+      "city": "Newark",
+      "state": "NJ",
+      "counties": {
+        "NJ": "all",
+        "PA": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "new-york",
+      "name": "Consulate of Colombia in New York",
+      "city": "New York",
+      "state": "NY",
+      "counties": {
+        "NY": "all",
+        "CT": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "san-francisco",
+      "name": "Consulate of Colombia in San Francisco",
+      "city": "San Francisco",
+      "state": "CA",
+      "counties": {
+        "AK": "all",
+        "CO": "all",
+        "HI": "all",
+        "ID": "all",
+        "MT": "all",
+        "NV": "all",
+        "OR": "all",
+        "UT": "all",
+        "WA": "all",
+        "WY": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "washington",
+      "name": "Consulate of Colombia in Washington",
+      "city": "Washington",
+      "state": "DC",
+      "counties": {
+        "DC": "all",
+        "DE": "all",
+        "MD": "all",
+        "VA": "all",
+        "WV": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "san-juan",
+      "name": "Consulate of Colombia in San Juan",
+      "city": "San Juan",
+      "state": "PR",
+      "counties": {
+        "PR": "all",
+        "VI": "all"
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "miami",
+      "name": "Consulate of Colombia in Miami",
+      "city": "Miami",
+      "state": "FL",
+      "counties": {
+        "FL": [
+          "Broward",
+          "Charlotte",
+          "Collier",
+          "DeSoto",
+          "Glades",
+          "Hardee",
+          "Hendry",
+          "Highlands",
+          "Lee",
+          "Manatee",
+          "Martin",
+          "Miami-Dade",
+          "Monroe",
+          "Okeechobee",
+          "Palm Beach",
+          "St. Lucie",
+          "Sarasota"
+        ]
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "orlando",
+      "name": "Consulate of Colombia in Orlando",
+      "city": "Orlando",
+      "state": "FL",
+      "counties": {
+        "FL": [
+          "Alachua",
+          "Bay",
+          "Bradford",
+          "Baker",
+          "Brevard",
+          "Calhoun",
+          "Citrus",
+          "Clay",
+          "Columbia",
+          "Dixie",
+          "Duval",
+          "Escambia",
+          "Flagler",
+          "Franklin",
+          "Gadsden",
+          "Gilchrist",
+          "Gulf",
+          "Hamilton",
+          "Hernando",
+          "Hillsborough",
+          "Holmes",
+          "Indian River",
+          "Jackson",
+          "Jefferson",
+          "Lafayette",
+          "Lake",
+          "Leon",
+          "Levy",
+          "Liberty",
+          "Madison",
+          "Marion",
+          "Nassau",
+          "Okaloosa",
+          "Orange",
+          "Osceola",
+          "Pasco",
+          "Pinellas",
+          "Polk",
+          "Putnam",
+          "Santa Rosa",
+          "Seminole",
+          "St. Johns",
+          "Sumter",
+          "Suwannee",
+          "Taylor",
+          "Union",
+          "Volusia",
+          "Wakulla",
+          "Walton",
+          "Washington"
+        ]
+      },
+      "source_url": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+      "source_date": "2026-11-07"
+    }
+  ],
+  "notes": [
+    "Source dates are verification dates, not publication dates.",
+    "Official spellings Paseo and Okechobee normalized to Pasco and Okeechobee, Florida.",
+    "American Samoa, Guam and Northern Mariana Islands are outside the map partition."
+  ]
+}

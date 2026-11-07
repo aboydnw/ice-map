@@ -1,0 +1,238 @@
+{
+  "country": "Ecuador",
+  "source": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+  "source_date_kind": "checked",
+  "coverage_note": "Partial coverage: New York outside Richmond, Kings, Queens, Nassau and Suffolk counties, Puerto Rico and the U.S. Virgin Islands are not mapped. Their assignments were not verified in official sources. Blank areas do not mean no consular service.",
+  "unverified": {
+    "NY": [
+      "Albany",
+      "Allegany",
+      "Bronx",
+      "Broome",
+      "Cattaraugus",
+      "Cayuga",
+      "Chautauqua",
+      "Chemung",
+      "Chenango",
+      "Clinton",
+      "Columbia",
+      "Cortland",
+      "Delaware",
+      "Dutchess",
+      "Erie",
+      "Essex",
+      "Franklin",
+      "Fulton",
+      "Genesee",
+      "Greene",
+      "Hamilton",
+      "Herkimer",
+      "Jefferson",
+      "Lewis",
+      "Livingston",
+      "Madison",
+      "Monroe",
+      "Montgomery",
+      "New York",
+      "Niagara",
+      "Oneida",
+      "Onondaga",
+      "Ontario",
+      "Orange",
+      "Orleans",
+      "Oswego",
+      "Otsego",
+      "Putnam",
+      "Rensselaer",
+      "Rockland",
+      "Saratoga",
+      "Schenectady",
+      "Schoharie",
+      "Schuyler",
+      "Seneca",
+      "St. Lawrence",
+      "Steuben",
+      "Sullivan",
+      "Tioga",
+      "Tompkins",
+      "Ulster",
+      "Warren",
+      "Washington",
+      "Wayne",
+      "Westchester",
+      "Wyoming",
+      "Yates"
+    ],
+    "PR": "all",
+    "VI": "all"
+  },
+  "consulates": [
+    {
+      "id": "atlanta",
+      "name": "Consulate of Ecuador in Atlanta",
+      "city": "Atlanta",
+      "state": "GA",
+      "counties": {
+        "AL": "all",
+        "NC": "all",
+        "SC": "all",
+        "GA": "all",
+        "TN": "all",
+        "MS": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "chicago",
+      "name": "Consulate of Ecuador in Chicago",
+      "city": "Chicago",
+      "state": "IL",
+      "counties": {
+        "IL": "all",
+        "IN": "all",
+        "KY": "all",
+        "MI": "all",
+        "MO": "all",
+        "OH": "all",
+        "WI": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "houston",
+      "name": "Consulate of Ecuador in Houston",
+      "city": "Houston",
+      "state": "TX",
+      "counties": {
+        "TX": "all",
+        "OK": "all",
+        "KS": "all",
+        "AR": "all",
+        "LA": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "los-angeles",
+      "name": "Consulate of Ecuador in Los Angeles",
+      "city": "Los Angeles",
+      "state": "CA",
+      "counties": {
+        "CA": "all",
+        "NV": "all",
+        "OR": "all",
+        "WA": "all",
+        "AK": "all",
+        "HI": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "miami",
+      "name": "Consulate of Ecuador in Miami",
+      "city": "Miami",
+      "state": "FL",
+      "counties": {
+        "FL": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "new-jersey",
+      "name": "Consulate of Ecuador in New Jersey",
+      "city": "New Jersey",
+      "state": "NJ",
+      "counties": {
+        "NJ": "all",
+        "PA": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "minneapolis",
+      "name": "Consulate of Ecuador in Minneapolis",
+      "city": "Minneapolis",
+      "state": "MN",
+      "counties": {
+        "MN": "all",
+        "IA": "all",
+        "ND": "all",
+        "SD": "all",
+        "NE": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "new-haven",
+      "name": "Consulate of Ecuador in Connecticut-New Haven",
+      "city": "Connecticut-New Haven",
+      "state": "CT",
+      "counties": {
+        "CT": "all",
+        "ME": "all",
+        "RI": "all",
+        "VT": "all",
+        "NH": "all",
+        "MA": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "phoenix",
+      "name": "Consulate of Ecuador in Phoenix",
+      "city": "Phoenix",
+      "state": "AZ",
+      "counties": {
+        "AZ": "all",
+        "NM": "all",
+        "CO": "all",
+        "UT": "all",
+        "ID": "all",
+        "MT": "all",
+        "WY": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "washington",
+      "name": "Consulate of Ecuador in Washington",
+      "city": "Washington",
+      "state": "DC",
+      "counties": {
+        "DE": "all",
+        "DC": "all",
+        "MD": "all",
+        "VA": "all",
+        "WV": "all"
+      },
+      "source_url": "https://www.cancilleria.gob.ec/washington/2022/01/21/contacto/",
+      "source_date": "2026-11-07"
+    },
+    {
+      "id": "queens",
+      "name": "Consular Agency of Ecuador in Queens",
+      "city": "Queens",
+      "state": "NY",
+      "counties": {
+        "NY": [
+          "Richmond",
+          "Kings",
+          "Queens",
+          "Nassau",
+          "Suffolk"
+        ]
+      },
+      "source_url": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+      "source_date": "2026-11-07"
+    }
+  ]
+}

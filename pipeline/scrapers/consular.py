@@ -12,7 +12,7 @@ Two rules keep the output honest:
   the build fails. A district is never drawn short because of a typo.
 - The districts must partition the country: every county in the 50 states,
   DC, Puerto Rico, and the U.S. Virgin Islands belongs to exactly one
-  consulate. Gaps and overlaps fail the build, which is what catches a stale
+  consulate or an explicitly documented unverified area (not drawn). Undeclared gaps and overlaps fail the build, which is what catches a stale
   source that still lists a county its neighbour has since taken over.
 
 Run manually when a country's lists change (they change every few years, not
@@ -49,6 +49,8 @@ CENSUS_ZIP = CACHE_DIR / "cb_2021_us_county_5m.zip"
 
 COUNTRIES = [
     {"key": "mexico", "name": "Mexico", "reference": "mexico.json"},
+    {"key": "colombia", "name": "Colombia", "reference": "colombia.json"},
+    {"key": "ecuador", "name": "Ecuador", "reference": "ecuador.json"},
 ]
 
 # Territories without a listed consular jurisdiction are outside the partition.
@@ -247,7 +249,13 @@ def build_country(country: dict, counties: gpd.GeoDataFrame, built: str, check_o
     """Validate one country's lists and, unless checking only, write its GeoJSON."""
     reference = load_reference(country["reference"])
     assignments = resolve(reference, counties, load_aliases())
-    check_partition(assignments, counties)
+    # Explicit unverified areas close the validation partition, but never become
+    # polygons. Overlaps with verified districts and undeclared gaps still fail.
+    unverified = reference.get("unverified", {})
+    if unverified and not reference.get("coverage_note"):
+        raise ValueError("unverified coverage requires a public coverage_note")
+    excluded = resolve({"consulates": [{"id": "__unverified__", "counties": unverified}]}, counties, load_aliases())
+    check_partition({**assignments, **excluded}, counties)
     dates = sorted(c["source_date"] for c in reference["consulates"])
     entry = {
         "key": country["key"],
@@ -258,6 +266,9 @@ def build_country(country: dict, counties: gpd.GeoDataFrame, built: str, check_o
         "source_dates": [dates[0], dates[-1]],
         "built": built,
     }
+    entry["coverage_note"] = reference.get("coverage_note", "")
+    entry["unverified_counties"] = len(excluded["__unverified__"])
+    entry["source_date_kind"] = reference.get("source_date_kind", "published")
     if check_only:
         return entry
     features = build_features(reference, assignments, counties)

@@ -41,6 +41,20 @@ const assert = require("node:assert/strict");
   });
   await page.mouse.move(hover.x, hover.y + hover.top);
   await page.screenshot({ path: "/tmp/ice-pr5-hover.png", fullPage: true });
+  for (const [country, count, district] of [["colombia", 12, "miami"], ["ecuador", 11, "queens"]]) {
+    await page.getByLabel("Consular districts", { exact: true }).selectOption(country);
+    await page.waitForFunction((n) => window.__iceDistricts === n, count);
+    await page.getByRole("note").filter({hasText: "Partial coverage:"}).waitFor();
+    assert.equal(await page.locator("#consular-district option").count(), count + 1);
+    await page.getByText("Find a consulate", { exact: true }).click();
+    await page.getByLabel("Find a consulate").selectOption(district);
+    await page.getByText("Source checked: 2026-11-07", {exact: true}).waitFor();
+    await page.screenshot({path: `/tmp/ice-${country}-desktop.png`,fullPage:true});
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    await page.screenshot({path: `/tmp/ice-${country}-mobile.png`,fullPage:true});
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
   await page.getByLabel("Consular districts", { exact: true }).selectOption("");
   await page.waitForFunction(() => window.__iceDistricts === 0);
   assert.equal(await page.locator("#consular-district").count(), 0);
@@ -101,7 +115,9 @@ const assert = require("node:assert/strict");
   console.log(
     JSON.stringify({
       passed: [
-        "WebGL rendered 53 districts",
+        "Colombia: 12 districts, coverage notice, source checked date, desktop/mobile",
+        "Ecuador: 11 districts, coverage notice, source checked date, desktop/mobile",
+        "WebGL rendered 53 Mexico districts",
         "all 53 consulates accessible",
         "source link",
         "Off removes overlay",
