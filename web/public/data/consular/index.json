@@ -9,6 +9,39 @@
       "2018-09-12",
       "2026-08-22"
     ],
-    "built": "2026-08-22"
+    "built": "2026-11-07",
+    "coverage_note": "",
+    "unverified_counties": 0,
+    "source_date_kind": "published"
+  },
+  {
+    "key": "colombia",
+    "name": "Colombia",
+    "file": "colombia.geojson",
+    "districts": 12,
+    "source": "https://estadosunidos.embajada.gov.co/embajada/concurrencia",
+    "source_dates": [
+      "2026-11-07",
+      "2026-11-07"
+    ],
+    "built": "2026-11-07",
+    "coverage_note": "Partial coverage: California is not mapped. Official sources describe northern/southern California without a verified county boundary. Blank areas do not mean no consular service. Los Angeles and San Francisco show only their verified out-of-state coverage.",
+    "unverified_counties": 58,
+    "source_date_kind": "checked"
+  },
+  {
+    "key": "ecuador",
+    "name": "Ecuador",
+    "file": "ecuador.geojson",
+    "districts": 11,
+    "source": "https://www.cancilleria.gob.ec/map_maps/estados-unidos/",
+    "source_dates": [
+      "2026-11-07",
+      "2026-11-07"
+    ],
+    "built": "2026-11-07",
+    "coverage_note": "Partial coverage: New York outside Richmond, Kings, Queens, Nassau and Suffolk counties, Puerto Rico and the U.S. Virgin Islands are not mapped. Their assignments were not verified in official sources. Blank areas do not mean no consular service.",
+    "unverified_counties": 138,
+    "source_date_kind": "checked"
   }
 ]

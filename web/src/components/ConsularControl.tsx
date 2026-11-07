@@ -90,6 +90,11 @@ export function ConsularControl({
             {districts.meta.districts} districts · colors separate
             jurisdictions, not risk.
           </Text>
+          {districts.meta.coverage_note && (
+            <Text fontSize="xs" mt="2" role="note">
+              {districts.meta.coverage_note}
+            </Text>
+          )}
           <details>
             <summary
               style={{
@@ -143,14 +148,19 @@ export function ConsularControl({
                   Jurisdiction source (opens new tab)
                 </chakra.a>
                 <Text color="inkSecondary">
-                  Source date: {district.source_date}
+                  {districts.meta.source_date_kind === "checked"
+                    ? "Source checked"
+                    : "Source date"}
+                  : {district.source_date}
                 </Text>
               </Box>
             )}
           </details>
           <Text fontSize="xs" color="inkSecondary" mt="2">
-            Sources {sourceYears(districts)}. County-level approximation;
-            confirm jurisdiction with the consulate.
+            Sources{" "}
+            {districts.meta.source_date_kind === "checked" ? "checked " : ""}
+            {sourceYears(districts)}. County-level approximation; confirm
+            jurisdiction with the consulate.
           </Text>
         </Box>
       )}

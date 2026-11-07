@@ -119,3 +119,41 @@ def test_color_exhaustion_raises_actionable_error():
 
 def test_color_empty_districts():
     assert consular.color_districts({}) == {}
+
+
+def test_explicit_unverified_partition_still_rejects_overlap_and_gaps():
+    consular.check_partition({"verified": ["48001"], "__unverified__": ["48003", "48005"]}, TEXAS)
+    with pytest.raises(ValueError, match="assigned twice"):
+        consular.check_partition({"verified": ["48001"], "__unverified__": ["48001", "48003", "48005"]}, TEXAS)
+    with pytest.raises(ValueError, match="unassigned"):
+        consular.check_partition({"verified": ["48001"], "__unverified__": ["48003"]}, TEXAS)
+
+
+@pytest.mark.parametrize("country,count", [("colombia",12),("ecuador",11)])
+def test_shipped_priority_artifacts(country, count):
+    import json
+    root = pathlib.Path(__file__).resolve().parents[2]
+    ref = json.loads((root / "pipeline/reference/consular" / f"{country}.json").read_text())
+    data = json.loads((root / "web/public/data/consular" / f"{country}.geojson").read_text())
+    assert len(data["features"]) == count
+    assert data["meta"]["coverage_note"] == ref["coverage_note"]
+    assert data["meta"]["unverified_counties"] > 0
+    assert data["meta"]["source_date_kind"] == "checked"
+    assert len({f["id"] for f in data["features"]}) == count
+    for feature in data["features"]:
+        assert feature["id"] != "__unverified__"
+        assert feature["properties"]["county_count"] > 0
+        geometry = shapely.from_geojson(json.dumps(feature["geometry"]))
+        assert geometry.is_valid and not geometry.is_empty
+    if country == "colombia":
+        assert all("CA" not in f["properties"]["states"] for f in data["features"])
+    else:
+        assert all(not {"PR", "VI"}.intersection(f["properties"]["states"]) for f in data["features"])
+
+
+def test_build_country_requires_public_gap_notice(monkeypatch):
+    ref = {"consulates": [{"id": "a", "counties": {"TX": ["Anderson"]}}], "unverified": {"TX": ["Andrews", "Angelina"]}}
+    monkeypatch.setattr(consular, "load_reference", lambda _: ref)
+    monkeypatch.setattr(consular, "load_aliases", lambda: {})
+    with pytest.raises(ValueError, match="coverage_note"):
+        consular.build_country({"reference": "test.json"}, TEXAS, "2026-11-07", True)
