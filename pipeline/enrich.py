@@ -31,6 +31,7 @@ INSPECTION_BODIES = {
 }
 INSPECTION_STANDARDS = {"NDS 2000", "NDS 2019", "NDS 2025", "PBNDS 2008", "PBNDS 2011", "FPBDS", "FRS"}
 EXCEL_EPOCH = pd.Timestamp("1899-12-30")
+ACRONYMS = {"ICE", "US", "USP", "FCI", "FDC", "MDC", "CCA", "SPC", "IPC", "NWIPC", "CLIPC", "MCF", "CCNO"}
 
 # DDP's individual-level detention data (source of peak / days-in-use) ends here.
 INDIVIDUAL_DATA_THROUGH = "2026-03-10"
@@ -42,6 +43,24 @@ STOPWORDS = {
     "ANNEX", "MAIN", "UNIT", "SHERIFF", "SHERIFFS", "OFFICE", "DEPARTMENT", "DEPT", "CITY",
     "TOWN", "PARISH", "STATE", "PRISON", "COMPLEX", "ADULT", "SECURE", "CAMP",
 }
+
+
+# str.title() capitalizes after any non-letter, which turns "SHERIFF'S" into
+# "Sheriff'S" and "1ST" into "1St". Initials like "B.C." need that behaviour, so
+# the two wrong cases are repaired rather than the rule replaced.
+POSSESSIVE = re.compile(r"(?<=[A-Za-z])'([A-Za-z])\b")
+ORDINAL = re.compile(r"\b(\d+)(St|Nd|Rd|Th)\b")
+
+
+def display_name(name: str) -> str:
+    """Title-case all-caps names, preserving known acronyms; keep mixed case as-is."""
+    if name != name.upper():
+        return name
+    titled = " ".join(
+        word if word.strip("().,") in ACRONYMS else word.title() for word in name.split(" ")
+    )
+    titled = POSSESSIVE.sub(lambda match: f"'{match.group(1).lower()}", titled)
+    return ORDINAL.sub(lambda match: f"{match.group(1)}{match.group(2).lower()}", titled)
 
 
 def normalize(value) -> str:

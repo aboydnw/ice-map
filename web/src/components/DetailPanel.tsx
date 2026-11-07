@@ -7,14 +7,27 @@ import {
   formatDate,
   formatMonthYear,
 } from "../config";
+import { FlowBoard } from "./FlowBoard";
 import { Sparkline } from "./Sparkline";
 import { ThreatBar } from "./ThreatBar";
-import type { FacilityFeature } from "../types";
+import { CountUp, SlidePanel } from "../motion";
+import type { BoardCut, BoardRow, FlowView } from "../flows";
+import type { FacilityFeature, FacilityFlows, FlowDirection } from "../types";
 
 interface Props {
   facility: FacilityFeature;
   history: [string, number][] | undefined;
   onClose: () => void;
+  flows: FacilityFlows | null;
+  flowRows: BoardRow[];
+  flowDirection: FlowDirection;
+  onFlowDirectionChange: (direction: FlowDirection) => void;
+  flowCut: BoardCut;
+  flowView: FlowView;
+  onFlowViewChange: (view: FlowView) => void;
+  highlightedFlowKey: string | null;
+  onHighlightFlow: (key: string | null) => void;
+  onSelectFlow: (detloc: string) => void;
 }
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -98,7 +111,21 @@ function ExternalLink({
   );
 }
 
-export function DetailPanel({ facility, history, onClose }: Props) {
+export function DetailPanel({
+  facility,
+  history,
+  onClose,
+  flows,
+  flowRows,
+  flowDirection,
+  onFlowDirectionChange,
+  flowCut,
+  flowView,
+  onFlowViewChange,
+  highlightedFlowKey,
+  onHighlightFlow,
+  onSelectFlow,
+}: Props) {
   const p = facility.properties;
   const bucket = BUCKETS.find((b) => b.key === p.bucket);
   const inspection = p.inspection;
@@ -110,7 +137,7 @@ export function DetailPanel({ facility, history, onClose }: Props) {
   const showStay = p.alos || p.last_year;
 
   return (
-    <Box
+    <SlidePanel
       position="absolute"
       top={{ base: "unset", md: "12px" }}
       bottom={{ base: "0", md: "12px" }}
@@ -230,15 +257,13 @@ export function DetailPanel({ facility, history, onClose }: Props) {
       </Box>
 
       <Box display="flex" alignItems="baseline" gap="2" mt="4">
-        <Text
+        <CountUp
+          value={p.adp}
           fontFamily="heading"
           fontSize="4xl"
           fontWeight="600"
           lineHeight="1"
-          fontVariantNumeric="tabular-nums"
-        >
-          {p.adp.toLocaleString()}
-        </Text>
+        />
         <Text fontSize="xs" color="inkSecondary" maxW="140px" lineHeight="1.3">
           avg. daily population, FY to date
         </Text>
@@ -290,6 +315,22 @@ export function DetailPanel({ facility, history, onClose }: Props) {
             )}
           </Box>
         </Box>
+      )}
+
+      {flows && flowRows.length > 0 && (
+        <FlowBoard
+          facilityName={p.name}
+          flows={flows}
+          direction={flowDirection}
+          onDirectionChange={onFlowDirectionChange}
+          rows={flowRows}
+          cut={flowCut}
+          view={flowView}
+          onViewChange={onFlowViewChange}
+          highlightedKey={highlightedFlowKey}
+          onHighlight={onHighlightFlow}
+          onSelect={onSelectFlow}
+        />
       )}
 
       {(inspection || p.deaths) && (
@@ -399,6 +440,6 @@ export function DetailPanel({ facility, history, onClose }: Props) {
           </Text>
         </Box>
       </Box>
-    </Box>
+    </SlidePanel>
   );
 }

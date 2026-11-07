@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import * as maplibregl from "maplibre-gl";
 import type {
@@ -8,26 +8,33 @@ import type {
   StyleSpecification,
 } from "maplibre-gl";
 import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
-import {
-  BUCKET_COLOR,
-  CONSULAR_FILL_OPACITY,
-  CONSULAR_OUTLINE,
-  RADIUS_MAX,
-  RADIUS_MIN,
-  SQRT_ADP_MAX,
-} from "../config";
+import { CONSULAR_FILL_OPACITY, CONSULAR_OUTLINE } from "../config";
 import {
   EMPTY_DISTRICTS,
   districtColor,
   districtSummary,
   fillColorExpression,
 } from "../consular";
+import type { ConsularCollection, ConsularDistrictProperties } from "../types";
+import type { MapboxOverlay } from "@deck.gl/mapbox";
+import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
+import { loadFlowOverlay } from "../flowOverlay";
+import {
+  LOOP_MS,
+  buildFlowScene,
+  countrySites,
+  processingSites,
+} from "../flowScene";
+import type { Marker, ProcessingSite } from "../flowScene";
+import { countryKey, isCountry } from "../flows";
+import type { BoardRow } from "../flows";
 import type {
   Bucket,
-  ConsularCollection,
-  ConsularDistrictProperties,
   FacilityCollection,
+  FlowDirection,
+  FlowEndpoints,
 } from "../types";
+import type { FlowData } from "../useFlows";
 
 // Vite (rolldown) does not emit maplibre's default sibling worker module in
 // production builds, so point maplibre at a bundled worker chunk explicitly.
@@ -38,6 +45,14 @@ const US_BOUNDS: [[number, number], [number, number]] = [
   [-126, 23.5],
   [-65.5, 50],
 ];
+/** Overlay layers whose clicks select something, so an empty-map click must not undo them. */
+const PICKABLE_FLOW_LAYERS = ["flow-processing", "flow-endpoint-dots"];
+/** Spacing between fanned lanes on screen. */
+const LANE_PX = 7;
+/** Web Mercator, 512px tiles: degrees of longitude per pixel at a zoom. */
+function degreesPerPixel(zoom: number): number {
+  return 360 / (512 * 2 ** zoom);
+}
 
 interface HoverInfo {
   x: number;
@@ -45,7 +60,7 @@ interface HoverInfo {
   name: string;
   detail: string;
   color: string;
-  kind: "facility" | "district";
+  kind: "facility" | "district" | "flow";
 }
 
 interface Props {
@@ -53,17 +68,64 @@ interface Props {
   selected: string | null;
   onSelect: (detloc: string | null) => void;
   districts: ConsularCollection | null;
+  flows: FlowData | null;
+  flowRows: BoardRow[];
+  direction: FlowDirection;
+  highlightedKey: string | null;
+  endpoints: FlowEndpoints | null;
 }
 
-export function FacilityMap({ data, selected, onSelect, districts }: Props) {
+function prefersReducedMotion(): boolean {
+  return (
+    typeof matchMedia === "function" &&
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+export function FacilityMap({
+  data,
+  selected,
+  onSelect,
+  flows,
+  flowRows,
+  direction,
+  highlightedKey,
+  endpoints,
+  districts,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const overlayRef = useRef<MapboxOverlay | null>(null);
+  const animatedKeyRef = useRef<string | null>(null);
+  const fittedRef = useRef<string | null>(null);
+  const clockStartRef = useRef(0);
+  const [zoom, setZoom] = useState(3);
+  // The endpoint table often arrives before the map does; the overlay effect
+  // must run again once there is a map to attach to.
+  const [mapReady, setMapReady] = useState(false);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const districtsRef = useRef(districts);
   districtsRef.current = districts;
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [mapFailed, setMapFailed] = useState(false);
+
+  const mappedCodes = useMemo(
+    () => new Set(data.features.map((feature) => feature.properties.detloc)),
+    [data],
+  );
+  const facilityLonLat = useMemo(() => {
+    const feature = data.features.find(
+      (candidate) => candidate.properties.detloc === selected,
+    );
+    if (feature) return feature.geometry.coordinates;
+    if (selected && isCountry(selected)) {
+      const country = flows?.countries[countryKey(selected)];
+      return country ? ([country.lon, country.lat] as [number, number]) : null;
+    }
+    const site = selected ? endpoints?.facilities[selected] : undefined;
+    return site ? ([site.lon, site.lat] as [number, number]) : null;
+  }, [data, selected, endpoints, flows]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -99,8 +161,11 @@ export function FacilityMap({ data, selected, onSelect, districts }: Props) {
           new maplibregl.NavigationControl({ showCompass: false }),
           "top-right",
         );
+        setZoom(m.getZoom());
+        m.on("zoomend", () => setZoom(m.getZoom()));
 
         m.on("load", () => {
+          setMapReady(true);
           // Test hook: lets Playwright drive the map in dev and preview builds.
           (window as unknown as { __iceMap?: maplibregl.Map }).__iceMap = m;
           m.addSource("consular", {
@@ -217,16 +282,21 @@ export function FacilityMap({ data, selected, onSelect, districts }: Props) {
             const circles = m.queryRenderedFeatures(event.point, {
               layers: ["facility-circles"],
             });
-            if (circles.length > 0) return;
+            if (
+              circles.length > 0 ||
+              overlayRef.current?.pickObject({
+                x: event.point.x,
+                y: event.point.y,
+                layerIds: PICKABLE_FLOW_LAYERS,
+              })
+            )
+              return;
             const props = feature.properties as ConsularDistrictProperties;
             setHover({
               x: event.point.x,
               y: event.point.y,
               name: props.name,
-              detail: districtSummary({
-                ...props,
-                states: JSON.parse(String(props.states)) as string[],
-              }),
+              detail: districtSummary(props),
               color: districtColor(props.color),
               kind: "district",
             });
@@ -247,7 +317,15 @@ export function FacilityMap({ data, selected, onSelect, districts }: Props) {
             const hits = m.queryRenderedFeatures(event.point, {
               layers: ["facility-circles"],
             });
-            if (hits.length === 0) onSelectRef.current(null);
+            // deck.gl handles its own clicks, but maplibre still sees the same
+            // click as empty map and would deselect the site or country the
+            // overlay just selected.
+            const picked = overlayRef.current?.pickObject({
+              x: event.point.x,
+              y: event.point.y,
+              layerIds: PICKABLE_FLOW_LAYERS,
+            });
+            if (hits.length === 0 && !picked) onSelectRef.current(null);
           });
         });
       })
@@ -258,6 +336,7 @@ export function FacilityMap({ data, selected, onSelect, districts }: Props) {
     return () => {
       cancelled = true;
       mapRef.current = null;
+      overlayRef.current = null;
       try {
         map?.remove();
       } catch {
@@ -269,6 +348,7 @@ export function FacilityMap({ data, selected, onSelect, districts }: Props) {
   }, []);
 
   useEffect(() => {
+    if (!selected) fittedRef.current = null;
     const map = mapRef.current;
     if (!map || !map.getLayer("facility-selected")) return;
     map.setFilter("facility-selected", [
@@ -288,7 +368,178 @@ export function FacilityMap({ data, selected, onSelect, districts }: Props) {
     (window as unknown as { __iceDistricts?: number }).__iceDistricts =
       districts?.features.length ?? 0;
     setHover((current) => (current?.kind === "district" ? null : current));
-  }, [districts]);
+  }, [districts, mapReady]);
+  const processing = useMemo(
+    () =>
+      endpoints
+        ? [
+            ...processingSites(endpoints, mappedCodes),
+            ...countrySites(endpoints),
+          ]
+        : [],
+    [endpoints, mappedCodes],
+  );
+
+  const handleSiteHover = useCallback(
+    (site: ProcessingSite | null, x: number, y: number) => {
+      setHover(
+        site
+          ? {
+              x,
+              y,
+              kind: "flow",
+              name: site.name,
+              detail:
+                site.kind === "country"
+                  ? `${site.stints.toLocaleString()} stints ended in a removal here · click to see where from`
+                  : `${site.stints.toLocaleString()} stints passed through · no population reported`,
+              color: site.kind === "country" ? "#8a857d" : "#5a5650",
+            }
+          : null,
+      );
+    },
+    [],
+  );
+
+  const handleMarkerHover = useCallback(
+    (marker: Marker | null, x: number, y: number) => {
+      setHover(
+        marker
+          ? {
+              x,
+              y,
+              kind: "flow",
+              name: marker.label,
+              detail: marker.detail,
+              color: "#5a5650",
+            }
+          : null,
+      );
+    },
+    [],
+  );
+
+  const scene = useMemo(() => {
+    if (!flows || !facilityLonLat || flowRows.length === 0) return null;
+    return buildFlowScene({
+      flows: flows.flows,
+      direction,
+      rows: flowRows,
+      facility: facilityLonLat,
+      mappedCodes,
+      animate: !prefersReducedMotion(),
+      laneWidthDeg: LANE_PX * degreesPerPixel(zoom),
+    });
+  }, [flows, facilityLonLat, flowRows, direction, mappedCodes, zoom]);
+
+  // A country's centroid is usually off-screen when it is clicked, so bring
+  // it and its origins into view once per selection.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !scene || !selected || !isCountry(selected)) return;
+    if (fittedRef.current === selected) return;
+    const points = scene.arcs.flatMap((arc) => [arc.source, arc.target]);
+    if (points.length === 0) return;
+    fittedRef.current = selected;
+    const lons = points.map((point) => point[0]);
+    const lats = points.map((point) => point[1]);
+    map.fitBounds(
+      [
+        [Math.min(...lons), Math.min(...lats)],
+        [Math.max(...lons), Math.max(...lats)],
+      ],
+      { padding: 80, maxZoom: 6, duration: 900 },
+    );
+  }, [scene, selected]);
+
+  useEffect(() => {
+    const wanted = Boolean(scene) || processing.length > 0;
+    if (!wanted) {
+      overlayRef.current?.setProps({ layers: [] });
+      return;
+    }
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    let cancelled = false;
+    let frame = 0;
+    loadFlowOverlay()
+      .then(({ MapboxOverlay, flowLayers }) => {
+        if (cancelled) return;
+        if (!overlayRef.current) {
+          // Overlaid, not interleaved: deck.gl's interleaved path routes every
+          // layer through resolveLayerGroups, which returns silently unless
+          // maplibre's private style._loaded is set — a failure that draws
+          // nothing and reports nothing. Its own canvas needs no such privates,
+          // and flows belong above the circles anyway.
+          overlayRef.current = new MapboxOverlay({
+            interleaved: false,
+            layers: [],
+          });
+          // top-left so deck's absolutely-positioned container lines up with
+          // the map origin rather than a right-anchored control corner.
+          map.addControl(overlayRef.current, "top-left");
+        }
+        const overlay = overlayRef.current;
+        // Test hook, alongside __iceMap: lets a visual check confirm what the
+        // overlay was actually handed without reading pixels.
+        (
+          window as unknown as { __iceFlows?: Record<string, number> }
+        ).__iceFlows = {
+          channels: scene?.arcs.length ?? 0,
+          dots: scene?.dots.length ?? 0,
+          markers: scene?.markers.length ?? 0,
+          processing: processing.length,
+        };
+        const paint = (currentTime: number) =>
+          overlay.setProps({
+            layers: flowLayers({
+              scene,
+              processing,
+              highlighted: highlightedKey,
+              currentTime,
+              selectedSite: selected,
+              onHoverSite: handleSiteHover,
+              onHoverMarker: handleMarkerHover,
+              onSelectSite: (code: string) => onSelectRef.current(code),
+            }),
+          });
+        if (!scene || scene.dots.length === 0) {
+          paint(0);
+          return;
+        }
+        // Highlighting and zooming both rebuild the scene; keying the clock on
+        // the selection means neither rewinds the animation.
+        const animatedKey = `${selected ?? ""}|${direction}`;
+        if (animatedKeyRef.current !== animatedKey) {
+          animatedKeyRef.current = animatedKey;
+          clockStartRef.current = performance.now();
+        }
+        // Runs only while a facility is selected, and is torn down on
+        // deselect, on unmount, and whenever the scene changes.
+        const tick = () => {
+          paint((performance.now() - clockStartRef.current) % LOOP_MS);
+          frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+      })
+      .catch((error) => {
+        // Data absence is silent by design; a broken renderer is not.
+        console.error("Facility flows failed to render", error);
+      });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [
+    scene,
+    highlightedKey,
+    processing,
+    handleSiteHover,
+    handleMarkerHover,
+    selected,
+    direction,
+    mapReady,
+  ]);
 
   if (mapFailed) {
     return (
@@ -314,8 +565,8 @@ export function FacilityMap({ data, selected, onSelect, districts }: Props) {
       {hover && (
         <Box
           position="absolute"
-          left={`${hover.x + 14}px`}
-          top={`${hover.y + 14}px`}
+          left={`clamp(8px, ${hover.x + 14}px, calc(100% - 276px))`}
+          top={`clamp(8px, ${hover.y + 14}px, calc(100% - 130px))`}
           bg="panel"
           borderWidth="1px"
           borderColor="hairline"

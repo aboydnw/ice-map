@@ -98,3 +98,24 @@ def test_color_districts_separates_neighbours():
     colors = consular.color_districts(geometries)
     assert colors["a"] != colors["b"] and colors["a"] != colors["c"]
     assert set(colors.values()) <= set(range(consular.MAX_COLORS))
+
+
+@pytest.mark.parametrize("geoids", [["99999"], ["51067"], ["48001", "48001"], []])
+def test_alias_rejects_invalid_or_duplicate_geoids(geoids):
+    _, problems = consular.resolve_state("TX", ["Alias"], TEXAS, {"TX|alias": geoids})
+    assert problems
+
+
+def test_alias_rejects_repeated_source_spelling():
+    geoids, problems = consular.resolve_state("TX", ["Alias", "Alias"], TEXAS, {"TX|alias": ["48001"]})
+    assert geoids == ["48001"]
+    assert problems and "listed 2x" in problems[0]
+
+
+def test_color_exhaustion_raises_actionable_error():
+    with pytest.raises(ValueError, match="needed more than"):
+        consular.color_districts({str(i): square(0, 0) for i in range(consular.MAX_COLORS + 2)})
+
+
+def test_color_empty_districts():
+    assert consular.color_districts({}) == {}

@@ -27,5 +27,47 @@
     "operator": 101,
     "photo": 141
   },
+  "flows": {
+    "as_of": "2026-08-05",
+    "window_start": "2022-10-01",
+    "facilities_written": 284,
+    "country_boards_written": 212,
+    "stints_at_mapped_facilities": 2160218,
+    "book_ins_in_window": 2137366,
+    "book_outs_in_window": 2096926,
+    "out_families": {
+      "transfer": 1139195,
+      "removed": 666757,
+      "released": 261718,
+      "custody": 18716,
+      "other": 10540
+    },
+    "unknown_shares": {
+      "transfer_unknown": 0.0051,
+      "transfer_no_location": 0.0325,
+      "removed_unknown": 0.0046,
+      "not_reported": 0.0
+    },
+    "endpoints": {
+      "referenced": 692,
+      "with_coordinates": 512,
+      "coordinate_share": 0.7399,
+      "processing_boards_written": 82,
+      "processing_sites": 81,
+      "stints_via_processing_sites": 1594561,
+      "off_map_endpoints": 307
+    },
+    "arrest_link_rate": {
+      "national": 0.3212,
+      "median_facility": 0.748,
+      "facilities_measured": 205
+    },
+    "unmapped_departure_countries": {
+      "UNKNOWN": 10,
+      "COMOROS": 1,
+      "LESOTHO": 1,
+      "USSR": 1
+    }
+  },
   "unmatched_facilities": []
 }

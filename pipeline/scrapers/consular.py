@@ -101,7 +101,7 @@ def load_counties() -> gpd.GeoDataFrame:
 
 
 def load_reference(filename: str) -> dict:
-    return json.loads((REFERENCE_DIR / filename).read_text())
+    return json.loads((REFERENCE_DIR / filename).read_text(encoding="utf-8"))
 
 
 def load_aliases() -> dict[str, list[str]]:
@@ -129,7 +129,19 @@ def resolve_state(
     # Aliases claim their counties first so that, e.g., "Ciudad de Baltimore"
     # takes Baltimore city and a plain "Baltimore" is left the county.
     for key in [k for k in wanted if f"{state}|{k}" in aliases]:
-        geoids.extend(aliases[f"{state}|{key}"] * wanted.pop(key))
+        count = wanted.pop(key)
+        candidates = aliases[f"{state}|{key}"]
+        if count != 1:
+            problems.append(f"{state}: alias '{spelled[key]}' listed {count}x")
+        if not candidates or len(candidates) != len(set(candidates)):
+            problems.append(f"{state}: alias '{spelled[key]}' has empty or duplicate GEOIDs")
+        for geoid in candidates:
+            if geoid not in set(in_state["GEOID"]):
+                problems.append(f"{state}: alias '{spelled[key]}' has invalid GEOID {geoid}")
+            elif geoid in geoids:
+                problems.append(f"{state}: alias '{spelled[key]}' repeats GEOID {geoid}")
+            else:
+                geoids.append(geoid)
     for key, count in wanted.items():
         found = [g for g in by_key.get(key, []) if g not in geoids]
         if not found:
@@ -183,6 +195,8 @@ def check_partition(assignments: dict[str, list[str]], counties: gpd.GeoDataFram
 def color_districts(geometries: dict[str, shapely.Geometry]) -> dict[str, int]:
     """Greedy graph coloring so touching districts never share a fill."""
     ids = list(geometries)
+    if not ids:
+        return {}
     tree = shapely.STRtree([geometries[i] for i in ids])
     neighbours: dict[str, set[str]] = {i: set() for i in ids}
     for a, b in tree.query([geometries[i] for i in ids], predicate="intersects").T:
@@ -191,9 +205,10 @@ def color_districts(geometries: dict[str, shapely.Geometry]) -> dict[str, int]:
     colors: dict[str, int] = {}
     for district in sorted(ids, key=lambda i: -len(neighbours[i])):
         used = {colors[n] for n in neighbours[district] if n in colors}
-        colors[district] = next(c for c in range(MAX_COLORS + 1) if c not in used)
-    if max(colors.values()) >= MAX_COLORS:
-        raise ValueError(f"needed more than {MAX_COLORS} colors")
+        color = next((c for c in range(MAX_COLORS) if c not in used), None)
+        if color is None:
+            raise ValueError(f"{district} needed more than {MAX_COLORS} colors")
+        colors[district] = color
     return colors
 
 

@@ -8,20 +8,36 @@ All data comes from the [Deportation Data Project](https://deportationdata.org) 
 
 - **Facility identity and coordinates** — [`deportationdata/ice-detention-facilities`](https://github.com/deportationdata/ice-detention-facilities): facility master with ICE facility codes (DETLOC) and manually verified geocoding, plus a dated name→code crosswalk.
 - **Populations** — [`deportationdata/ice-detention-management`](https://github.com/deportationdata/ice-detention-management): ICE's Detention Management spreadsheets parsed into a single time series (snapshots since October 2019).
+- **Flows** — [`deportationdata/ice`](https://github.com/deportationdata/ice): individual-level detention stints and ICE arrests, since October 2022. These records lag the population figures; the window the current build covers is `flows.window_start` → `flows.as_of` in `web/public/data/match_report.json`.
 
 The population figure is ICE's **average daily population, fiscal-year-to-date** — not a point-in-time headcount. Snapshots only include facilities holding at least one person on the pull date and exclude hold rooms and medical facilities. ICE's publication cadence became irregular in 2026, so the map displays the snapshot date prominently.
 
 ### Consular districts
 
-An optional overlay draws the jurisdiction of each foreign consulate in the United States — the area whose detained nationals that consulate is responsible for — with a country picker in the legend. Governments publish these only as lists of counties, so the polygons are built: each consulate's published list is joined to the Census cartographic county boundaries (`cb_2021_us_county_5m`) and dissolved. The lists live in `pipeline/reference/consular/<country>.json` with a source URL and date per consulate; `pipeline/scrapers/consular.py` refuses to build unless every name resolves and every county in the 50 states, DC, Puerto Rico, and the U.S. Virgin Islands belongs to exactly one consulate, so a stale list cannot draw a district short. It is run by hand when a country's lists change (it needs `geopandas`) and writes `web/public/data/consular/`.
+An optional overlay draws the jurisdiction of each foreign consulate in the United States — the area whose detained nationals that consulate is responsible for — with a country picker in the legend. The overlay is off by default. The picker reports loading failures and offers a retry. A keyboard- and touch-accessible consulate selector exposes district coverage and the original source without requiring map hover. Colors distinguish neighboring jurisdictions, not risk. The map key can be expanded independently to keep controls compact on small screens. Governments publish these only as lists of counties, so the polygons are built: each consulate's published list is joined to the Census cartographic county boundaries (`cb_2021_us_county_5m`) and dissolved. The lists live in `pipeline/reference/consular/<country>.json` with a source URL and date per consulate; `pipeline/scrapers/consular.py` refuses to build unless every name resolves and every county in the 50 states, DC, Puerto Rico, and the U.S. Virgin Islands belongs to exactly one consulate, so a stale list cannot draw a district short. It is run by hand when a country's lists change (it needs `geopandas`) and writes `web/public/data/consular/`.
 
 Mexico is the only country shipped so far. Its lists come from the Secretaría de Relaciones Exteriores: each consulate's own `consulmex.sre.gob.mx` circunscripción page where one is archived, otherwise the per-consulate PDFs of the SRE's [consular network directory](https://www.gob.mx/sre/documentos/red-consular-de-mexico-en-los-estados-unidos-de-america) (2018), with the June 2022 redistricting ([Comunicado 198](https://www.gob.mx/sre/prensa/comunicado-no-198)) and the consulates opened since (Oklahoma City, New Brunswick) applied. Counties are atomic: where a consulate's jurisdiction covers part of a county (Nogales in Pima County, Yuma up to Lukeville), the whole county stays with the consulate of its seat.
+### Flows
+
+Selecting a facility draws where the people held there came from and where they went next. Every stay has exactly one way in and one way out, so the board in the panel always sums to that facility's book-ins and book-outs over the last 12 complete months of the record (the board, the CSV, and the animated dots all describe that same period) — the map is a view of the board, not a separate calculation. Counts are **stays, not people** — one continuous period in custody at one facility: someone moved three times appears three times.
+
+Departures come from ICE's own release reason: a transfer to the next facility in the stay, a removal to a named country, or a release into the community. **Releases have no destination in ICE's data**, so they stay on the board and get no route on the map rather than travelling somewhere invented. Arrivals are transfers from another facility, or an ICE arrest matched to the same person within 10 days before or 5 days after book-in. That match only reaches ICE's *interior* arrests by ERO — people apprehended by CBP at the border are absent from the arrest data, so the link rate is low nationally and high at interior facilities — `flows.arrest_link_rate` in the match report carries the current national and median-facility figures (32% and 75% as of the August 2026 data). Each board states its own coverage, and the unlinked remainder is always an explicit row.
+
+A quarter of all movement runs through **hold rooms, field offices, and staging sites** — places ICE processes people in transit. Its population reports exclude them by design, so they have no average daily population and get no circle on the map. They are drawn instead as fixed-size rings behind a legend toggle, off by default, and always as ring markers when a flow reaches one, so a route can never end at nothing. Each one has its own flow board and can be selected like a facility — AROCC in Arizona moves 38,330 stays a year to Florence Staging, Alexandria Staging, and Venezuela. `flows.endpoints` in the match report counts them.
+
+State and country centroids are committed under `pipeline/reference/`; a departure country or apprehension state missing from those tables degrades to an explicit "not recorded" row and is listed in the match report rather than guessed. See `pipeline/flows.py` and the `flows` block in `web/public/data/match_report.json`.
 
 ### Facility detail sources
 
 The detail panel adds, per facility: ICE threat-level classification, mandatory-detention share, average length of stay, inspection results, peak population and days in use (all from the same DDP-processed ICE data); deaths in custody from [UCLA Law's Behind Bars Data Project](https://github.com/uclalawbehindbars/ICE_custody_mortality) (matched by ICE facility code); operators verified across [Wikipedia](https://en.wikipedia.org/wiki/List_of_immigrant_detention_sites_in_the_United_States) (CC BY-SA 4.0) and [OpenStreetMap](https://www.openstreetmap.org) (ODbL) or the facility's own name; and ICE's official facility pages, photos, and ODO inspection reports. Every value passes a validation rule or is omitted for that facility — see `pipeline/enrich.py` and the `enrichment_coverage` block in `web/public/data/match_report.json`.
 
 External reference data lives in `pipeline/reference/` and is refreshed manually with the scripts in `pipeline/scrapers/` (they read ice.gov through the Wayback Machine, since ice.gov blocks datacenter traffic). The weekly refresh workflow only re-pulls DDP and UCLA data.
+
+### Source reconciliation
+
+The DDP parquet files are the canonical source for the map's population figures. Every build fails unless each row in the latest DDP snapshot maps to exactly one published facility, required population fields are present, and the source's independent population breakdowns reconcile. After generating the GeoJSON, the pipeline also compares every published ADP and demographic count with its source-derived value. The `reconciliation` block in `web/public/data/match_report.json` records the row counts and totals checked by that gate.
+
+DDP's fiscal-year-to-date averages contain fractional people. Facility figures are rounded individually for display, while the national figure is summed before rounding. `facility_rounding_delta` records the resulting presentational difference; it is not treated as a source mismatch.
 
 ## Structure
 
@@ -42,3 +58,21 @@ cd web
 yarn
 yarn dev
 ```
+
+## Deployment
+
+The frontend deploys to Cloudflare Workers with Static Assets at
+`https://icemap.anthonynboyd.com`. The custom domain is declared in
+`web/wrangler.jsonc`, so Cloudflare provisions its DNS record and TLS certificate
+when Wrangler deploys the Worker.
+
+```bash
+cd web
+yarn
+yarn deploy:dry-run # build and validate the Worker bundle locally
+yarn deploy         # deploy to Cloudflare and attach the custom domain
+```
+
+For Cloudflare Workers Builds, set the project root directory to `web`, the build
+command to `yarn build`, and the deploy command to `yarn wrangler deploy`. Yarn is
+pinned in `web/package.json` so local and hosted builds use the same release.

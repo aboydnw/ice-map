@@ -96,6 +96,31 @@ export const CONSULAR_COLORS = [
 ];
 export const CONSULAR_OUTLINE = "#7a6a4e";
 export const CONSULAR_FILL_OPACITY = 0.3;
+/** Flow families read as one restrained set, distinct from the circle buckets. */
+export const FLOW_COLORS: Record<string, string> = {
+  transfer: "#4a3aa7",
+  removed: "#b03a2e",
+  arrested: "#1c7a5e",
+  released: "#b07d10",
+  other: "#6b6862",
+};
+
+/**
+ * Channels are a neutral route, not a data value: colour belongs to the dots
+ * travelling them, so a facility with mixed destinations does not turn into a
+ * tangle of competing hues.
+ */
+export const FLOW_CHANNEL = "#b8b1a4";
+
+export function hexRgb(hex: string): [number, number, number] {
+  return [1, 3, 5].map((offset) =>
+    parseInt(hex.slice(offset, offset + 2), 16),
+  ) as [number, number, number];
+}
+
+export function flowRgb(family: string): [number, number, number] {
+  return hexRgb(FLOW_COLORS[family] ?? FLOW_COLORS.other);
+}
 
 export const HOTLINE = {
   label: "National Immigration Detention Hotline",

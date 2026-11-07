@@ -75,6 +75,14 @@ export interface MatchReport {
   matched: number;
   unmatched: number;
   national_adp: number;
+  flows?: {
+    window_start: string;
+    as_of: string;
+    arrest_link_rate: {
+      national: number | null;
+      median_facility: number | null;
+    };
+  };
 }
 
 /** One country whose consular districts can be overlaid; the picker reads these. */
@@ -116,3 +124,46 @@ export interface ConsularCollection {
   meta: ConsularCountry;
   features: ConsularDistrictFeature[];
 }
+export type FlowDirection = "in" | "out";
+
+/** One destination or origin for a facility, with a monthly breakdown. */
+export interface FlowEdge {
+  key: string;
+  count: number;
+  months: [string, number][];
+}
+
+export interface FacilityFlows {
+  /** `country:<KEY>` for a destination-country board. */
+  detloc: string;
+  kind?: "facility" | "country";
+  as_of: string;
+  window: [string, string];
+  totals: Record<FlowDirection, number>;
+  coverage: { origin_linked: number | null; origin_linked_of: number };
+  in: FlowEdge[];
+  out: FlowEdge[];
+}
+
+export interface Centroid {
+  name: string;
+  lon: number;
+  lat: number;
+  /**
+   * Endpoints only. "processing" is a hold room, field office, or staging
+   * site: somewhere people pass through, with no reported population.
+   */
+  kind?: "processing" | "detention";
+  /** Endpoints only: stints that moved through here, in either direction. */
+  stints?: number;
+}
+
+export interface FlowEndpoints {
+  as_of: string;
+  facilities: Record<string, Centroid>;
+  /** Removal destinations that have a board, with the stints sent there. */
+  countries?: Record<string, Centroid>;
+}
+
+/** Centroid tables keyed by ICE's own spellings, as written by the pipeline. */
+export type Centroids = Record<string, Centroid>;

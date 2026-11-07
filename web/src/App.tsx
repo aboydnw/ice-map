@@ -1,12 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Heading, Spinner, Text } from "@chakra-ui/react";
 import { DetailPanel } from "./components/DetailPanel";
+import { SitePanel } from "./components/SitePanel";
 import { FacilityMap } from "./components/FacilityMap";
 import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
-import { STALE_AFTER_DAYS, formatDate } from "./config";
 import { useConsular } from "./useConsular";
-import type { FacilityCollection, History, MatchReport } from "./types";
+import { STALE_AFTER_DAYS, formatDate } from "./config";
+import {
+  DEFAULT_VIEW,
+  cutBoard,
+  buildBoardRows,
+  countryKey,
+  isCountry,
+  quantumFor,
+} from "./flows";
+import type { FlowView } from "./flows";
+import { useFacilityFlows, useFlowEndpoints } from "./useFlows";
+import { AnimatePresence } from "./motion";
+import type {
+  FacilityCollection,
+  FlowDirection,
+  History,
+  MatchReport,
+} from "./types";
 
 interface Loaded {
   facilities: FacilityCollection;
@@ -20,6 +37,45 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null);
   const [showMethodology, setShowMethodology] = useState(false);
   const consular = useConsular();
+  const [flowDirection, setFlowDirection] = useState<FlowDirection>("out");
+  const [flowView, setFlowView] = useState<FlowView>(DEFAULT_VIEW);
+  const [highlightedFlowKey, setHighlightedFlowKey] = useState<string | null>(
+    null,
+  );
+  const flowData = useFacilityFlows(selected);
+  const flowEndpoints = useFlowEndpoints(true);
+
+  const flowRows = useMemo(
+    () =>
+      flowData
+        ? buildBoardRows(
+            flowData.flows,
+            flowDirection,
+            flowData.endpoints,
+            flowData.states,
+            flowData.countries,
+          )
+        : [],
+    [flowData, flowDirection],
+  );
+  const flowCut = useMemo(
+    () => cutBoard(flowRows, flowView),
+    [flowRows, flowView],
+  );
+  const mapFlowRows = flowCut.visible;
+
+  function selectFacility(detloc: string | null) {
+    setSelected(detloc);
+    setFlowDirection(isCountry(detloc) ? "in" : "out");
+    setFlowView(DEFAULT_VIEW);
+    setHighlightedFlowKey(null);
+  }
+
+  function changeFlowDirection(direction: FlowDirection) {
+    setFlowDirection(direction);
+    setFlowView(DEFAULT_VIEW);
+    setHighlightedFlowKey(null);
+  }
 
   useEffect(() => {
     Promise.all(
@@ -74,6 +130,15 @@ export default function App() {
   const selectedFeature = selected
     ? data.facilities.features.find((f) => f.properties.detloc === selected)
     : null;
+  const selectedCountry =
+    selected && isCountry(selected)
+      ? (flowData?.countries[countryKey(selected)] ?? null)
+      : null;
+  // A selection the circle map does not know about is a processing site.
+  const selectedSite =
+    selected && !selectedFeature && !isCountry(selected)
+      ? (flowEndpoints?.facilities[selected] ?? null)
+      : null;
 
   return (
     <Box display="flex" flexDirection="column" height="100%">
@@ -146,8 +211,13 @@ export default function App() {
         <FacilityMap
           data={data.facilities}
           selected={selected}
-          onSelect={setSelected}
+          onSelect={selectFacility}
+          flows={flowData}
+          flowRows={mapFlowRows}
+          direction={flowDirection}
+          highlightedKey={highlightedFlowKey}
           districts={consular.districts}
+          endpoints={flowEndpoints}
         />
         <Legend
           data={data.facilities}
@@ -155,14 +225,69 @@ export default function App() {
           selectedCountry={consular.selected}
           onCountryChange={consular.select}
           districts={consular.districts}
+          consularStatus={consular.status}
+          onRetryConsular={consular.retry}
+          flows={flowData?.flows ?? null}
+          quantum={quantumFor(mapFlowRows.map((row) => row.count))}
         />
-        {selectedFeature && (
-          <DetailPanel
-            facility={selectedFeature}
-            history={data.history[selectedFeature.properties.detloc]}
-            onClose={() => setSelected(null)}
-          />
-        )}
+        <AnimatePresence>
+          {selectedCountry && (
+            <SitePanel
+              key="country"
+              kind="country"
+              name={selectedCountry.name}
+              stints={flowData?.flows.totals.in ?? 0}
+              onClose={() => selectFacility(null)}
+              flows={flowData?.flows ?? null}
+              flowRows={flowRows}
+              flowDirection={flowDirection}
+              onFlowDirectionChange={changeFlowDirection}
+              flowCut={flowCut}
+              flowView={flowView}
+              onFlowViewChange={setFlowView}
+              highlightedFlowKey={highlightedFlowKey}
+              onHighlightFlow={setHighlightedFlowKey}
+              onSelectFlow={selectFacility}
+            />
+          )}
+          {selectedSite && (
+            <SitePanel
+              key="site"
+              kind="processing"
+              name={selectedSite.name}
+              stints={selectedSite.stints ?? 0}
+              onClose={() => selectFacility(null)}
+              flows={flowData?.flows ?? null}
+              flowRows={flowRows}
+              flowDirection={flowDirection}
+              onFlowDirectionChange={changeFlowDirection}
+              flowCut={flowCut}
+              flowView={flowView}
+              onFlowViewChange={setFlowView}
+              highlightedFlowKey={highlightedFlowKey}
+              onHighlightFlow={setHighlightedFlowKey}
+              onSelectFlow={selectFacility}
+            />
+          )}
+          {selectedFeature && (
+            <DetailPanel
+              key="facility"
+              facility={selectedFeature}
+              history={data.history[selectedFeature.properties.detloc]}
+              onClose={() => selectFacility(null)}
+              flows={flowData?.flows ?? null}
+              flowRows={flowRows}
+              flowDirection={flowDirection}
+              onFlowDirectionChange={changeFlowDirection}
+              flowCut={flowCut}
+              flowView={flowView}
+              onFlowViewChange={setFlowView}
+              highlightedFlowKey={highlightedFlowKey}
+              onHighlightFlow={setHighlightedFlowKey}
+              onSelectFlow={selectFacility}
+            />
+          )}
+        </AnimatePresence>
       </Box>
 
       <Box
