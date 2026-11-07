@@ -1,0 +1,15 @@
+{
+ "_source": "Source spellings that do not fold onto a Census county NAME, keyed 'ST|folded source name' -> list of GEOIDs. Only partial-state lists need these; whole-state entries never do. '_why' records the reason for each.",
+ "_why": {
+  "TX|cottledallam": "Dallas PDF (2018) runs 'Cottle, Dallam' together with a missing comma.",
+  "FL|putman": "Orlando PDF (2018) misspells Putnam County.",
+  "CA|stanistaus": "Sacramento PDF (2018) misspells Stanislaus County.",
+  "WI|washbum": "Saint Paul PDF and consulmex page misspell Washburn County.",
+  "WI|sewyer": "Saint Paul PDF and consulmex page misspell Sawyer County."
+ },
+ "TX|cottledallam": ["48101", "48111"],
+ "FL|putman": ["12107"],
+ "CA|stanistaus": ["06099"],
+ "WI|washbum": ["55129"],
+ "WI|sewyer": ["55113"]
+}

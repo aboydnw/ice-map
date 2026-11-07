@@ -2,11 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import * as maplibregl from "maplibre-gl";
 import type {
+  ExpressionSpecification,
   MapLayerMouseEvent,
   MapMouseEvent,
   StyleSpecification,
 } from "maplibre-gl";
 import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { CONSULAR_FILL_OPACITY, CONSULAR_OUTLINE } from "../config";
+import {
+  EMPTY_DISTRICTS,
+  districtColor,
+  districtSummary,
+  fillColorExpression,
+} from "../consular";
+import type { ConsularCollection, ConsularDistrictProperties } from "../types";
 import type { MapboxOverlay } from "@deck.gl/mapbox";
 import { BUCKET_COLOR, RADIUS_MAX, RADIUS_MIN, SQRT_ADP_MAX } from "../config";
 import { loadFlowOverlay } from "../flowOverlay";
@@ -51,12 +60,14 @@ interface HoverInfo {
   name: string;
   detail: string;
   color: string;
+  kind: "facility" | "district" | "flow";
 }
 
 interface Props {
   data: FacilityCollection;
   selected: string | null;
   onSelect: (detloc: string | null) => void;
+  districts: ConsularCollection | null;
   flows: FlowData | null;
   flowRows: BoardRow[];
   direction: FlowDirection;
@@ -80,6 +91,7 @@ export function FacilityMap({
   direction,
   highlightedKey,
   endpoints,
+  districts,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -93,6 +105,8 @@ export function FacilityMap({
   const [mapReady, setMapReady] = useState(false);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const districtsRef = useRef(districts);
+  districtsRef.current = districts;
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [mapFailed, setMapFailed] = useState(false);
 
@@ -154,6 +168,29 @@ export function FacilityMap({
           setMapReady(true);
           // Test hook: lets Playwright drive the map in dev and preview builds.
           (window as unknown as { __iceMap?: maplibregl.Map }).__iceMap = m;
+          m.addSource("consular", {
+            type: "geojson",
+            data: (districtsRef.current ?? EMPTY_DISTRICTS) as never,
+          });
+          m.addLayer({
+            id: "consular-fill",
+            type: "fill",
+            source: "consular",
+            paint: {
+              "fill-color": fillColorExpression() as ExpressionSpecification,
+              "fill-opacity": CONSULAR_FILL_OPACITY,
+            },
+          });
+          m.addLayer({
+            id: "consular-line",
+            type: "line",
+            source: "consular",
+            paint: {
+              "line-color": CONSULAR_OUTLINE,
+              "line-width": 1,
+              "line-opacity": 0.7,
+            },
+          });
           m.addSource("facilities", { type: "geojson", data: data as never });
           m.addLayer({
             id: "facility-circles",
@@ -230,11 +267,44 @@ export function FacilityMap({
               name: props.name,
               detail: `${props.adp.toLocaleString()} avg. daily population`,
               color: BUCKET_COLOR[props.bucket] ?? BUCKET_COLOR.other,
+              kind: "facility",
             });
           });
           m.on("mouseleave", "facility-circles", () => {
             m.getCanvas().style.cursor = "";
             setHover(null);
+          });
+          // Circles win: a district tooltip only shows where no circle is
+          // under the pointer, and never replaces a facility tooltip.
+          m.on("mousemove", "consular-fill", (event: MapLayerMouseEvent) => {
+            const feature = event.features?.[0];
+            if (!feature) return;
+            const circles = m.queryRenderedFeatures(event.point, {
+              layers: ["facility-circles"],
+            });
+            if (
+              circles.length > 0 ||
+              overlayRef.current?.pickObject({
+                x: event.point.x,
+                y: event.point.y,
+                layerIds: PICKABLE_FLOW_LAYERS,
+              })
+            )
+              return;
+            const props = feature.properties as ConsularDistrictProperties;
+            setHover({
+              x: event.point.x,
+              y: event.point.y,
+              name: props.name,
+              detail: districtSummary(props),
+              color: districtColor(props.color),
+              kind: "district",
+            });
+          });
+          m.on("mouseleave", "consular-fill", () => {
+            setHover((current) =>
+              current?.kind === "district" ? null : current,
+            );
           });
           m.on("click", "facility-circles", (event: MapLayerMouseEvent) => {
             const feature = event.features?.[0];
@@ -288,6 +358,17 @@ export function FacilityMap({
     ]);
   }, [selected]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    const source = map?.getSource("consular") as
+      maplibregl.GeoJSONSource | undefined;
+    if (!source) return;
+    source.setData((districts ?? EMPTY_DISTRICTS) as never);
+    // Test hook: lets a visual check confirm which districts are on the map.
+    (window as unknown as { __iceDistricts?: number }).__iceDistricts =
+      districts?.features.length ?? 0;
+    setHover((current) => (current?.kind === "district" ? null : current));
+  }, [districts, mapReady]);
   const processing = useMemo(
     () =>
       endpoints
@@ -306,6 +387,7 @@ export function FacilityMap({
           ? {
               x,
               y,
+              kind: "flow",
               name: site.name,
               detail:
                 site.kind === "country"
@@ -326,6 +408,7 @@ export function FacilityMap({
           ? {
               x,
               y,
+              kind: "flow",
               name: marker.label,
               detail: marker.detail,
               color: "#5a5650",
@@ -482,8 +565,8 @@ export function FacilityMap({
       {hover && (
         <Box
           position="absolute"
-          left={`${hover.x + 14}px`}
-          top={`${hover.y + 14}px`}
+          left={`clamp(8px, ${hover.x + 14}px, calc(100% - 276px))`}
+          top={`clamp(8px, ${hover.y + 14}px, calc(100% - 130px))`}
           bg="panel"
           borderWidth="1px"
           borderColor="hairline"
@@ -500,7 +583,7 @@ export function FacilityMap({
               as="span"
               width="9px"
               height="9px"
-              borderRadius="full"
+              borderRadius={hover.kind === "facility" ? "full" : "2px"}
               bg={hover.color}
               flexShrink={0}
               transform="translateY(-1px)"

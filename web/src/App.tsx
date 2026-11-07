@@ -5,6 +5,7 @@ import { SitePanel } from "./components/SitePanel";
 import { FacilityMap } from "./components/FacilityMap";
 import { Legend } from "./components/Legend";
 import { MethodologyDialog } from "./components/MethodologyDialog";
+import { useConsular } from "./useConsular";
 import { STALE_AFTER_DAYS, formatDate } from "./config";
 import {
   DEFAULT_VIEW,
@@ -35,6 +36,7 @@ export default function App() {
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [showMethodology, setShowMethodology] = useState(false);
+  const consular = useConsular();
   const [flowDirection, setFlowDirection] = useState<FlowDirection>("out");
   const [flowView, setFlowView] = useState<FlowView>(DEFAULT_VIEW);
   const [highlightedFlowKey, setHighlightedFlowKey] = useState<string | null>(
@@ -214,10 +216,17 @@ export default function App() {
           flowRows={mapFlowRows}
           direction={flowDirection}
           highlightedKey={highlightedFlowKey}
+          districts={consular.districts}
           endpoints={flowEndpoints}
         />
         <Legend
           data={data.facilities}
+          countries={consular.countries}
+          selectedCountry={consular.selected}
+          onCountryChange={consular.select}
+          districts={consular.districts}
+          consularStatus={consular.status}
+          onRetryConsular={consular.retry}
           flows={flowData?.flows ?? null}
           quantum={quantumFor(mapFlowRows.map((row) => row.count))}
         />

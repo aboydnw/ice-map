@@ -3704,6 +3704,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"playwright-core@npm:1.65.0":
+  version: 1.65.0
+  resolution: "playwright-core@npm:1.65.0"
+  bin:
+    playwright-core: cli.js
+  checksum: 10c0/ed905c6fc2457a725c3fdb3ad4500f43c7a1bb2c6e4e8c708e1e314930c7dce446a5756ad073425bf3c6e3ca975e5a35fb0221118e2d51ef7b4b6c6d13d0644c
+  languageName: node
+  linkType: hard
+
+"playwright@npm:^1.65.0":
+  version: 1.65.0
+  resolution: "playwright@npm:1.65.0"
+  dependencies:
+    playwright-core: "npm:1.65.0"
+  bin:
+    playwright: cli.js
+  checksum: 10c0/a7d71f3ca5bcad0531b5f3c39ae1a9be0da8e74be6fee8510d99b9f5fc07fd5b3d889aa4ca487c70ca29aba8625f74e3c2c7473b4c8a784dc14fefff80474ac3
+  languageName: node
+  linkType: hard
+
 "postcss@npm:^8.5.26":
   version: 8.5.26
   resolution: "postcss@npm:8.5.26"
@@ -4323,6 +4343,7 @@ __metadata:
     maplibre-gl: "npm:^6.4.1"
     motion: "npm:^13.1.1"
     oxlint: "npm:^1.75.0"
+    playwright: "npm:^1.65.0"
     prettier: "npm:^3.9.6"
     react: "npm:^19.2.8"
     react-dom: "npm:^19.2.8"
